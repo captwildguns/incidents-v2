@@ -213,7 +213,7 @@ export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommu
           padding: 'var(--forge-spacing-small) var(--forge-spacing-large)',
           textAlign: 'center',
         }}>
-          &copy; 2025 Tyler Technologies Inc. v1.2.0
+          &copy; 2025 Tyler Technologies Inc. V2 test build
         </div>
       </aside>
     </forge-modal-drawer>
@@ -231,7 +231,7 @@ export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommu
 
           <div slot="start" style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }} onClick={() => onNavigate('dashboard')}>
             <span className="forge-typography--heading4" style={{ color: 'var(--forge-theme-text-high-inverse)', lineHeight: 1.3 }}>
-              Incident Tracker
+              Incident Tracker V2
             </span>
           </div>
 

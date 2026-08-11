@@ -4,11 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Student Transportation Incident Tracker** — a React + Vite + Tailwind CSS prototype exported from Figma Make. It simulates an incident management system for school transportation (Tyler Technologies / Traversa branding). All data is hardcoded (no backend/API).
+**IncidentsV2** — the V2 test fork of the Student Transportation Incident Tracker prototype. React + Vite + Tailwind CSS. It simulates an incident management system for school transportation (Tyler Technologies / Traversa branding). All data is hardcoded (no backend/API).
+
+This project exists to rework how incidents get created without disturbing the current site. Big changes land here first.
+
+- V2 test site (this project): `https://captwildguns.github.io/incidents-v2/` from repo `captwildguns/incidents-v2`
+- Current site (leave working): `https://captwildguns.github.io/incident-tracker/` from repo `captwildguns/incident-tracker`
+
+Forked from `captwildguns/incident-tracker` at commit `bc86d3e`, so full history before that point is shared. The two repos are independent from that commit forward; nothing syncs automatically between them.
 
 Figma source: `https://www.figma.com/design/mL9xFgEtvUvEGvMCbkV9c9/Incident-tracker---Ted-Final-version`
 
 The app source lives in `Figma files/` subdirectory (not the repo root).
+
+The Vite `base` here is `/incidents-v2/`. Do not copy it back to the original project.
 
 ## Commands
 
