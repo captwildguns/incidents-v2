@@ -20,7 +20,7 @@ defineIconComponent();
 defineIconButtonComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import { EditIncidentDialog } from './EditIncidentDialog';
-import { NewIncidentForm } from './NewIncidentForm';
+import { NewIncidentFormSwitcher } from './NewIncidentFormSwitcher';
 import { hasActiveCommunication } from '../communications/communicationsData';
 import { assignWorkflowToIncident, Workflow, workflows } from '../../data/workflows';
 import { ExportDropdown } from '../shared/ExportDropdown';
@@ -2100,7 +2100,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
             </p>
           </div>
           <div className="px-6 pb-6">
-            <NewIncidentForm onNavigate={(page) => {
+            <NewIncidentFormSwitcher onNavigate={(page) => {
               setIsNewIncidentDialogOpen(false);
               if (page === 'incidents') {
                 toastHelper[0]({ message: 'Incident reported successfully!', theme: 'success', duration: 3000 } as any);

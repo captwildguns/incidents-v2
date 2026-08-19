@@ -8,7 +8,7 @@ import { VehiclesPage } from './components/vehicles/VehiclesPage';
 import { DriversPage } from './components/drivers/DriversPage';
 import { ReportsPage } from './components/reports/ReportsPage';
 import { CommunicationsPage } from './components/communications/CommunicationsPage';
-import { NewIncidentForm } from './components/incidents/NewIncidentForm';
+import { NewIncidentFormSwitcher } from './components/incidents/NewIncidentFormSwitcher';
 import { HelpPage } from './components/help/HelpPage';
 import { WorkflowsPage } from './components/workflows/WorkflowsPage';
 import { WorkflowBuilderPage } from './components/workflows/WorkflowBuilderPage';
@@ -240,7 +240,7 @@ export default function App() {
       case 'reports':
         return <ReportsPage onNavigate={navigateToPage} />;
       case 'new-incident':
-        return <NewIncidentForm onNavigate={navigateToPage} />;
+        return <NewIncidentFormSwitcher onNavigate={navigateToPage} />;
       case 'workflows':
         return <WorkflowsPage onNavigate={navigateToPage} onNavigateToWorkflowBuilder={navigateToWorkflowBuilder} />;
       case 'workflow-builder':
