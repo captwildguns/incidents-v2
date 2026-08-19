@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { ForgeCard, ForgeButton, useForgeToast } from '@tylertech/forge-react';
 import {
   defineCardComponent,
@@ -19,6 +19,7 @@ defineIconComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
+import { mockIncidents } from '../incidents/IncidentsPage';
 
 // Mock driver data
 export const mockDrivers = [
@@ -518,7 +519,7 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
   const dialogRef = useRef<HTMLElement>(null);
   
   // Sorting state
-  const [sortColumn, setSortColumn] = useState<'id' | 'name' | 'contact' | 'email' | 'yearsOfService' | 'status'>('name');
+  const [sortColumn, setSortColumn] = useState<'id' | 'name' | 'contact' | 'email' | 'yearsOfService' | 'incidents' | 'status'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   // Pagination state
@@ -539,6 +540,35 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
     return () => el.removeEventListener('forge-dialog-close', handler);
   }, []);
 
+  // Incident counts derived from mockIncidents rather than read from the seeded
+  // incidentCount field, so filing an incident actually moves the number on this
+  // grid. Keyed by driver full name, which is what every incident carries; the
+  // DRV ids on involvedParties are not reliably in sync with this roster.
+  //
+  // This must stay inside the component. DriversPage and IncidentsPage sit in an
+  // import cycle (IncidentsPage -> NewIncidentForm -> DriversPage), so at this
+  // module's top level mockIncidents is still in its temporal dead zone.
+  const incidentCountByDriver = useMemo(() => {
+    const counts = new Map<string, number>();
+    const bump = (name: string) => counts.set(name, (counts.get(name) ?? 0) + 1);
+    for (const inc of mockIncidents as any[]) {
+      // A driver is linked either by having been the driver on the incident, or
+      // by being a named employee party on a staff-subject incident. Counted
+      // once per incident, so a driver who is both does not count twice.
+      const names = new Set<string>();
+      if (typeof inc.driver === 'string' && inc.driver && inc.driver !== 'N/A') {
+        names.add(inc.driver);
+      }
+      for (const party of (inc.involvedParties ?? [])) {
+        if (party?.partyType === 'employee' && party?.name) names.add(party.name);
+      }
+      names.forEach(bump);
+    }
+    return counts;
+  }, []);
+
+  const incidentsFor = (driver: any) => incidentCountByDriver.get(driver.fullName) ?? 0;
+
   // Calculate summary statistics
   const totalDrivers = mockDrivers.length;
   const activeDrivers = mockDrivers.filter(d => d.status === 'Active').length;
@@ -551,7 +581,7 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
     return licenseExpiry <= threeMonthsFromNow || medicalExpiry <= threeMonthsFromNow || bgExpiry <= threeMonthsFromNow;
   }).length;
   const inactiveDrivers = mockDrivers.filter(d => d.status !== 'Active').length;
-  const avgIncidents = (mockDrivers.reduce((sum, d) => sum + d.incidentCount, 0) / totalDrivers).toFixed(1);
+  const avgIncidents = (mockDrivers.reduce((sum, d) => sum + incidentsFor(d), 0) / totalDrivers).toFixed(1);
 
   // Filter drivers
   const filteredDrivers = mockDrivers.filter((driver) => {
@@ -611,6 +641,9 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
       case 'yearsOfService':
         compareResult = a.yearsOfService - b.yearsOfService;
         break;
+      case 'incidents':
+        compareResult = incidentsFor(a) - incidentsFor(b);
+        break;
       case 'status':
         compareResult = a.status.localeCompare(b.status);
         break;
@@ -664,7 +697,7 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
       const rows = sortedDrivers.map(d => [
         d.id, `"${d.fullName}"`, d.employeeId, d.status, d.phone, d.email,
         d.licenseNumber, d.yearsOfService, `"${d.primaryRoute}"`,
-        d.safetyRating, d.incidentCount, d.performanceScore, d.onTimePercentage
+        d.safetyRating, incidentsFor(d), d.performanceScore, d.onTimePercentage
       ].join(','));
 
       const csvContent = [headers.join(','), ...rows].join('\n');
@@ -845,6 +878,15 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <button
+                      onClick={() => handleSort('incidents')}
+                      className="flex items-center hover:text-primary transition-colors cursor-pointer"
+                    >
+                      Incidents
+                      <SortIcon column="incidents" />
+                    </button>
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <button
                       onClick={() => handleSort('status')}
                       className="flex items-center hover:text-primary transition-colors cursor-pointer"
                     >
@@ -885,6 +927,11 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
                     <td className="forge-table-cell">
                       <span style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--foreground)' }}>
                         {driver.yearsOfService} {driver.yearsOfService === 1 ? 'year' : 'years'}
+                      </span>
+                    </td>
+                    <td className="forge-table-cell">
+                      <span style={{ fontWeight: incidentsFor(driver) > 8 ? 600 : 'normal' }}>
+                        {incidentsFor(driver)}
                       </span>
                     </td>
                     <td className="forge-table-cell">
