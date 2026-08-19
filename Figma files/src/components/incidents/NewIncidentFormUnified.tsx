@@ -184,6 +184,8 @@ function ContactFields({
 export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedProps) {
   const [subject, setSubject] = useState<IncidentSubject | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
+  // Reporter is back on the subject chooser with a subject already picked
+  const [choosing, setChoosing] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   // Shared across every subject
@@ -208,6 +210,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // The one subject-specific section
   const [people, setPeople] = useState<Person[]>([]);
   const [personDraft, setPersonDraft] = useState('');
+  // Subject the reporter picked while subject-specific answers were already filled
+  const [pendingSubject, setPendingSubject] = useState<IncidentSubject | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const roster = subject ? ROSTER[subject] : undefined;
@@ -231,14 +235,30 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   };
 
   const chooseSubject = (next: IncidentSubject) => {
-    if (subject && subject !== next) {
-      const dirty = incidentType || assetRef || people.length > 0;
-      if (dirty && !window.confirm('Changing the subject clears the incident type, the people involved, and the affected asset. Date, time, description, location and evidence are kept. Continue?')) {
-        return;
-      }
-      resetSubjectSpecific();
+    // Picking the subject already set just closes the chooser again.
+    if (subject === next) {
+      setChoosing(false);
+      setPendingSubject(null);
+      return;
     }
+    // Warn before clearing, per #191, confirmed in place rather than in a
+    // browser dialog. Only when there is something to lose.
+    if (subject && (incidentType || assetRef || people.length > 0)) {
+      setPendingSubject(next);
+      return;
+    }
+    if (subject) resetSubjectSpecific();
     setSubject(next);
+    setChoosing(false);
+    setStep(1);
+  };
+
+  const confirmSubjectChange = () => {
+    if (!pendingSubject) return;
+    resetSubjectSpecific();
+    setSubject(pendingSubject);
+    setPendingSubject(null);
+    setChoosing(false);
     setStep(1);
   };
 
@@ -265,6 +285,16 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+
+  const clearedBySwitch = (() => {
+    const parts: string[] = [];
+    if (incidentType) parts.push('the incident type');
+    if (assetRef) parts.push('the affected asset');
+    if (people.length === 1) parts.push('the person named');
+    else if (people.length > 1) parts.push(`the ${people.length} people named`);
+    if (parts.length <= 1) return parts[0] ?? 'nothing';
+    return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+  })();
 
   const peopleRequired = subject ? subjectRequiresParties(subject) : false;
 
@@ -301,12 +331,37 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   }
 
   // ── Subject chooser ───────────────────────────────────────────────────────
-  if (!subject) {
+  if (!subject || choosing) {
     return (
       <div style={{ fontFamily: 'var(--forge-font-family)' }}>
         <SectionHeading hint="Choose the subject of the incident. This determines which details you are asked for.">
           What kind of incident is this?
         </SectionHeading>
+        {pendingSubject && (
+          <div
+            className="flex items-center"
+            style={{
+              gap: 'var(--forge-spacing-small)', marginTop: 'var(--forge-spacing-medium)',
+              padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)',
+              borderRadius: 'var(--forge-radius-medium)',
+              background: 'var(--forge-color-surface-warning, #fffbeb)',
+              border: '1px solid var(--forge-color-border-warning, #fde68a)',
+            }}
+          >
+            <forge-icon name="warning" style={{ fontSize: '18px', flexShrink: 0, color: 'var(--forge-theme-warning, #b45309)' }}></forge-icon>
+            <span style={{ fontSize: 'var(--forge-font-size-sm)', flex: 1 }}>
+              Switching to {getSubjectLabel(pendingSubject)} clears {clearedBySwitch}. Date,
+              time, description, location and evidence are kept.
+            </span>
+            {/* @ts-ignore */}
+            <forge-button variant="flat" onClick={() => setPendingSubject(null)}>Keep {getSubjectLabel(subject!)}</forge-button>
+            {/* @ts-ignore */}
+            <forge-button variant="raised" onClick={confirmSubjectChange}>
+              Switch to {getSubjectLabel(pendingSubject)}
+            </forge-button>
+          </div>
+        )}
+
         <div className="flex flex-wrap" style={{ gap: 'var(--forge-spacing-small)', marginTop: 'var(--forge-spacing-medium)' }}>
           {INCIDENT_SUBJECTS.map(s => (
             <button
@@ -347,7 +402,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         </span>
         <forge-badge theme="warning">{getSubjectLabel(subject)}</forge-badge>
         {/* @ts-ignore */}
-        <forge-button variant="flat" onClick={() => { setSubject(null); resetSubjectSpecific(); }}>
+        <forge-button variant="flat" onClick={() => setChoosing(true)}>
           <forge-icon slot="start" name="chevron_left"></forge-icon>
           Change
         </forge-button>
@@ -384,7 +439,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const detailsStep = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-large)' }}>
       <div>
-        <SectionHeading hint="When and what. Every subject is asked the same questions here.">
+        <SectionHeading hint="When it happened and what happened.">
           Incident Details
         </SectionHeading>
 
@@ -662,7 +717,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
       {/* Context and evidence, identical for all five */}
       <div>
-        <SectionHeading hint="Anyone else present, and anything attached. Same on every subject.">
+        <SectionHeading hint="Anyone else present, and anything to attach.">
           Context and Evidence
         </SectionHeading>
 
@@ -783,7 +838,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
   const reviewStep = (
     <div>
-      <SectionHeading hint="Same review for every subject. Rows that do not apply are simply absent.">
+      <SectionHeading hint="Check the details before submitting.">
         Review &amp; Submit
       </SectionHeading>
       <div style={{ border: '1px solid var(--forge-color-border-subtle)', borderRadius: 'var(--forge-radius-medium)', padding: 'var(--forge-spacing-medium)' }}>

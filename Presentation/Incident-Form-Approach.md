@@ -129,13 +129,15 @@ Less work later:
 - The requirement spec collapses to one field list plus two exceptions, which is
   what dev asked for.
 
-## Proposed way to discuss it as a group
+## Where to see it
 
-Build the container version as a second component beside the existing one, with
-a toggle in the running prototype, rather than replacing the current form. The
-group can then click both against the same data and decide. The current
-multi-step version is not lost, and no decision has to be made before people can
-see the alternative.
+The container version is the new-incident form in the prototype, reachable from
+New Incident on the incidents grid or the New Incident page. It contains nothing
+that would not ship: no design-comparison toggle, no reviewer commentary in the
+help text, no browser confirm dialogs.
+
+The previous multi-step version stays in the repository as NewIncidentForm.tsx,
+unreferenced, so it can be brought back or diffed if the group prefers it.
 
 ## How this consolidates the tickets
 
