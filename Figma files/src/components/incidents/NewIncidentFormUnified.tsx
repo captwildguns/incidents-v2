@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import {
   defineTextFieldComponent,
   defineButtonComponent,
@@ -25,6 +25,7 @@ import { mockLocations } from './IncidentsPage';
 import { mockVehicles } from '../vehicles/VehiclesPage';
 import { mockDrivers } from '../drivers/DriversPage';
 import { mockStudents } from '../students/StudentsPage';
+import { IncidentLocationMap } from './IncidentLocationMap';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The container form.
@@ -40,9 +41,11 @@ import { mockStudents } from '../students/StudentsPage';
 // 1. A field never changes position between subjects. The original moved
 //    Incident Type down beside Affected Location on a Location incident; here it
 //    stays in the same slot on all five.
-// 2. The affected asset has a permanent slot. It fills with Affected Vehicle or
-//    Affected Location, or collapses, and nothing else moves when it collapses.
-//    This is the MyRide container behaviour described in the meeting.
+// 2. Fields are one ordered list flowed into a grid. A field the subject does
+//    not need is not rendered and the ones after it close up, so the grid is
+//    always fully packed. This is the MyRide container behaviour described in
+//    the meeting: if one disappears it does not change the entire UI, that field
+//    is just no longer there.
 // 3. Every subject runs the same two steps, Details then Review. The original ran
 //    four steps for Student, Employee and Third Party and two for Vehicle and
 //    Location, which is the single largest reason clicking through all five felt
@@ -52,8 +55,8 @@ import { mockStudents } from '../students/StudentsPage';
 // detail as an expandable row inside it, and there is one roster implementation
 // instead of the original's two.
 //
-// This lives beside NewIncidentForm rather than replacing it, so the group can
-// click both against the same data before deciding.
+// NewIncidentForm.tsx is the previous multi-step design. It is kept in the
+// repository, unreferenced, so it can be diffed or brought back.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SUBJECT_ICONS: Record<IncidentSubject, string> = {
@@ -204,6 +207,12 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const [witnesses, setWitnesses] = useState<PersonContact[]>([]);
   const [thirdPartyPresent, setThirdPartyPresent] = useState(false);
   const [thirdParties, setThirdParties] = useState<PersonContact[]>([]);
+  const [uploadedPhotos, setUploadedPhotos] = useState<Array<{ id: string; name: string; url: string; size: string }>>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<Array<{ id: string; name: string; size: string; type: string }>>([]);
+  const [locationCoordinates, setLocationCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationAddress, setLocationAddress] = useState('');
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
 
   // The one subject-specific field
   const [assetRef, setAssetRef] = useState('');
@@ -278,6 +287,27 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     setPeople(p => p.map(x => (x.id === id ? { ...x, ...patch } : x)));
 
   const removePerson = (id: string) => setPeople(p => p.filter(x => x.id !== id));
+
+  const readableSize = (bytes: number) =>
+    bytes > 1048576 ? `${(bytes / 1048576).toFixed(2)} MB` : `${(bytes / 1024).toFixed(1)} KB`;
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    setUploadedPhotos(p => [...p, ...Array.from(files).map((f, i) => ({
+      id: `photo-${Date.now()}-${i}`, name: f.name, url: URL.createObjectURL(f), size: readableSize(f.size),
+    }))]);
+    if (photoInputRef.current) photoInputRef.current.value = '';
+  };
+
+  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    setUploadedDocuments(d => [...d, ...Array.from(files).map((f, i) => ({
+      id: `doc-${Date.now()}-${i}`, name: f.name, type: f.type, size: readableSize(f.size),
+    }))]);
+    if (documentInputRef.current) documentInputRef.current.value = '';
+  };
 
   const toggleExpanded = (id: string) =>
     setExpanded(e => {
@@ -850,6 +880,93 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             />
           </forge-text-field>
         </div>
+
+        {/* Both uploads share a row, since each is only a button until
+            something is attached. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-medium)' }}>
+          <div>
+            <label style={labelStyle}>Photo evidence</label>
+            <input ref={photoInputRef} type="file" accept="image/*" multiple onChange={handlePhotoUpload} style={{ display: 'none' }} />
+            {/* @ts-ignore */}
+            <forge-button variant="outlined" onClick={() => photoInputRef.current?.click()}>
+              <forge-icon slot="start" name="upload"></forge-icon>
+              Upload photos
+            </forge-button>
+            {uploadedPhotos.length > 0 && (
+              <div className="grid grid-cols-3 gap-3" style={{ marginTop: 'var(--forge-spacing-small)' }}>
+                {uploadedPhotos.map(photo => (
+                  <div
+                    key={photo.id}
+                    style={{ border: '1px solid var(--forge-color-border-default)', borderRadius: 'var(--forge-radius-medium)', overflow: 'hidden' }}
+                  >
+                    <img src={photo.url} alt={photo.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
+                    <div className="flex items-center" style={{ gap: '4px', padding: '4px' }}>
+                      <span
+                        title={`${photo.name} (${photo.size})`}
+                        style={{ fontSize: '0.75rem', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      >
+                        {photo.name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setUploadedPhotos(ps => ps.filter(x => x.id !== photo.id))}
+                        aria-label={`Remove ${photo.name}`}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--forge-theme-text-medium)', lineHeight: 1 }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label style={labelStyle}>Document evidence</label>
+            <input ref={documentInputRef} type="file" accept=".pdf,.doc,.docx" multiple onChange={handleDocumentUpload} style={{ display: 'none' }} />
+            {/* @ts-ignore */}
+            <forge-button variant="outlined" onClick={() => documentInputRef.current?.click()}>
+              <forge-icon slot="start" name="upload"></forge-icon>
+              Upload documents
+            </forge-button>
+            {uploadedDocuments.length > 0 && (
+              <div className="flex flex-wrap" style={{ gap: 'var(--forge-spacing-xsmall)', marginTop: 'var(--forge-spacing-small)' }}>
+                {uploadedDocuments.map(doc => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center"
+                    style={{ gap: '6px', padding: '6px 10px', border: '1px solid var(--forge-color-border-default)', borderRadius: 'var(--forge-radius-medium)' }}
+                  >
+                    <forge-icon name="description" style={{ fontSize: '16px', color: 'var(--forge-theme-text-medium)' }}></forge-icon>
+                    <span style={{ fontSize: '0.75rem' }} title={`${doc.name} (${doc.size})`}>{doc.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setUploadedDocuments(ds => ds.filter(x => x.id !== doc.id))}
+                      aria-label={`Remove ${doc.name}`}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--forge-theme-text-medium)', lineHeight: 1 }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Where on the map, as distinct from Location Type, which is the kind
+            of place. Same on every subject. */}
+        {/* No label of our own: the map component supplies its own heading, and
+            two "Incident Location Pin" headings stacked read as a mistake. */}
+        <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
+          <IncidentLocationMap
+            location={locationCoordinates}
+            onLocationChange={setLocationCoordinates}
+            address={locationAddress}
+            onAddressChange={setLocationAddress}
+          />
+        </div>
       </div>
     </div>
   );
@@ -870,6 +987,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     ['Witnesses', witnesses.filter(w => w.name.trim()).map(w => w.name).join(', ') || '—'],
     ['Third parties', thirdParties.filter(t => t.name.trim()).map(t => t.name).join(', ') || '—'],
     ['Tags', tags.join(', ') || '—'],
+    ['Photos', uploadedPhotos.length ? `${uploadedPhotos.length} attached` : '—'],
+    ['Documents', uploadedDocuments.length ? `${uploadedDocuments.length} attached` : '—'],
+    ['Location pin', locationAddress || (locationCoordinates ? `${locationCoordinates.lat.toFixed(4)}, ${locationCoordinates.lng.toFixed(4)}` : '—')],
   ];
 
   const reviewStep = (
