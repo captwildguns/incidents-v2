@@ -19,6 +19,7 @@ defineIconComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
+import { EntitySearchField } from '../shared/EntitySearchField';
 import { mockIncidents } from '../incidents/IncidentsPage';
 
 // Mock driver data
@@ -579,6 +580,16 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
     new Set(mockDrivers.map(d => d.defaultGarage).filter(Boolean))
   ).sort((a, b) => a.localeCompare(b));
 
+  // Typeahead groups, limited to the fields the filter above actually matches.
+  // Employee IDs, email, and phone stay searchable but unsuggested; nobody
+  // browses for a partial phone number.
+  const searchSuggestionGroups = useMemo(() => [
+    { kind: 'Driver', values: mockDrivers.map(d => d.fullName) },
+    { kind: 'Vehicle', values: mockDrivers.map(d => d.assignedVehicle) },
+    { kind: 'Run', values: mockDrivers.flatMap(d => [d.primaryRoute, d.secondaryRoute]) },
+    { kind: 'Garage', values: uniqueGarages },
+  ], []);
+
   // Calculate summary statistics
   const totalDrivers = mockDrivers.length;
   const activeDrivers = mockDrivers.filter(d => d.status === 'Active').length;
@@ -790,15 +801,12 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
           <div className="flex items-center" style={{ gap: 'var(--forge-spacing-medium)' }}>
             {/* Search */}
             <div className="flex-1 min-w-0">
-              <forge-text-field>
-                <forge-icon slot="start" name="search"></forge-icon>
-                <input
-                  type="text"
-                  placeholder="Search drivers, contact details, vehicles, or runs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </forge-text-field>
+              <EntitySearchField
+                value={searchTerm}
+                onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+                placeholder="Search drivers, contact details, vehicles, runs, or garage..."
+                groups={searchSuggestionGroups}
+              />
             </div>
 
             {/* Status Filter */}

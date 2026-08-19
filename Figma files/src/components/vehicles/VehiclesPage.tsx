@@ -19,6 +19,7 @@ defineIconComponent();
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
+import { EntitySearchField } from '../shared/EntitySearchField';
 import { mockIncidents } from '../incidents/IncidentsPage';
 import {
   BlueBirdVisionIcon,
@@ -630,6 +631,15 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
     new Set(mockVehicles.map(v => v.defaultGarage).filter(Boolean))
   ).sort((a, b) => a.localeCompare(b));
 
+  // Typeahead groups, limited to the fields the filter above actually matches.
+  // Vehicle IDs stay searchable but unsuggested; the bus name is what people use.
+  const searchSuggestionGroups = useMemo(() => [
+    { kind: 'Vehicle', values: mockVehicles.map(v => v.name) },
+    { kind: 'Driver', values: mockVehicles.map(v => v.driver) },
+    { kind: 'Run', values: mockVehicles.flatMap(v => [v.primaryRoute, v.secondaryRoute]) },
+    { kind: 'Garage', values: uniqueGarages },
+  ], []);
+
   // Calculate summary statistics
   const totalVehicles = mockVehicles.length;
   const activeVehicles = mockVehicles.filter(v => v.status === 'Active').length;
@@ -872,15 +882,12 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* Search */}
             <div className="md:col-span-2">
-              <forge-text-field>
-                <forge-icon slot="start" name="search"></forge-icon>
-                <input
-                  type="text"
-                  placeholder="Search vehicles, drivers, runs, or garage..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </forge-text-field>
+              <EntitySearchField
+                value={searchTerm}
+                onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+                placeholder="Search vehicles, drivers, runs, or garage..."
+                groups={searchSuggestionGroups}
+              />
             </div>
 
             {/* Status Filter */}

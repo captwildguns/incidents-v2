@@ -25,6 +25,7 @@ import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
+import { EntitySearchField } from '../shared/EntitySearchField';
 import { mockIncidents } from '../incidents/IncidentsPage';
 
 // Photo URLs for students
@@ -1251,6 +1252,16 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   // The list is already newest first, so the first entry is the most recent.
   const lastIncidentFor = (student: any) => incidentsFor(student)[0]?.date ?? '';
 
+  // Typeahead groups, limited to the fields the filter below actually matches.
+  // Student IDs are searchable but not suggested; a partial ID is not something
+  // anyone browses for, and listing 46 of them would bury the useful options.
+  const searchSuggestionGroups = useMemo(() => [
+    { kind: 'Student', values: mockStudents.map(s => s.name) },
+    { kind: 'School', values: mockStudents.map(s => s.school) },
+    { kind: 'Vehicle', values: mockStudents.map(s => s.bus) },
+    { kind: 'Run', values: mockStudents.map(s => s.route) },
+  ], []);
+
   // Get unique grades and schools for filters
   const uniqueGrades = Array.from(new Set(mockStudents.map(s => s.grade))).sort();
   const uniqueSchools = Array.from(new Set(mockStudents.map(s => s.school))).sort();
@@ -1444,15 +1455,12 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
             {/* Search */}
             <div className="flex-1 min-w-[300px]">
-              <forge-text-field>
-                <forge-icon slot="start" name="search"></forge-icon>
-                <input
-                  type="text"
-                  placeholder="Search by student name, ID, school, bus, or run..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </forge-text-field>
+              <EntitySearchField
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search by student name, ID, school, bus, or run..."
+                groups={searchSuggestionGroups}
+              />
             </div>
 
             {/* Filters Section */}

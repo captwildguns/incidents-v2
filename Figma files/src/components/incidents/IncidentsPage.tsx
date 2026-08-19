@@ -25,6 +25,7 @@ import { hasActiveCommunication } from '../communications/communicationsData';
 import { assignWorkflowToIncident, Workflow, workflows } from '../../data/workflows';
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
+import { EntitySearchField } from '../shared/EntitySearchField';
 import {
   INCIDENT_TYPES,
   INCIDENT_SUBJECTS,
@@ -1384,6 +1385,22 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       .map(label => ({ value: label, label }));
   }, []);
 
+  // Typeahead groups for the search box. Every group is a field the filter below
+  // actually matches, so a suggestion can never point at rows the grid discards.
+  const searchSuggestionGroups = useMemo(() => {
+    const partyNames = mockIncidents.flatMap((inc: any) =>
+      (inc.involvedParties ?? []).map((p: any) => p?.name)
+    );
+    return [
+      { kind: 'Student', values: uniqueStudents.map(s => s.name) },
+      { kind: 'Person', values: partyNames },
+      { kind: 'Driver', values: mockIncidents.map((inc: any) => inc.driver) },
+      { kind: 'Vehicle', values: mockIncidents.map((inc: any) => inc.bus) },
+      { kind: 'Run', values: mockIncidents.map((inc: any) => inc.route) },
+      { kind: 'Facility', values: mockFacilities.map(f => f.name) },
+    ];
+  }, []);
+
   // Sync New Incident Dialog open state to forge-dialog
   useEffect(() => {
     const el = newIncidentDialogRef.current as any;
@@ -1665,49 +1682,13 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
           <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
             {/* Search */}
             <div className="flex-1 min-w-0">
-              <forge-autocomplete
-                allow-unmatched
-                filter-on-focus
-                ref={(el: any) => {
-                  if (!el) return;
-                  el.filter = (filterText: string) => {
-                    const q = (filterText || '').toLowerCase();
-                    if (!q) return [];
-                    const studentMatches = uniqueStudents
-                      .filter(s => s.name.toLowerCase().includes(q))
-                      .map(s => ({ label: `${s.name} (Student)`, value: s.name }));
-                    const busMatches = Array.from(new Set(mockIncidents.map(i => i.bus)))
-                      .filter(b => b.toLowerCase().includes(q))
-                      .map(b => ({ label: `${b} (Vehicle)`, value: b }));
-                    const routeMatches = Array.from(new Set(mockIncidents.map(i => i.route)))
-                      .filter(r => r.toLowerCase().includes(q))
-                      .map(r => ({ label: `${r} (Run)`, value: r }));
-                    return [...studentMatches, ...busMatches, ...routeMatches].slice(0, 20);
-                  };
-                  const handler = (e: any) => {
-                    const val = e.detail?.value;
-                    if (val !== undefined) setPendingSearchTerm(val);
-                  };
-                  el.removeEventListener('forge-autocomplete-change', handler);
-                  el.addEventListener('forge-autocomplete-change', handler);
-                }}
-              >
-                <forge-text-field>
-                  <forge-icon slot="start" name="search"></forge-icon>
-                  <input
-                    type="text"
-                    placeholder="Search by student, vehicle, or run..."
-                    value={pendingSearchTerm}
-                    onChange={(e) => setPendingSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSearch();
-                      }
-                    }}
-                    style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--forge-font-size-base)' }}
-                  />
-                </forge-text-field>
-              </forge-autocomplete>
+              <EntitySearchField
+                value={pendingSearchTerm}
+                onChange={setPendingSearchTerm}
+                onSubmit={handleSearch}
+                placeholder="Search by person, vehicle, run, or facility..."
+                groups={searchSuggestionGroups}
+              />
             </div>
 
             {/* Status Filter */}
