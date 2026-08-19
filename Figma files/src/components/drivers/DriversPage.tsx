@@ -507,9 +507,12 @@ export const mockDrivers = [
 
 interface DriversPageProps {
   onNavigate: (page: string) => void;
+  // Opens the incidents grid scoped to one driver. Optional so the page still
+  // renders if a caller has not wired it; the count degrades to plain text.
+  onNavigateToIncidentsMatching?: (term: string) => void;
 }
 
-export function DriversPage({ onNavigate }: DriversPageProps) {
+export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: DriversPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [yearsOfServiceFilter, setYearsOfServiceFilter] = useState<string[]>([]);
@@ -937,9 +940,32 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
                       </span>
                     </td>
                     <td className="forge-table-cell">
-                      <span style={{ fontWeight: incidentsFor(driver) > 8 ? 600 : 'normal' }}>
-                        {incidentsFor(driver)}
-                      </span>
+                      {/* stopPropagation so the count opens the incidents grid
+                          rather than the driver detail dialog behind it. Zero
+                          stays plain text; there is nothing to open. */}
+                      {incidentsFor(driver) > 0 && onNavigateToIncidentsMatching ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onNavigateToIncidentsMatching(driver.fullName); }}
+                          title={`View incidents involving ${driver.fullName}`}
+                          style={{
+                            fontFamily: 'var(--forge-font-family)',
+                            fontSize: 'inherit',
+                            fontWeight: incidentsFor(driver) > 8 ? 600 : 'normal',
+                            color: 'var(--forge-theme-primary)',
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                          }}
+                        >
+                          {incidentsFor(driver)}
+                        </button>
+                      ) : (
+                        <span style={{ fontWeight: incidentsFor(driver) > 8 ? 600 : 'normal' }}>
+                          {incidentsFor(driver)}
+                        </span>
+                      )}
                     </td>
                     <td className="forge-table-cell">
                       <forge-badge theme={driver.status === 'Active' ? 'success' : 'default'}>

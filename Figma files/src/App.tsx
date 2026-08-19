@@ -65,6 +65,7 @@ export default function App() {
   const [incidentsStatusFilter, setIncidentsStatusFilter] = useState<string | null>(null);
   const [incidentsSeverityFilter, setIncidentsSeverityFilter] = useState<string | null>(null);
   const [incidentsDateAfterFilter, setIncidentsDateAfterFilter] = useState<string | null>(null);
+  const [incidentsSearchTerm, setIncidentsSearchTerm] = useState<string | null>(null);
   const [sortedFilteredIncidents, setSortedFilteredIncidents] = useState<any[]>([]);
   const [selectedWorkflow, setSelectedWorkflow] = useState<any | null>(null);
   const [studentsActiveIncidentsFilter, setStudentsActiveIncidentsFilter] = useState(false);
@@ -85,6 +86,7 @@ export default function App() {
       setIncidentsStatusFilter(null);
       setIncidentsSeverityFilter(null);
       setIncidentsDateAfterFilter(null);
+      setIncidentsSearchTerm(null);
     }
     // Clear students filters when navigating away
     if (page !== 'students') {
@@ -101,6 +103,20 @@ export default function App() {
     setIncidentsStatusFilter('Open');
     setIncidentsSeverityFilter(null);
     setIncidentsDateAfterFilter(null);
+    setIncidentsSearchTerm(null);
+    setCurrentPage('incidents');
+  };
+
+  // Hands a vehicle name or driver name to the incidents grid as a search term,
+  // so an incident count on another grid opens the rows behind it instead of
+  // being a dead end. Status is left unset on purpose: the count is every
+  // incident, not only the open ones.
+  const navigateToIncidentsMatching = (term: string) => {
+    setIncidentsSearchTerm(term);
+    setIncidentsAssignedToFilter(null);
+    setIncidentsStatusFilter(null);
+    setIncidentsSeverityFilter(null);
+    setIncidentsDateAfterFilter(null);
     setCurrentPage('incidents');
   };
 
@@ -109,6 +125,7 @@ export default function App() {
     setIncidentsSeverityFilter(filters.severity || null);
     setIncidentsDateAfterFilter(filters.dateAfter || null);
     setIncidentsAssignedToFilter(null);
+    setIncidentsSearchTerm(null);
     setCurrentPage('incidents');
   };
 
@@ -187,6 +204,7 @@ export default function App() {
           initialStatusFilter={incidentsStatusFilter}
           initialSeverityFilter={incidentsSeverityFilter}
           initialDateAfterFilter={incidentsDateAfterFilter}
+          initialSearchTerm={incidentsSearchTerm}
           onSortedFilteredIncidentsChange={setSortedFilteredIncidents}
         />;
       case 'incident-detail':
@@ -207,15 +225,16 @@ export default function App() {
             initialStatusFilter={incidentsStatusFilter}
             initialSeverityFilter={incidentsSeverityFilter}
             initialDateAfterFilter={incidentsDateAfterFilter}
+            initialSearchTerm={incidentsSearchTerm}
             onSortedFilteredIncidentsChange={setSortedFilteredIncidents}
           />
         );
       case 'students':
         return <StudentsPage onNavigate={navigateToPage} initialActiveIncidentsFilter={studentsActiveIncidentsFilter} onNavigateToIncidentDetail={navigateToIncidentDetail} />;
       case 'drivers':
-        return <DriversPage onNavigate={navigateToPage} />;
+        return <DriversPage onNavigate={navigateToPage} onNavigateToIncidentsMatching={navigateToIncidentsMatching} />;
       case 'vehicles':
-        return <VehiclesPage onNavigate={navigateToPage} />;
+        return <VehiclesPage onNavigate={navigateToPage} onNavigateToIncidentsMatching={navigateToIncidentsMatching} />;
       case 'communications':
         return <CommunicationsPage initialIncidentId={selectedCommIncidentId} initialIncidentData={newCommIncidentData} />;
       case 'reports':

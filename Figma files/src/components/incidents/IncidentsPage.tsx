@@ -1278,15 +1278,18 @@ interface IncidentsPageProps {
   initialStatusFilter?: string | null;
   initialSeverityFilter?: string | null;
   initialDateAfterFilter?: string | null;
+  // Pre-fills the search box, so another page can hand off a vehicle name or a
+  // driver name and land the user on an already scoped list.
+  initialSearchTerm?: string | null;
   onSortedFilteredIncidentsChange?: (incidents: any[]) => void;
 }
 
 type SortField = 'id' | 'date' | 'student' | 'subject' | 'type' | 'severity' | 'status' | 'workflow';
 type SortDirection = 'asc' | 'desc' | null;
 
-export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigateToIncidentDetail, initialAssignedToFilter = null, initialStatusFilter = null, initialSeverityFilter = null, initialDateAfterFilter = null, onSortedFilteredIncidentsChange }: IncidentsPageProps) {
+export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigateToIncidentDetail, initialAssignedToFilter = null, initialStatusFilter = null, initialSeverityFilter = null, initialDateAfterFilter = null, initialSearchTerm = null, onSortedFilteredIncidentsChange }: IncidentsPageProps) {
   // Active (committed) filter values — used to actually filter the table
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm || '');
   const [statusFilter, setStatusFilter] = useState<string[]>(initialStatusFilter ? [initialStatusFilter] : []);
   // Filters on the subject label ("Student", "Facility", ...) rather than the
   // raw value, so the committed value matches what the chip displays.
@@ -1297,7 +1300,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   const [dateAfterFilter, setDateAfterFilter] = useState(initialDateAfterFilter || '');
 
   // Pending (uncommitted) filter values — updated by inputs, applied on Search click
-  const [pendingSearchTerm, setPendingSearchTerm] = useState('');
+  const [pendingSearchTerm, setPendingSearchTerm] = useState(initialSearchTerm || '');
   const [pendingStatusFilter, setPendingStatusFilter] = useState<string[]>(initialStatusFilter ? [initialStatusFilter] : []);
   const [pendingSubjectFilter, setPendingSubjectFilter] = useState<string[]>([]);
   const [pendingTypeFilter, setPendingTypeFilter] = useState<string[]>([]);
@@ -1420,7 +1423,6 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
     setAssignedToFilter(pendingAssignedToFilter);
     setSeverityFilter(pendingSeverityFilter);
     setDateAfterFilter(pendingDateAfterFilter);
-    setShowAllIncidents(false);
   };
 
   const handleSort = (field: SortField) => {
@@ -1500,13 +1502,21 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   };
 
   const filteredIncidents = useMemo(() => incidentsWithWorkflows.filter((incident) => {
+    // Driver and every involved party name are matched, not just the subject
+    // label. The label collapses a multi-party incident to "First Name +1", so
+    // without this the second person named on a staff incident is unfindable,
+    // and a driver count handed over from the drivers grid lands on nothing.
     const q = searchTerm.trim().toLowerCase();
     const matchesSearch =
       q === '' ||
       getIncidentSubjectLabel(incident).toLowerCase().includes(q) ||
       (incident.bus ?? '').toLowerCase().includes(q) ||
-      (incident.route ?? '').toLowerCase().includes(q);
-    
+      (incident.route ?? '').toLowerCase().includes(q) ||
+      (incident.driver ?? '').toLowerCase().includes(q) ||
+      (incident.assetRef ?? '').toLowerCase().includes(q) ||
+      (incident.involvedParties ?? []).some((p: any) => (p?.name ?? '').toLowerCase().includes(q)) ||
+      (incident.involvedStudents ?? []).some((s: any) => (s?.name ?? '').toLowerCase().includes(q));
+
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(incident.status);
     const matchesSubject = subjectFilter.length === 0 || subjectFilter.includes(getSubjectLabel(incident.subject ?? 'student'));
     const matchesType = typeFilter.length === 0 || typeFilter.includes(incident.type);
@@ -1792,13 +1802,16 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       </ForgeCard>
 
       {/* Active Filter Banner */}
-      {(severityFilter.length > 0 || statusFilter.length > 0 || subjectFilter.length > 0 || dateAfterFilter) && (
+      {(severityFilter.length > 0 || statusFilter.length > 0 || subjectFilter.length > 0 || dateAfterFilter || searchTerm.trim()) && (
         <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #eff6ff)', border: '1px solid var(--forge-color-border-info, #bfdbfe)', borderRadius: 'var(--forge-radius-medium)', fontFamily: 'var(--forge-font-family)' }}>
           <forge-icon name="error" style={{ fontSize: '16px', flexShrink: 0, color: 'var(--forge-color-text-info, #2563eb)' }}></forge-icon>
           <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-color-text-info, #1e40af)' }}>
             {/* Joined rather than each line prefixing its own separator, which
                 left a dangling bullet whenever the first filter was unset. */}
             Filtered view: {[
+              // Search first, since it is what an incoming link from the drivers
+              // or vehicles grid sets, and the user did not type it themselves.
+              searchTerm.trim() && `Matching "${searchTerm.trim()}"`,
               severityFilter.length > 0 && `Severity = ${severityFilter.join(', ')}`,
               statusFilter.length > 0 && `Status = ${statusFilter.join(', ')}`,
               subjectFilter.length > 0 && `Subject = ${subjectFilter.join(', ')}`,

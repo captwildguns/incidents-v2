@@ -554,9 +554,12 @@ export const mockVehicles = [
 
 interface VehiclesPageProps {
   onNavigate: (page: string) => void;
+  // Opens the incidents grid scoped to one vehicle. Optional so the page still
+  // renders if a caller has not wired it; the count degrades to plain text.
+  onNavigateToIncidentsMatching?: (term: string) => void;
 }
 
-export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
+export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: VehiclesPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [mileageRangeFilter, setMileageRangeFilter] = useState<string[]>([]);
@@ -1029,9 +1032,32 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
                       </span>
                     </td>
                     <td className="forge-table-cell">
-                      <span style={{ fontWeight: incidentsFor(vehicle) > 8 ? 600 : 'normal' }}>
-                        {incidentsFor(vehicle)}
-                      </span>
+                      {/* stopPropagation so the count opens the incidents grid
+                          rather than the vehicle detail dialog behind it. Zero
+                          stays plain text; there is nothing to open. */}
+                      {incidentsFor(vehicle) > 0 && onNavigateToIncidentsMatching ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onNavigateToIncidentsMatching(vehicle.name); }}
+                          title={`View incidents involving ${vehicle.name}`}
+                          style={{
+                            fontFamily: 'var(--forge-font-family)',
+                            fontSize: 'inherit',
+                            fontWeight: incidentsFor(vehicle) > 8 ? 600 : 'normal',
+                            color: 'var(--forge-theme-primary)',
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                          }}
+                        >
+                          {incidentsFor(vehicle)}
+                        </button>
+                      ) : (
+                        <span style={{ fontWeight: incidentsFor(vehicle) > 8 ? 600 : 'normal' }}>
+                          {incidentsFor(vehicle)}
+                        </span>
+                      )}
                     </td>
                     <td className="forge-table-cell">
                       <forge-badge theme={vehicle.status === 'Active' ? 'success' : 'default'}>
