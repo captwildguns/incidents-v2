@@ -31,8 +31,9 @@ interface Message {
 interface IncidentCommunication {
   incidentId: string;
   incidentDate: string;
-  student: string;
-  studentId: string;
+  // Optional: a facility or vehicle incident has no student
+  student?: string;
+  studentId?: string;
   incidentType: string;
   driver: string;
   bus: string;
@@ -1199,7 +1200,7 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
       searchQuery === '' ||
       comm.incidentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       comm.driver.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      comm.student.toLowerCase().includes(searchQuery.toLowerCase());
+      (comm.student ?? '').toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter.length === 0 ||

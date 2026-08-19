@@ -7,7 +7,7 @@ defineBadgeComponent();
 defineMenuComponent();
 defineIconButtonComponent();
 import { EditIncidentDialog } from '../incidents/EditIncidentDialog';
-import { mockIncidents } from '../incidents/IncidentsPage';
+import { mockIncidents, getIncidentSubjectLabel } from '../incidents/IncidentsPage';
 import { defineButtonComponent } from '@tylertech/forge';
 defineButtonComponent();
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
@@ -226,7 +226,10 @@ const activeIncidents = (mockIncidents as any[])
   .slice()
   .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   .slice(0, 5)
-  .map(i => ({ ...i, time: (i.date || '').replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1') }));
+  // displayDate, not time. `time` now holds the incident's occurrence time, and
+  // overwriting it here leaked a date string into the detail page via the
+  // row-click handler below, which renders "Occurred: <date> at <date>".
+  .map(i => ({ ...i, displayDate: (i.date || '').replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1') }));
 
 const needsAttention = [
   {
@@ -860,7 +863,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
               <thead>
                 <tr>
                   <th className="forge-table-cell forge-table-cell--header">Incident ID</th>
-                  <th className="forge-table-cell forge-table-cell--header">Student</th>
+                  <th className="forge-table-cell forge-table-cell--header">Involved</th>
                   <th className="forge-table-cell forge-table-cell--header">Type</th>
                   <th className="forge-table-cell forge-table-cell--header">Severity</th>
                   <th className="forge-table-cell forge-table-cell--header">Assigned To</th>
@@ -899,7 +902,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
                     <td className="forge-table-cell" style={{ fontWeight: 500, fontFamily: 'var(--forge-font-family)' }}>
                       {incident.id}
                     </td>
-                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>{incident.student}</td>
+                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>{getIncidentSubjectLabel(incident)}</td>
                     <td className="forge-table-cell">
                       <forge-badge theme="default">{incident.type}</forge-badge>
                     </td>
@@ -910,7 +913,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
                     </td>
                     <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>{incident.assignedTo}</td>
                     <td className="forge-table-cell" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--forge-theme-text-low)' }}>
-                      {incident.time}
+                      {incident.displayDate}
                     </td>
                     <td className="forge-table-cell">
                       {incidentsWithCommunications.includes(incident.id) && (

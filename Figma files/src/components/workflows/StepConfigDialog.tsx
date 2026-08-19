@@ -103,6 +103,9 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
   const [newRecipient, setNewRecipient] = useState('');
   const [newApprover, setNewApprover] = useState('');
 
+  // NOTE: this list is duplicated in WorkflowBuilderPage and StepTemplateManager
+  // and the three have historically diverged. Kept in sync here; consolidating
+  // them into one shared constant is a separate cleanup.
   const groups = [
     'Driver',
     'Safety Coordinator',
@@ -111,6 +114,12 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
     'Mechanic',
     'School Principal',
     'Nurse',
+    // Non-student incident roles
+    'Transportation Supervisor',
+    'Transportation Director',
+    'HR Manager',
+    'Facilities Manager',
+    'Maintenance Manager',
   ];
 
   const handleSave = () => {

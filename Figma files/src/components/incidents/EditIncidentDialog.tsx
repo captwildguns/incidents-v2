@@ -10,6 +10,8 @@ import { Badge } from '../ui/badge';
 import { Save, X, Upload, Image as ImageIcon, FileText, Plus } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
 import { IncidentLocationMap } from './IncidentLocationMap';
+import { getIncidentSubjectLabel } from './IncidentsPage';
+import { getSubjectLabel } from './IncidentTypes';
 import { toast } from 'sonner';
 
 const LOCATION_OPTIONS = [
@@ -242,15 +244,18 @@ export function EditIncidentDialog({ incident, onClose, onSave }: EditIncidentDi
           <h3 style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 500, marginBottom: 12 }}>Classification</h3>
           <div className="grid grid-cols-2 gap-4 p-4 rounded-md" style={{ background: '#F4F7FB', border: '1px solid #D4DFF0' }}>
             <div>
-              <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Student</div>
+              <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Involved</div>
               <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 500 }}>
-                {isMulti ? `${incident.involvedStudents.length} students involved` : incident.student}
+                {isMulti ? `${incident.involvedStudents.length} students involved` : getIncidentSubjectLabel(incident)}
               </div>
             </div>
             <div>
-              <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Student ID</div>
+              <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Subject</div>
               <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>
-                {isMulti ? 'Multiple' : incident.studentId}
+                {getSubjectLabel(incident.subject ?? 'student')}
+                {(incident.subject ?? 'student') === 'student' && !isMulti && incident.studentId && (
+                  <span style={{ color: 'var(--forge-theme-text-medium)' }}> · {incident.studentId}</span>
+                )}
               </div>
             </div>
             <div>

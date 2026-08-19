@@ -126,6 +126,13 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
     'Mechanic',
     'School Principal',
     'Nurse',
+    // Non-student incident roles. Also duplicated in StepConfigDialog and
+    // StepTemplateManager; consolidating the three is a separate cleanup.
+    'Transportation Supervisor',
+    'Transportation Director',
+    'HR Manager',
+    'Facilities Manager',
+    'Maintenance Manager',
   ];
 
   const addStep = () => {

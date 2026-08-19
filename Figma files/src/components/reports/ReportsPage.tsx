@@ -13,6 +13,9 @@ defineDialogComponent();
 defineBadgeComponent();
 defineIconComponent();
 import { INCIDENT_TYPES } from '../incidents/IncidentTypes';
+// Note: this file declares its own local `mockIncidents` below, shadowing the
+// shared one. Only the label helper is imported here.
+import { getIncidentSubjectLabel } from '../incidents/IncidentsPage';
 
 const quickReports = [
   {
@@ -574,7 +577,7 @@ export function ReportsPage({ onNavigate }: ReportsPageProps) {
                     <tr>
                       <th className="forge-table-cell forge-table-cell--header">Incident ID</th>
                       <th className="forge-table-cell forge-table-cell--header">Date</th>
-                      <th className="forge-table-cell forge-table-cell--header">Student</th>
+                      <th className="forge-table-cell forge-table-cell--header">Involved</th>
                       <th className="forge-table-cell forge-table-cell--header">Type</th>
                       <th className="forge-table-cell forge-table-cell--header">Vehicle</th>
                       <th className="forge-table-cell forge-table-cell--header">Driver</th>
@@ -591,7 +594,7 @@ export function ReportsPage({ onNavigate }: ReportsPageProps) {
                         <td className="forge-table-cell" style={{ fontWeight: 'var(--forge-font-weight-medium)', color: 'var(--primary)' }}>{incident.id}</td>
                         <td className="forge-table-cell" style={{ color: 'var(--muted-foreground)' }}>{incident.date.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1')}</td>
                         <td className="forge-table-cell">
-                          <div>{incident.student}</div>
+                          <div>{getIncidentSubjectLabel(incident)}</div>
                           <div style={{ fontSize: 'var(--forge-font-size-xs)', color: 'var(--muted-foreground)' }}>{incident.studentId}</div>
                         </td>
                         <td className="forge-table-cell">{incident.type}</td>

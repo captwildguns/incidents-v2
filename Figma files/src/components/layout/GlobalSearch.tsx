@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, AlertCircle, Users, UserCircle, Bus, MessageSquare } from 'lucide-react';
-import { mockIncidents } from '../incidents/IncidentsPage';
+import { mockIncidents, getIncidentSubjectLabel } from '../incidents/IncidentsPage';
+import { getSubjectLabel } from '../incidents/IncidentTypes';
 import { mockStudents } from '../students/StudentsPage';
 import { mockDrivers } from '../drivers/DriversPage';
 import { mockVehicles } from '../vehicles/VehiclesPage';
@@ -47,12 +48,16 @@ export function GlobalSearch({ onNavigate, onNavigateToIncidentDetail, onNavigat
     const out: SearchResult[] = [];
 
     for (const inc of mockIncidents as any[]) {
-      if (match(q, inc.id, inc.student, inc.type, inc.driver, inc.bus, inc.route, inc.description, inc.assignedTo, inc.status)) {
+      // Match and display on the subject label, so a facility or vehicle
+      // incident is findable and does not render a leading bullet from a
+      // missing student name.
+      const involved = getIncidentSubjectLabel(inc);
+      if (match(q, inc.id, involved, inc.type, inc.driver, inc.bus, inc.route, inc.description, inc.assignedTo, inc.status)) {
         out.push({
           id: inc.id,
           category: 'Incidents',
           title: `${inc.id} — ${inc.type}`,
-          subtitle: `${inc.student} • ${inc.bus} • ${inc.status}`,
+          subtitle: [involved, inc.bus, inc.status].filter(Boolean).join(' • '),
           payload: inc,
         });
       }
@@ -94,12 +99,13 @@ export function GlobalSearch({ onNavigate, onNavigateToIncidentDetail, onNavigat
     for (const incId of INCIDENTS_WITH_COMMUNICATIONS) {
       const inc = (mockIncidents as any[]).find(i => i.id === incId);
       if (!inc) continue;
-      if (match(q, inc.id, inc.student, inc.driver, inc.type)) {
+      const involved = getIncidentSubjectLabel(inc);
+      if (match(q, inc.id, involved, inc.driver, inc.type)) {
         out.push({
           id: `comm-${inc.id}`,
           category: 'Communications',
           title: `${inc.id} — ${inc.type}`,
-          subtitle: `${inc.student} (Student) ↔ ${inc.driver} (Employee)`,
+          subtitle: `${involved} (${getSubjectLabel(inc.subject ?? 'student')}) ↔ ${inc.driver} (Employee)`,
           payload: inc.id,
         });
       }

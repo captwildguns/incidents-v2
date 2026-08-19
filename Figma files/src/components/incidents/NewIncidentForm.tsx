@@ -1,20 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
 import { ForgeCard, ForgeButton } from '@tylertech/forge-react';
-import { defineCardComponent, defineButtonComponent, defineTextFieldComponent, defineStepperComponent } from '@tylertech/forge';
+import { defineCardComponent, defineButtonComponent, defineTextFieldComponent, defineStepperComponent, defineIconComponent, defineDatePickerComponent, defineTimePickerComponent } from '@tylertech/forge';
 defineCardComponent();
 defineButtonComponent();
 defineTextFieldComponent();
 defineStepperComponent();
+defineIconComponent();
+// Registered and available if we swap the native date/time inputs for the real
+// Forge pickers. Forge has no combined date-time component, only these two.
+defineDatePickerComponent();
+defineTimePickerComponent();
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
 import {
   AlertCircle, Send, Circle, CheckCircle2, Upload, X,
-  Image as ImageIcon, FileText, Users, ChevronRight, ChevronDown, ChevronUp, Plus,
+  Image as ImageIcon, FileText, Users, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Plus,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
-import { INCIDENT_TYPES, getAllCategories } from './IncidentTypes';
+import {
+  INCIDENT_TYPES,
+  INCIDENT_SUBJECTS,
+  getIncidentTypesForCategory,
+  getSubjectLabel,
+  getSubjectMeta,
+  subjectRequiresParties,
+  emptyContact,
+  normalizeContacts,
+  type IncidentSubject,
+  type PersonContact,
+} from './IncidentTypes';
+import { mockFacilities } from './IncidentsPage';
+import { mockVehicles } from '../vehicles/VehiclesPage';
 import { IncidentLocationMap } from './IncidentLocationMap';
 import { mockDrivers } from '../drivers/DriversPage';
 import { mockIncidents } from './IncidentsPage';
@@ -45,6 +63,11 @@ interface PerStudentData {
 }
 
 interface SharedFormData {
+  // When the incident actually happened, which is not when it gets filed.
+  // Reports routinely come in at the end of a run or the next morning, so this
+  // is entered by the reporter rather than stamped from the clock.
+  incidentDate: string;
+  incidentTime: string;
   incidentType: string;
   severity: string;
   description: string;
@@ -53,7 +76,13 @@ interface SharedFormData {
   route: string;
   driver: string;
   witnessPresent: boolean;
-  witnessNames: string[];
+  witnesses: PersonContact[];
+  // Someone outside the district who was involved or present. Distinct from the
+  // thirdParty SUBJECT: the subject says what the incident is fundamentally
+  // about, while these are outside people present on an incident of any subject,
+  // such as a parent who intervened during a student incident.
+  thirdPartyPresent: boolean;
+  thirdParties: PersonContact[];
   tags: string[];
 }
 
@@ -62,12 +91,68 @@ interface NewIncidentFormProps {
   onNavigate: (page: string) => void;
 }
 
-const STEPS = [
-  { number: 1, label: 'Involved Students' },
-  { number: 2, label: 'Incident Details' },
-  { number: 3, label: 'Per-Student Details' },
-  { number: 4, label: 'Review & Submit' },
-];
+// Steps are identified by a stable key rather than a position, because the step
+// count varies by subject. A facility incident has no people to name, so its
+// "Incident Details" step is step 1, where a student incident's is step 2.
+// Gating render on the key keeps both correct without duplicating the markup.
+type StepKey = 'parties' | 'details' | 'perParty' | 'review';
+
+const STEP_DEFS: Record<IncidentSubject, Array<{ key: StepKey; label: string }>> = {
+  student: [
+    { key: 'parties', label: 'Involved Students' },
+    { key: 'details', label: 'Incident Details' },
+    { key: 'perParty', label: 'Per-Student Details' },
+    { key: 'review', label: 'Review & Submit' },
+  ],
+  staff: [
+    { key: 'parties', label: 'Involved Employees' },
+    { key: 'details', label: 'Incident Details' },
+    { key: 'perParty', label: 'Per-Person Details' },
+    { key: 'review', label: 'Review & Submit' },
+  ],
+  thirdParty: [
+    { key: 'parties', label: 'Involved People' },
+    { key: 'details', label: 'Incident Details' },
+    { key: 'perParty', label: 'Per-Person Details' },
+    { key: 'review', label: 'Review & Submit' },
+  ],
+  // No people to name, so the roster and per-person steps drop out entirely.
+  vehicle: [
+    { key: 'details', label: 'Incident Details' },
+    { key: 'review', label: 'Review & Submit' },
+  ],
+  facility: [
+    { key: 'details', label: 'Incident Details' },
+    { key: 'review', label: 'Review & Submit' },
+  ],
+};
+
+// A non-student person on an incident: an employee picked from the driver roster,
+// or a free-text third party such as another motorist or a parent.
+interface Party {
+  id: string;
+  partyType: 'employee' | 'thirdParty';
+  partyId?: string;
+  name: string;
+  role: string;
+  severityOverride: string;
+  description: string;
+  actionTaken: string;
+  notes: string;
+}
+
+const PARTY_ROLES = ['Participant', 'Witness', 'Reporter', 'Injured'];
+
+// Tyler Forge icon names, registered in AppLayout's IconRegistry.define call.
+// Rendered monotone in the brand blue rather than one hue per subject, so the
+// cards read as one set of options instead of five unrelated categories.
+const SUBJECT_ICONS: Record<IncidentSubject, string> = {
+  student: 'school',
+  vehicle: 'directions_bus',
+  facility: 'warehouse',
+  thirdParty: 'public',
+  staff: 'badge',
+};
 
 const LOCATION_OPTIONS = [
   { category: 'ON ROUTE', items: [
@@ -104,50 +189,113 @@ const DRIVER_LOCATION_OPTIONS = [
   ...LOCATION_OPTIONS.slice(1),
 ];
 
-function WitnessFields({ names, onChange }: { names: string[]; onChange: (names: string[]) => void }) {
-  const [focusedIdx, setFocusedIdx] = useState<number | null>(null);
+// One contact per person: who they were and how to reach them. Used for both
+// witnesses and third parties, which capture the same thing (who else was
+// there) and so should look and behave identically.
+function PersonContactFields({
+  people,
+  onChange,
+  personLabel = 'Witness',
+  addLabel = 'Add Witness',
+  removeLabel = 'Remove witness',
+}: {
+  people: PersonContact[];
+  onChange: (people: PersonContact[]) => void;
+  personLabel?: string;
+  addLabel?: string;
+  removeLabel?: string;
+}) {
+  const update = (idx: number, field: keyof PersonContact, value: string) => {
+    const next = people.map((p, i) => (i === idx ? { ...p, [field]: value } : p));
+    onChange(next);
+  };
+
+  const fieldStyle = {
+    width: '100%',
+    padding: '6px 8px',
+    border: '1px solid #C5D2E8',
+    borderRadius: '4px',
+    background: '#fff',
+    outline: 'none',
+    fontFamily: 'Roboto, sans-serif',
+    fontSize: 'var(--text-sm)',
+  } as const;
+
+  const microLabel = {
+    fontFamily: 'Roboto, sans-serif',
+    fontSize: '11px',
+    color: 'var(--forge-theme-text-medium)',
+    marginBottom: 2,
+    display: 'block',
+  } as const;
+
   return (
     <div>
-      {names.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
-          {names.map((name, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', width: '20%', minWidth: '160px' }}>
-              <div style={{
-                flex: 1,
-                border: `1px solid ${focusedIdx === idx ? '#4A6FA5' : '#C5D2E8'}`,
-                borderRadius: '6px', padding: '8px 12px', background: '#fff',
-              }}>
-                <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: '12px', color: 'var(--forge-theme-text-medium)', marginBottom: '2px' }}>
-                  Witness Name
-                </div>
+      {people.length > 0 && (
+        <div className="space-y-3 mb-3">
+          {people.map((p, idx) => (
+            <div
+              key={idx}
+              style={{
+                border: '1px solid #C5D2E8',
+                borderRadius: '6px',
+                padding: '10px 12px',
+                background: '#fff',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', fontWeight: 500, color: 'var(--forge-theme-text-medium)' }}>
+                  {personLabel} {idx + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onChange(people.filter((_, i) => i !== idx))}
+                  aria-label={removeLabel}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--forge-theme-text-medium)', lineHeight: 1 }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="mb-2">
+                <label style={microLabel}>Name</label>
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => {
-                    const updated = [...names];
-                    updated[idx] = e.target.value;
-                    onChange(updated);
-                  }}
-                  onFocus={() => setFocusedIdx(idx)}
-                  onBlur={() => setFocusedIdx(null)}
-                  style={{ width: '100%', border: 'none', outline: 'none', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', background: 'transparent' }}
+                  value={p.name}
+                  onChange={(e) => update(idx, 'name', e.target.value)}
+                  placeholder="Full name"
+                  style={fieldStyle}
                 />
               </div>
-              <button
-                type="button"
-                onClick={() => onChange(names.filter((_, i) => i !== idx))}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--forge-theme-text-medium)', marginTop: '10px', flexShrink: 0 }}
-                aria-label="Remove witness"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label style={microLabel}>Phone</label>
+                  <input
+                    type="tel"
+                    value={p.phone}
+                    onChange={(e) => update(idx, 'phone', e.target.value)}
+                    placeholder="(555) 123-4567"
+                    style={fieldStyle}
+                  />
+                </div>
+                <div>
+                  <label style={microLabel}>Email</label>
+                  <input
+                    type="email"
+                    value={p.email}
+                    onChange={(e) => update(idx, 'email', e.target.value)}
+                    placeholder="name@example.com"
+                    style={fieldStyle}
+                  />
+                </div>
+              </div>
             </div>
           ))}
         </div>
       )}
       <button
         type="button"
-        onClick={() => onChange([...names, ''])}
+        onClick={() => onChange([...people, emptyContact()])}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: '8px',
           padding: '8px 20px', borderRadius: '6px',
@@ -156,7 +304,7 @@ function WitnessFields({ names, onChange }: { names: string[]; onChange: (names:
           color: '#4A6FA5', fontWeight: 500, cursor: 'pointer',
         }}
       >
-        <Plus className="h-4 w-4" /> Add Witness
+        <Plus className="h-4 w-4" /> {addLabel}
       </button>
     </div>
   );
@@ -229,9 +377,49 @@ function TagFields({ tags, onChange }: { tags: string[]; onChange: (tags: string
 }
 
 export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
-  const [incidentCategory] = useState<'student'>('student');
+  // null until the reporter picks a subject
+  const [incidentCategory, setIncidentCategory] = useState<IncidentSubject | null>(null);
+  // Whether the chooser is on screen. Deliberately separate from
+  // incidentCategory: going back to the chooser must NOT clear the current
+  // subject, otherwise re-picking the same one looks like a no-op to the
+  // reporter but silently wipes what they had already entered.
+  const [showChooser, setShowChooser] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Steps for the chosen subject. Empty while the chooser is up, which makes
+  // every step gate below false and leaves only the chooser rendered.
+  const steps = incidentCategory && !showChooser ? STEP_DEFS[incidentCategory] : [];
+  const stepKey = steps[currentStep - 1]?.key;
+  const isLastStep = currentStep >= steps.length;
+
+  const goNext = () => setCurrentStep(s => Math.min(s + 1, steps.length));
+  const goBack = () => setCurrentStep(s => Math.max(s - 1, 1));
+  const goToStep = (key: StepKey) => {
+    const idx = steps.findIndex(s => s.key === key);
+    if (idx >= 0) setCurrentStep(idx + 1);
+  };
+
+  const chooseSubject = (subject: IncidentSubject) => {
+    // Re-picking the current subject is a pure cancel: keep everything.
+    if (subject === incidentCategory) {
+      setShowChooser(false);
+      return;
+    }
+    setIncidentCategory(subject);
+    setShowChooser(false);
+    setCurrentStep(1);
+    // Switching to a DIFFERENT subject invalidates the subject-specific answers,
+    // because the incident types, the people, and the asset all differ per
+    // subject. Shared answers (date, time, description, location, evidence) are
+    // deliberately kept.
+    setInvolvedStudents([]);
+    setPerStudentData({});
+    setExpandedStudents(new Set());
+    setInvolvedParties([]);
+    setSharedData(prev => ({ ...prev, incidentType: '', severity: '' }));
+    setAssetRef('');
+  };
 
   // Step 1: involved students
   const [involvedStudents, setInvolvedStudents] = useState<Student[]>([]);
@@ -242,8 +430,18 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
 
   // Step 2: shared incident data
   const [sharedData, setSharedData] = useState<SharedFormData>({
+    // Date defaults to today, since most reports are filed the same day. Time is
+    // deliberately left blank rather than defaulted, so the reporter states when
+    // it happened instead of accepting a clock reading they never looked at. A
+    // prefilled clock time on a report filed the next morning is wrong data that
+    // passes validation, which is worse than no value at all.
+    incidentDate: new Date().toISOString().slice(0, 10),
+    incidentTime: '',
     incidentType: '', severity: '', description: '', location: '',
-    bus: '', route: '', driver: '', witnessPresent: false, witnessNames: [], tags: [],
+    bus: '', route: '', driver: '',
+    witnessPresent: false, witnesses: [],
+    thirdPartyPresent: false, thirdParties: [],
+    tags: [],
   });
   const [locationCoordinates, setLocationCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [locationAddress, setLocationAddress] = useState('');
@@ -256,6 +454,36 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
   const [perStudentData, setPerStudentData] = useState<Record<string, PerStudentData>>({});
   const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
 
+  // Non-student subjects: the people involved (staff and thirdParty), and the
+  // affected facility or vehicle (facility and vehicle, which have no people).
+
+  const [involvedParties, setInvolvedParties] = useState<Party[]>([]);
+  const [newPartyName, setNewPartyName] = useState('');
+  const [assetRef, setAssetRef] = useState('');
+
+  const addParty = (partyType: 'employee' | 'thirdParty', name: string, partyId?: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (involvedParties.some(p => p.name === trimmed)) return;
+    setInvolvedParties(prev => [...prev, {
+      id: `party-${prev.length}-${trimmed}`,
+      partyType,
+      partyId,
+      name: trimmed,
+      role: 'Participant',
+      severityOverride: 'shared',
+      description: '',
+      actionTaken: '',
+      notes: '',
+    }]);
+    setNewPartyName('');
+  };
+
+  const removeParty = (id: string) => setInvolvedParties(prev => prev.filter(p => p.id !== id));
+
+  const updateParty = (id: string, field: keyof Party, value: string) =>
+    setInvolvedParties(prev => prev.map(p => (p.id === id ? { ...p, [field]: value } : p)));
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (studentSearchRef.current && !studentSearchRef.current.contains(e.target as Node)) setStudentSearchOpen(false);
@@ -263,6 +491,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
 
   const addStudent = (student: Student) => {
     if (!involvedStudents.find(s => s.id === student.id)) {
@@ -316,6 +545,26 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
     const sharedSeverity = cap(sharedData.severity);
     const today = new Date().toISOString().slice(0, 10);
     const createdBy = sharedData.driver || 'Current User';
+    // The occurrence date and time come from the reporter. `today` is only the
+    // filing stamp, kept separately so the two are never conflated.
+    const occurredDate = sharedData.incidentDate || today;
+
+    const subject: IncidentSubject = incidentCategory ?? 'student';
+    const isStudent = subject === 'student';
+
+    // Build the per-party records for non-student incidents. Deliberately the
+    // same shape as involvedStudents so the detail page renders both with one
+    // pattern.
+    const parties = involvedParties.map(p => ({
+      partyType: p.partyType,
+      ...(p.partyId ? { partyId: p.partyId } : {}),
+      name: p.name,
+      role: p.role,
+      severity: p.severityOverride !== 'shared' ? p.severityOverride : sharedSeverity,
+      description: p.description || '',
+      actionTaken: p.actionTaken || '',
+      notes: p.notes || '',
+    }));
 
     // Build the per-student records (role / severity / type override / notes)
     const involved = involvedStudents.map(stu => {
@@ -346,12 +595,18 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
     const first = involvedStudents[0];
     const newIncident: any = {
       id: newId,
-      date: today,
-      student: first?.name || '',
-      studentId: first?.id || '',
+      date: occurredDate,
+      time: sharedData.incidentTime,
+      // When the report was filed, as distinct from when the incident happened
+      reportedDate: today,
+      subject,
+      // Only student incidents carry the denormalized student fields. Emitting
+      // them as empty strings on a facility incident is what produces blank
+      // cells in every student column downstream.
+      ...(isStudent ? { student: first?.name || '', studentId: first?.id || '' } : {}),
       type: typeLabel,
       description: sharedData.description,
-      bus: sharedData.bus ? `Bus ${sharedData.bus.replace('bus-', '')}` : '',
+      bus: sharedData.bus ? `Bus ${sharedData.bus.replace('bus-', '')}` : (assetRequired && incidentCategory === 'vehicle' ? assetRef : ''),
       route: ROUTE_LABELS[sharedData.route] || sharedData.route || '',
       driver: sharedData.driver,
       severity: sharedSeverity,
@@ -359,12 +614,18 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
       createdBy,
       assignedTo: 'Sarah Williams',
       location: sharedData.location,
+      ...(assetRef ? { assetRef } : {}),
       ...(locationCoordinates ? { locationCoordinates } : {}),
       ...(locationAddress ? { locationAddress } : {}),
       witnessPresent: sharedData.witnessPresent,
-      witnessNames: sharedData.witnessNames.filter(Boolean),
+      witnessNames: normalizeContacts(sharedData.witnesses).map(c => c.name),
+      witnesses: normalizeContacts(sharedData.witnesses),
+      thirdPartyPresent: sharedData.thirdPartyPresent,
+      thirdPartyNames: normalizeContacts(sharedData.thirdParties).map(c => c.name),
+      thirdParties: normalizeContacts(sharedData.thirdParties),
       tags: sharedData.tags,
-      involvedStudents: involved,
+      ...(isStudent ? { involvedStudents: involved } : {}),
+      ...(parties.length ? { involvedParties: parties } : {}),
       ...(uploadedPhotos.length
         ? { photos: uploadedPhotos.map(p => ({ id: p.id, url: p.url, thumbnail: p.url, uploadedBy: createdBy, uploadedAt: today, caption: p.name })) }
         : {}),
@@ -386,8 +647,129 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
       && !involvedStudents.find(added => added.id === s.id)
   );
 
+  // Incident types for the chosen subject, flat and alphabetical. Categories
+  // still exist on the type records and are used elsewhere (Admin, reporting),
+  // they are just not used to group this dropdown.
+  const sortedTypesForSubject = incidentCategory
+    ? getIncidentTypesForCategory(incidentCategory)
+        .slice()
+        .sort((a, b) => a.label.localeCompare(b.label))
+    : [];
+
+  // Non-student incidents happen in places a student incident never does, so
+  // they get the wider list that includes the FACILITY group.
+  const activeLocationOptions =
+    incidentCategory && incidentCategory !== 'student' ? DRIVER_LOCATION_OPTIONS : LOCATION_OPTIONS;
+
+  // Incident Type is defined once and placed in one of two spots depending on
+  // subject: in the top row with date and time normally, or beside Affected
+  // Facility on a facility incident. Defined here so the two placements cannot
+  // drift apart.
+  const incidentTypeField = (
+    <div>
+      <Label style={{ fontFamily: 'Roboto, sans-serif' }}>
+        Incident Type <span style={{ color: 'var(--forge-theme-error)' }}>*</span>
+      </Label>
+      {/* @ts-ignore */}
+      <forge-text-field>
+        <select
+          value={sharedData.incidentType}
+          onChange={(e) => {
+            const t = INCIDENT_TYPES.find(t => t.id === e.target.value);
+            setSharedData(s => ({ ...s, incidentType: e.target.value, severity: t?.defaultSeverity.toLowerCase() || '' }));
+          }}
+          required
+          /* The full type description is a tooltip rather than visible copy.
+             Rendered inline it wrapped to five lines in a narrow column and
+             shoved the rest of the row down. */
+          title={INCIDENT_TYPES.find(t => t.id === sharedData.incidentType)?.description || undefined}
+          style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
+        >
+          <option value="">Select type...</option>
+          {/* Flat alphabetical: already filtered to the subject, so category
+              headers only added rows to scan. */}
+          {sortedTypesForSubject.map(t => (
+            <option key={t.id} value={t.id}>{t.label}</option>
+          ))}
+        </select>
+      </forge-text-field>
+    </div>
+  );
+
+  const dateField = (
+    <div>
+      <Label style={{ fontFamily: 'Roboto, sans-serif' }}>
+        Date <span style={{ color: 'var(--forge-theme-error)' }}>*</span>
+      </Label>
+      {/* @ts-ignore */}
+      <forge-text-field>
+        <input
+          type="date"
+          value={sharedData.incidentDate}
+          max={new Date().toISOString().slice(0, 10)}
+          onChange={(e) => setSharedData(s => ({ ...s, incidentDate: e.target.value }))}
+          required
+          style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
+        />
+      </forge-text-field>
+      <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', marginTop: 4 }}>
+        When the incident occurred, not when you are filing it.
+      </p>
+    </div>
+  );
+
+  const timeField = (
+    <div>
+      <Label style={{ fontFamily: 'Roboto, sans-serif' }}>
+        Time <span style={{ color: 'var(--forge-theme-error)' }}>*</span>
+      </Label>
+      {/* @ts-ignore */}
+      <forge-text-field>
+        <input
+          type="time"
+          value={sharedData.incidentTime}
+          onChange={(e) => setSharedData(s => ({ ...s, incidentTime: e.target.value }))}
+          required
+          style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
+        />
+      </forge-text-field>
+      <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', marginTop: 4 }}>
+        Approximate is fine if the exact time is unknown.
+      </p>
+    </div>
+  );
+
+  // Flattened and alphabetised for the Location Type dropdown. The grouped
+  // structure above is still what defines which locations apply per subject.
+  const sortedLocationOptions = activeLocationOptions
+    .flatMap(g => g.items)
+    .slice()
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  // Facility and vehicle incidents must name the affected asset, since they may
+  // carry no people at all and would otherwise be unidentifiable in the list.
+  const assetRequired = incidentCategory === 'facility' || incidentCategory === 'vehicle';
+  const detailsIncomplete =
+    !sharedData.incidentDate ||
+    !sharedData.incidentTime ||
+    !sharedData.incidentType ||
+    !sharedData.severity ||
+    !sharedData.description ||
+    !sharedData.location ||
+    (assetRequired && !assetRef);
+
+  // Render a 24-hour time value as 12-hour for display, e.g. "14:05" to "2:05 PM"
+  const formatTime = (value: string) => {
+    if (!value) return '';
+    const [h, m] = value.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return value;
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 === 0 ? 12 : h % 12;
+    return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+  };
+
   const getLocationLabel = (value: string) => {
-    for (const group of LOCATION_OPTIONS) {
+    for (const group of DRIVER_LOCATION_OPTIONS) {
       const item = group.items.find(i => i.value === value);
       if (item) return item.label;
     }
@@ -396,7 +778,40 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
 
   const getIncidentTypeLabel = (id: string) => INCIDENT_TYPES.find(t => t.id === id)?.label || id;
 
-  // ── Student incident 4-step wizard ──────────────────────────────────────────
+  // Whether the reporter has actually put anything in yet. Used to decide
+  // whether changing the subject is worth warning about.
+  const hasEnteredData =
+    involvedStudents.length > 0 ||
+    involvedParties.length > 0 ||
+    !!sharedData.incidentType ||
+    !!sharedData.severity ||
+    !!sharedData.incidentTime ||
+    !!sharedData.description ||
+    !!sharedData.location ||
+    !!sharedData.bus ||
+    !!sharedData.route ||
+    !!sharedData.driver ||
+    !!assetRef ||
+    normalizeContacts(sharedData.witnesses).length > 0 ||
+    normalizeContacts(sharedData.thirdParties).length > 0 ||
+    sharedData.tags.length > 0 ||
+    uploadedPhotos.length > 0 ||
+    uploadedDocuments.length > 0;
+
+  // How many records the success banner should claim. Student and staff/third
+  // party incidents create one per person; facility and vehicle create one.
+  // Submitting always creates exactly ONE incident record. The people are
+   // associated to it; they are not separate incidents. This phrase describes
+   // who is attached, for the success message.
+  const associatedSummary = incidentCategory === 'student'
+    ? (involvedStudents.length
+        ? `${involvedStudents.length} student${involvedStudents.length !== 1 ? 's' : ''} associated`
+        : '')
+    : (involvedParties.length
+        ? `${involvedParties.length} ${involvedParties.length === 1 ? 'person' : 'people'} associated`
+        : '');
+
+  // ── Subject chooser, then a step count derived from the chosen subject ──────
 
   return (
     <div>
@@ -404,13 +819,148 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
         <Alert className="mb-6 bg-green-50 border-green-200">
           <AlertCircle className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800" style={{ fontFamily: 'Roboto, sans-serif' }}>
-            {involvedStudents.length} incident record{involvedStudents.length !== 1 ? 's' : ''} created and linked successfully! Supervisor has been notified.
+            Incident created successfully{associatedSummary ? ` with ${associatedSummary}` : ''}. Supervisor has been notified.
           </AlertDescription>
         </Alert>
       )}
 
+      {/* ── Subject chooser: which kind of incident is this? ── */}
+      {showChooser && (
+        <ForgeCard style={{ border: 'none', boxShadow: 'none' }}>
+          <div style={{ padding: 'var(--forge-spacing-medium)' }}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif' }}>What kind of incident is this?</h3>
+                <p className="forge-typography--body2" style={{ color: 'var(--forge-theme-text-medium)', fontFamily: 'Roboto, sans-serif' }}>
+                  Choose the subject of the incident. This determines which details you are asked for.
+                </p>
+              </div>
+              {/* Escape hatch. Without this, opening the chooser by accident
+                  strands the reporter with no way back to what they had. */}
+              {incidentCategory && (
+                <ForgeButton
+                  type="button"
+                  variant="outlined"
+                  onClick={() => setShowChooser(false)}
+                  style={{ fontFamily: 'Roboto, sans-serif', flexShrink: 0 }}
+                >
+                  <ChevronLeft className="h-4 w-4" /> Keep {getSubjectLabel(incidentCategory)}
+                </ForgeButton>
+              )}
+            </div>
+
+            {incidentCategory && hasEnteredData && (
+              <Alert className="mt-4 bg-amber-50 border-amber-200">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800" style={{ fontFamily: 'Roboto, sans-serif' }}>
+                  You have already started this report. Picking a <strong>different</strong> subject clears the incident
+                  type, the people involved, and the affected asset, because those differ by subject. Your date, time,
+                  description, location, and attachments are kept.
+                  {' '}Choosing <strong>{getSubjectLabel(incidentCategory)}</strong> again, or using Keep {getSubjectLabel(incidentCategory)},
+                  leaves everything exactly as it is.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+          <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
+            {/* All five subjects on one row so the whole choice is visible at
+                once without scanning a wrapped grid. Five columns hold from
+                640px up, rather than dropping to two, because two columns made
+                each card enormously wide for two words of copy. The pixel cap
+                keeps cards from stretching on a wide dialog; font sizes are
+                unchanged, only the card width. */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 max-w-[820px] mx-auto">
+              {INCIDENT_SUBJECTS.map(subject => {
+                const iconName = SUBJECT_ICONS[subject.value];
+                const isCurrent = subject.value === incidentCategory;
+                return (
+                  <button
+                    key={subject.value}
+                    type="button"
+                    onClick={() => chooseSubject(subject.value)}
+                    className="group relative p-4 border-2 rounded-lg hover:border-primary transition-all bg-white hover:bg-primary/5 h-full"
+                    style={{
+                      borderColor: isCurrent ? '#4A6FA5' : 'var(--forge-color-border-default)',
+                      background: isCurrent ? '#F4F7FB' : '#fff',
+                      borderRadius: 'var(--forge-radius-large)',
+                    }}
+                  >
+                    {isCurrent && (
+                      <span
+                        style={{
+                          position: 'absolute', top: 8, right: 8,
+                          fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)',
+                          fontWeight: 500, color: '#4A6FA5',
+                        }}
+                      >
+                        Current
+                      </span>
+                    )}
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <div
+                        className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                        style={{ background: '#EEF2F8' }}
+                      >
+                        {/* @ts-ignore */}
+                        <forge-icon name={iconName} style={{ fontSize: '28px', color: '#4A6FA5' }}></forge-icon>
+                      </div>
+                      <div>
+                        <h3
+                          className="font-semibold mb-1"
+                          style={{
+                            fontFamily: 'Roboto, sans-serif',
+                            fontSize: 'var(--text-base)',
+                            fontWeight: 'var(--font-weight-semibold)',
+                          }}
+                        >
+                          {subject.label}
+                        </h3>
+                        <p
+                          className="text-muted-foreground"
+                          style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', lineHeight: 1.4 }}
+                        >
+                          {subject.description}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </ForgeCard>
+      )}
+
       {/* Forge Stepper */}
+      {incidentCategory && !showChooser && (
       <div className="mb-6">
+        {/* pt-4 so this row clears the dialog header's bottom border rather than
+            sitting right on top of it. The change control sits immediately after
+            the chip, not floated to the far right, so it reads as belonging to
+            the subject it changes. */}
+        <div className="flex items-center gap-2 pt-4 mb-4">
+          <span className="forge-typography--body2" style={{ color: 'var(--forge-theme-text-medium)', fontFamily: 'Roboto, sans-serif' }}>
+            Subject:
+          </span>
+          <Badge variant="secondary" style={{ fontFamily: 'Roboto, sans-serif' }}>
+            {getSubjectLabel(incidentCategory)}
+          </Badge>
+          <button
+            type="button"
+            onClick={() => setShowChooser(true)}
+            title="Go back to the subject chooser. Nothing is lost unless you pick a different subject."
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              marginLeft: 4, padding: '2px 8px',
+              background: 'none', border: '1px solid var(--forge-color-border-default)',
+              borderRadius: 'var(--forge-radius-medium)', cursor: 'pointer',
+              fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)',
+              color: 'var(--forge-theme-text-medium)',
+            }}
+          >
+            <ChevronLeft className="h-3 w-3" /> Change
+          </button>
+        </div>
         {/* @ts-ignore */}
         <forge-stepper
           selected-index={currentStep - 1}
@@ -418,13 +968,14 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
           layout-mode="fixed"
           style={{ width: '100%' }}
         >
-          {STEPS.map((step) => {
-            const isDone = currentStep > step.number;
-            const isActive = currentStep === step.number;
+          {steps.map((step, idx) => {
+            const number = idx + 1;
+            const isDone = currentStep > number;
+            const isActive = currentStep === number;
             return (
               // @ts-ignore
               <forge-step
-                key={step.number}
+                key={step.key}
                 completed={isDone ? 'true' : undefined}
                 editable={isDone ? 'true' : undefined}
                 selected={isActive ? 'true' : undefined}
@@ -436,9 +987,10 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
         {/* @ts-ignore */}
         </forge-stepper>
       </div>
+      )}
 
       {/* ── Step 1: Involved Students ── */}
-      {currentStep === 1 && (
+      {stepKey === 'parties' && incidentCategory === 'student' && (
         <ForgeCard style={{ border: 'none', boxShadow: 'none' }}>
           <div style={{ padding: 'var(--forge-spacing-medium)' }}>
             <div className="flex items-start gap-3 mb-1">
@@ -448,7 +1000,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
               <div>
                 <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', marginBottom: 2 }}>Involved Students</h3>
                 <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)' }}>
-                  Add all students involved in this incident. A separate incident record will be created for each student, linked together as a group.
+                  Add all students involved. They are all associated with this one incident, each with their own role and details.
                 </p>
               </div>
             </div>
@@ -557,7 +1109,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
             <button
               type="button"
               disabled={involvedStudents.length === 0}
-              onClick={() => setCurrentStep(2)}
+              onClick={goNext}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                 padding: '0 20px', height: '38px',
@@ -573,115 +1125,409 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
         </ForgeCard>
       )}
 
-      {/* ── Step 2: Incident Details ── */}
-      {currentStep === 2 && (
+      {/* ── Step: Involved People (staff and third party) ── */}
+      {stepKey === 'parties' && incidentCategory && incidentCategory !== 'student' && (
+        <ForgeCard style={{ border: 'none', boxShadow: 'none' }}>
+          <div style={{ padding: 'var(--forge-spacing-medium)' }}>
+            <div className="flex items-start gap-3 mb-1">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#EEF2F8' }}>
+                <Users className="w-5 h-5" style={{ color: '#4A6FA5' }} />
+              </div>
+              <div>
+                <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', marginBottom: 4 }}>
+                  {incidentCategory === 'staff' ? 'Involved Employees' : 'Involved People'}
+                </h3>
+                <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)' }}>
+                  {incidentCategory === 'staff'
+                    ? 'Add each employee involved. Their individual account and any action taken is captured on the next step.'
+                    : 'Add each person outside the district involved, such as another motorist, a parent, or a member of the public.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Add a person */}
+            <div className="mt-5">
+              {incidentCategory === 'staff' ? (
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Employee</Label>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const drv = mockDrivers.find((d: any) => d.id === e.target.value);
+                        if (drv) addParty('employee', drv.fullName, drv.id);
+                      }}
+                      style={{
+                        fontFamily: 'var(--forge-font-family)',
+                        fontSize: 'var(--forge-font-size-base)',
+                        width: '100%',
+                        padding: 'var(--forge-spacing-small)',
+                        borderRadius: 'var(--forge-radius-medium)',
+                        border: '1px solid var(--border)',
+                        background: 'var(--input-background)',
+                      }}
+                    >
+                      <option value="">Select an employee to add...</option>
+                      {mockDrivers
+                        .filter((d: any) => !involvedParties.some(p => p.partyId === d.id))
+                        .map((d: any) => (
+                          <option key={d.id} value={d.id}>{d.fullName} ({d.employeeId})</option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Name or description</Label>
+                    <input
+                      type="text"
+                      value={newPartyName}
+                      onChange={(e) => setNewPartyName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addParty('thirdParty', newPartyName); } }}
+                      placeholder="e.g. Unnamed motorist (grey sedan), or a parent's name"
+                      style={{
+                        fontFamily: 'var(--forge-font-family)',
+                        fontSize: 'var(--forge-font-size-base)',
+                        width: '100%',
+                        padding: 'var(--forge-spacing-small)',
+                        borderRadius: 'var(--forge-radius-medium)',
+                        border: '1px solid var(--border)',
+                        background: 'var(--input-background)',
+                      }}
+                    />
+                  </div>
+                  <ForgeButton
+                    type="button"
+                    variant="outlined"
+                    onClick={() => addParty('thirdParty', newPartyName)}
+                    style={{ fontFamily: 'Roboto, sans-serif' }}
+                  >
+                    <Plus className="h-4 w-4" /> Add
+                  </ForgeButton>
+                </div>
+              )}
+            </div>
+
+            {/* Current roster */}
+            <div className="mt-5 space-y-2">
+              {involvedParties.length === 0 ? (
+                <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)' }}>
+                  No one added yet. Add at least one person to continue.
+                </p>
+              ) : (
+                involvedParties.map((p, idx) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border"
+                    style={{ borderColor: 'var(--forge-color-border-default)', borderRadius: 'var(--forge-radius-medium)' }}
+                  >
+                    <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', minWidth: 20, textAlign: 'center' }}>{idx + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 500 }}>{p.name}</p>
+                      <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)' }}>
+                        {p.partyType === 'employee' ? 'Employee' : 'Third party'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeParty(p.id)}
+                      aria-label={`Remove ${p.name}`}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--forge-theme-text-medium)' }}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end p-4 border-t" style={{ borderColor: 'var(--forge-color-border-subtle)' }}>
+            <button
+              type="button"
+              disabled={involvedParties.length === 0}
+              onClick={goNext}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                padding: '0 20px', height: '38px',
+                background: involvedParties.length === 0 ? '#9BAEC8' : '#4A6FA5',
+                color: '#fff', border: 'none', borderRadius: '4px',
+                fontFamily: 'Roboto, sans-serif', fontSize: '14px', fontWeight: 500,
+                cursor: involvedParties.length === 0 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Next: Incident Details <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </ForgeCard>
+      )}
+
+      {/* ── Step: Incident Details ── */}
+      {stepKey === 'details' && (
         <ForgeCard style={{ border: 'none', boxShadow: 'none' }}>
           <div style={{ padding: 'var(--forge-spacing-medium)' }}>
             <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', marginBottom: 4 }}>Incident Details</h3>
             <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)', marginBottom: 'var(--forge-spacing-medium)' }}>
-              These details apply to all {involvedStudents.length} student{involvedStudents.length !== 1 ? 's' : ''}. You can customize per-student details in the next step.
+              {incidentCategory === 'student' && (
+                <>These details apply to all {involvedStudents.length} student{involvedStudents.length !== 1 ? 's' : ''}. You can customize per-student details in the next step.</>
+              )}
+              {(incidentCategory === 'staff' || incidentCategory === 'thirdParty') && (
+                <>These details apply to all {involvedParties.length} {involvedParties.length === 1 ? 'person' : 'people'}. You can customize per-person details in the next step.</>
+              )}
+              {incidentCategory === 'facility' && 'Describe what happened and name the facility affected.'}
+              {incidentCategory === 'vehicle' && 'Describe what happened and name the vehicle affected.'}
             </p>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Incident Type *</Label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select
-                      value={sharedData.incidentType}
-                      onChange={(e) => {
-                        const t = INCIDENT_TYPES.find(t => t.id === e.target.value);
-                        setSharedData(s => ({ ...s, incidentType: e.target.value, severity: t?.defaultSeverity.toLowerCase() || '' }));
-                      }}
-                      required
-                      style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
-                    >
-                      <option value="">Select type...</option>
-                      {getAllCategories().map(cat => {
-                        const types = INCIDENT_TYPES.filter(t => t.category === cat && (t.applicableTo === 'student' || t.applicableTo === 'both')).sort((a, b) => a.label.localeCompare(b.label));
-                        if (!types.length) return null;
-                        return <optgroup key={cat} label={cat}>{types.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}</optgroup>;
-                      })}
-                    </select>
-                  </forge-text-field>
-                  {sharedData.incidentType && (
-                    <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', marginTop: 4 }}>
-                      {INCIDENT_TYPES.find(t => t.id === sharedData.incidentType)?.description}
-                    </p>
+            {/* ── Page split in two ────────────────────────────────────────
+                Left half is the factual record, laid out in three columns.
+                Right half is the assessment and the location: severity, the
+                location type, and the pinned map. */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4 items-start">
+
+              {/* ── LEFT 50%: three-column field grid ── */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+
+                {/* First row of fields. Facility incidents move Incident Type
+                    down beside Affected Facility, which would leave a third
+                    column empty here, so date and time split the row 50/50
+                    instead of sitting in two thirds of a three-column grid. */}
+                {incidentCategory === 'facility' ? (
+                  <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                    {dateField}
+                    {timeField}
+                  </div>
+                ) : (
+                  <>
+                    {dateField}
+                    {timeField}
+                    {incidentTypeField}
+                  </>
+                )}
+
+                {/* The affected asset, the vehicle, and the driver share one
+                    row group. On a vehicle incident the Vehicle Number field is
+                    omitted entirely: Affected Vehicle already captures it, so
+                    asking twice invites the two to disagree. That leaves
+                    Affected Vehicle and Driver side by side. */}
+                <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                  {/* Facility incidents get Incident Type here, immediately to
+                      the left of the facility it applies to. */}
+                  {incidentCategory === 'facility' && incidentTypeField}
+
+                  {(incidentCategory === 'facility' || incidentCategory === 'vehicle') && (
+                    <div>
+                      <Label style={{ fontFamily: 'Roboto, sans-serif' }}>
+                        {incidentCategory === 'facility' ? 'Affected Facility' : 'Affected Vehicle'} <span style={{ color: 'var(--forge-theme-error)' }}>*</span>
+                      </Label>
+                      {/* @ts-ignore */}
+                      <forge-text-field>
+                        <select
+                          value={assetRef}
+                          onChange={(e) => setAssetRef(e.target.value)}
+                          required
+                          style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
+                        >
+                          <option value="">
+                            {incidentCategory === 'facility' ? 'Select facility...' : 'Select vehicle...'}
+                          </option>
+                          {incidentCategory === 'facility'
+                            ? mockFacilities.map(f => <option key={f.id} value={f.name}>{f.name}</option>)
+                            : mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
+                        </select>
+                      </forge-text-field>
+                    </div>
                   )}
+
+                  {incidentCategory !== 'vehicle' && (
+                    <div>
+                      <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Vehicle Number</Label>
+                      {/* @ts-ignore */}
+                      <forge-text-field>
+                        <select value={sharedData.bus} onChange={(e) => setSharedData(s => ({ ...s, bus: e.target.value }))} style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}>
+                          <option value="">Optional...</option>
+                          {['bus-12', 'bus-15', 'bus-22', 'bus-31', 'bus-8'].map(b => <option key={b} value={b}>Vehicle {b.replace('bus-', '')}</option>)}
+                        </select>
+                      </forge-text-field>
+                    </div>
+                  )}
+
+                  <div>
+                    <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Driver</Label>
+                    {/* @ts-ignore */}
+                    <forge-text-field>
+                      <select
+                        value={sharedData.driver}
+                        onChange={(e) => setSharedData(s => ({ ...s, driver: e.target.value }))}
+                        style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
+                      >
+                        <option value="">Optional...</option>
+                        {mockDrivers
+                          .filter(d => d.status === 'Active')
+                          .sort((a, b) => a.fullName.localeCompare(b.fullName))
+                          .map(d => (
+                            <option key={d.id} value={d.fullName}>{d.fullName}</option>
+                          ))}
+                      </select>
+                    </forge-text-field>
+                  </div>
                 </div>
 
-                <div>
-                  <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Location *</Label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select
-                      value={sharedData.location}
-                      onChange={(e) => setSharedData(s => ({ ...s, location: e.target.value }))}
-                      required
-                      style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
-                    >
-                      <option value="">Select location...</option>
-                      {LOCATION_OPTIONS.map(g => (
-                        <optgroup key={g.category} label={g.category}>
-                          {g.items.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}
-                        </optgroup>
-                      ))}
-                    </select>
-                  </forge-text-field>
-                </div>
+                {/* Run and Location Type share the next row. Location Type lives
+                    here with the other record fields rather than out beside the
+                    map, so the map can stand on its own. */}
+                <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                  <div>
+                    <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Run</Label>
+                    {/* @ts-ignore */}
+                    <forge-text-field>
+                      <select value={sharedData.route} onChange={(e) => setSharedData(s => ({ ...s, route: e.target.value }))} style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}>
+                        <option value="">Optional...</option>
+                        <option value="colonie-high-am-purple">Colonie High AM - Purple</option>
+                        <option value="jefferson-middle-am-blue">Jefferson Middle AM - Blue</option>
+                        <option value="lincoln-elem-am-green">Lincoln Elementary AM - Green</option>
+                        <option value="meyers-middle-am-yellow">Meyers Middle AM - Yellow</option>
+                        <option value="roosevelt-high-pm-red">Roosevelt High PM - Red</option>
+                        <option value="washington-high-pm-wolf">Washington High PM - Wolf Rd</option>
+                      </select>
+                    </forge-text-field>
+                  </div>
 
-                <div>
-                  <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Vehicle Number</Label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select value={sharedData.bus} onChange={(e) => setSharedData(s => ({ ...s, bus: e.target.value }))} style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}>
-                      <option value="">Select vehicle (optional)...</option>
-                      {['bus-12', 'bus-15', 'bus-22', 'bus-31', 'bus-8'].map(b => <option key={b} value={b}>Vehicle {b.replace('bus-', '')}</option>)}
-                    </select>
-                  </forge-text-field>
-                </div>
-
-                <div>
-                  <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Run</Label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select value={sharedData.route} onChange={(e) => setSharedData(s => ({ ...s, route: e.target.value }))} style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}>
-                      <option value="">Select run (optional)...</option>
-                      <option value="colonie-high-am-purple">Colonie High AM - Purple</option>
-                      <option value="jefferson-middle-am-blue">Jefferson Middle AM - Blue</option>
-                      <option value="lincoln-elem-am-green">Lincoln Elementary AM - Green</option>
-                      <option value="meyers-middle-am-yellow">Meyers Middle AM - Yellow</option>
-                      <option value="roosevelt-high-pm-red">Roosevelt High PM - Red</option>
-                      <option value="washington-high-pm-wolf">Washington High PM - Wolf Rd</option>
-                    </select>
-                  </forge-text-field>
-                  <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', marginTop: 4 }}>Leave blank if incident occurred outside of a run</p>
-                </div>
-
-                <div>
-                  <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Driver</Label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select
-                      value={sharedData.driver}
-                      onChange={(e) => setSharedData(s => ({ ...s, driver: e.target.value }))}
-                      style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
-                    >
-                      <option value="">Select driver (optional)...</option>
-                      {mockDrivers
-                        .filter(d => d.status === 'Active')
-                        .sort((a, b) => a.fullName.localeCompare(b.fullName))
-                        .map(d => (
-                          <option key={d.id} value={d.fullName}>{d.fullName}</option>
+                  <div>
+                    <Label style={{ fontFamily: 'Roboto, sans-serif' }}>
+                      Location Type <span style={{ color: 'var(--forge-theme-error)' }}>*</span>
+                    </Label>
+                    {/* @ts-ignore */}
+                    <forge-text-field>
+                      <select
+                        value={sharedData.location}
+                        onChange={(e) => setSharedData(s => ({ ...s, location: e.target.value }))}
+                        required
+                        style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
+                      >
+                        <option value="">Select location...</option>
+                        {/* Flat alphabetical. The category headers (ON ROUTE,
+                            FACILITY, ...) added rows to scan without narrowing
+                            anything down, same as the incident type list. */}
+                        {sortedLocationOptions.map(i => (
+                          <option key={i.value} value={i.value}>{i.label}</option>
                         ))}
-                    </select>
-                  </forge-text-field>
+                      </select>
+                    </forge-text-field>
+                  </div>
                 </div>
 
+                {/* Description spans all three columns. */}
+                <div className="sm:col-span-3">
+                  <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Incident Description <span style={{ color: 'var(--forge-theme-error)' }}>*</span></Label>
+                  <Textarea
+                    placeholder="Provide a detailed description of what occurred. Include time, specific behaviors, and any relevant context..."
+                    rows={12}
+                    value={sharedData.description}
+                    onChange={(e) => setSharedData(s => ({ ...s, description: e.target.value }))}
+                    style={{ fontFamily: 'Roboto, sans-serif' }}
+                  />
+                </div>
+
+                {/* Who else was there. Two across rather than three, because the
+                    contact cards need the width. */}
+                <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="witnessPresent" checked={sharedData.witnessPresent} onCheckedChange={(v) => setSharedData(s => ({ ...s, witnessPresent: v as boolean }))} />
+                      <Label htmlFor="witnessPresent" className="cursor-pointer" style={{ fontFamily: 'Roboto, sans-serif' }}>Witness(es) present</Label>
+                    </div>
+                    {sharedData.witnessPresent && (
+                      <div className="mt-3">
+                        <PersonContactFields
+                          people={sharedData.witnesses}
+                          onChange={(witnesses) => setSharedData(s => ({ ...s, witnesses }))}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="thirdPartyPresent" checked={sharedData.thirdPartyPresent} onCheckedChange={(v) => setSharedData(s => ({ ...s, thirdPartyPresent: v as boolean }))} />
+                      <Label htmlFor="thirdPartyPresent" className="cursor-pointer" style={{ fontFamily: 'Roboto, sans-serif' }}>Third part(ies) involved</Label>
+                    </div>
+                    {sharedData.thirdPartyPresent && (
+                      <div className="mt-2">
+                        <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', marginBottom: 8 }}>
+                          Anyone outside the district who was involved, such as another motorist, a parent or guardian, a pedestrian, or a member of the public.
+                        </p>
+                        <PersonContactFields
+                          people={sharedData.thirdParties}
+                          onChange={(thirdParties) => setSharedData(s => ({ ...s, thirdParties }))}
+                          personLabel="Third Party"
+                          addLabel="Add Third Party"
+                          removeLabel="Remove third party"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tags spans the row: the chips wrap and need the width. */}
+                <div className="sm:col-span-3">
+                  <Label style={{ fontFamily: 'Roboto, sans-serif', display: 'block', marginBottom: '8px' }}>Tags</Label>
+                  <TagFields
+                    tags={sharedData.tags}
+                    onChange={(tags) => setSharedData(s => ({ ...s, tags }))}
+                  />
+                </div>
+
+                {/* Both evidence uploads share a row, since each is just a
+                    button until something is attached. */}
+                <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                  <div>
+                    <h4 style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 500, marginBottom: 8 }}>Photo Evidence <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)', fontSize: 'var(--text-sm)' }}>(optional)</span></h4>
+                    <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" />
+                    <ForgeButton type="button" variant="outlined" onClick={() => fileInputRef.current?.click()} style={{ fontFamily: 'Roboto, sans-serif' }}>
+                      <Upload className="mr-2 h-4 w-4" /> Upload Photos
+                    </ForgeButton>
+                    {uploadedPhotos.length > 0 && (
+                      <div className="grid grid-cols-3 gap-3 mt-3">
+                        {uploadedPhotos.map(p => (
+                          <div key={p.id} className="relative group border rounded-lg overflow-hidden" style={{ borderColor: 'var(--forge-color-border-default)' }}>
+                            <div className="aspect-square"><img src={p.url} alt={p.name} className="w-full h-full object-cover" /></div>
+                            <button type="button" onClick={() => setUploadedPhotos(photos => photos.filter(x => x.id !== p.id))} className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <X className="h-3 w-3 text-white" />
+                            </button>
+                            <div className="p-1"><p className="text-xs truncate" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)' }} title={p.name}>{p.name}</p></div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 500, marginBottom: 8 }}>Document Evidence <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)', fontSize: 'var(--text-sm)' }}>(optional)</span></h4>
+                    <input ref={documentInputRef} type="file" accept=".pdf,.doc,.docx" multiple onChange={handleDocumentUpload} className="hidden" />
+                    <ForgeButton type="button" variant="outlined" onClick={() => documentInputRef.current?.click()} style={{ fontFamily: 'Roboto, sans-serif' }}>
+                      <Upload className="mr-2 h-4 w-4" /> Upload Documents
+                    </ForgeButton>
+                    {uploadedDocuments.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {uploadedDocuments.map(d => (
+                          <div key={d.id} className="flex items-center gap-2 px-3 py-2 border rounded-md" style={{ borderColor: 'var(--forge-color-border-default)' }}>
+                            <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)' }}>{d.name}</span>
+                            <button type="button" onClick={() => setUploadedDocuments(docs => docs.filter(x => x.id !== d.id))}><X className="h-3 w-3 text-muted-foreground" /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── RIGHT 50%: severity, location type, location pin ── */}
+              <div className="space-y-4">
+
                 <div>
-                  <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Severity Level *</Label>
+                  <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Severity Level <span style={{ color: 'var(--forge-theme-error)' }}>*</span></Label>
                   <div className="flex flex-wrap gap-3 mt-2">
                     {(['low', 'medium', 'high', 'critical'] as const).map(level => (
                       <button key={level} type="button" onClick={() => setSharedData(s => ({ ...s, severity: level }))}
@@ -696,115 +1542,46 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
                     ))}
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Incident Description *</Label>
-                <Textarea
-                  placeholder="Provide a detailed description of what occurred. Include time, specific behaviors, and any relevant context..."
-                  rows={5}
-                  value={sharedData.description}
-                  onChange={(e) => setSharedData(s => ({ ...s, description: e.target.value }))}
-                  style={{ fontFamily: 'Roboto, sans-serif' }}
+                {/* Map only, no surrounding border. The pin card already
+                    reads as its own block; wrapping it made it look nested. */}
+                <IncidentLocationMap
+                  location={locationCoordinates}
+                  onLocationChange={setLocationCoordinates}
+                  address={locationAddress}
+                  onAddressChange={setLocationAddress}
                 />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox id="witnessPresent" checked={sharedData.witnessPresent} onCheckedChange={(v) => setSharedData(s => ({ ...s, witnessPresent: v as boolean }))} />
-                <Label htmlFor="witnessPresent" className="cursor-pointer" style={{ fontFamily: 'Roboto, sans-serif' }}>Witness(es) present</Label>
-              </div>
-              {sharedData.witnessPresent && (
-                <WitnessFields
-                  names={sharedData.witnessNames}
-                  onChange={(names) => setSharedData(s => ({ ...s, witnessNames: names }))}
-                />
-              )}
-
-              <div>
-                <Label style={{ fontFamily: 'Roboto, sans-serif', display: 'block', marginBottom: '8px' }}>Tags</Label>
-                <TagFields
-                  tags={sharedData.tags}
-                  onChange={(tags) => setSharedData(s => ({ ...s, tags }))}
-                />
-              </div>
-
-              {/* Location map */}
-              <IncidentLocationMap
-                location={locationCoordinates}
-                onLocationChange={setLocationCoordinates}
-                address={locationAddress}
-                onAddressChange={setLocationAddress}
-              />
-
-              {/* Photo evidence */}
-              <div>
-                <h4 style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 500, marginBottom: 8 }}>Photo Evidence <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)', fontSize: 'var(--text-sm)' }}>(optional, shared across all records)</span></h4>
-                <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" />
-                <ForgeButton type="button" variant="outlined" onClick={() => fileInputRef.current?.click()} style={{ fontFamily: 'Roboto, sans-serif' }}>
-                  <Upload className="mr-2 h-4 w-4" /> Upload Photos
-                </ForgeButton>
-                {uploadedPhotos.length > 0 && (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
-                    {uploadedPhotos.map(p => (
-                      <div key={p.id} className="relative group border rounded-lg overflow-hidden" style={{ borderColor: 'var(--forge-color-border-default)' }}>
-                        <div className="aspect-square"><img src={p.url} alt={p.name} className="w-full h-full object-cover" /></div>
-                        <button type="button" onClick={() => setUploadedPhotos(photos => photos.filter(x => x.id !== p.id))} className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <X className="h-3 w-3 text-white" />
-                        </button>
-                        <div className="p-1"><p className="text-xs truncate" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)' }} title={p.name}>{p.name}</p></div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Document evidence */}
-              <div>
-                <h4 style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 500, marginBottom: 8 }}>Document Evidence <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)', fontSize: 'var(--text-sm)' }}>(optional)</span></h4>
-                <input ref={documentInputRef} type="file" accept=".pdf,.doc,.docx" multiple onChange={handleDocumentUpload} className="hidden" />
-                <ForgeButton type="button" variant="outlined" onClick={() => documentInputRef.current?.click()} style={{ fontFamily: 'Roboto, sans-serif' }}>
-                  <Upload className="mr-2 h-4 w-4" /> Upload Documents
-                </ForgeButton>
-                {uploadedDocuments.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {uploadedDocuments.map(d => (
-                      <div key={d.id} className="flex items-center gap-2 px-3 py-2 border rounded-md" style={{ borderColor: 'var(--forge-color-border-default)' }}>
-                        <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)' }}>{d.name}</span>
-                        <button type="button" onClick={() => setUploadedDocuments(docs => docs.filter(x => x.id !== d.id))}><X className="h-3 w-3 text-muted-foreground" /></button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
           <div className="flex justify-between p-4 border-t" style={{ borderColor: 'var(--forge-color-border-subtle)' }}>
-            <ForgeButton type="button" variant="outlined" onClick={() => setCurrentStep(1)} style={{ fontFamily: 'Roboto, sans-serif' }}>
-              ← Back
-            </ForgeButton>
+            {currentStep > 1 ? (
+              <ForgeButton type="button" variant="outlined" onClick={goBack} style={{ fontFamily: 'Roboto, sans-serif' }}>
+                ← Back
+              </ForgeButton>
+            ) : <span />}
             <button
               type="button"
-              disabled={!sharedData.incidentType || !sharedData.severity || !sharedData.description || !sharedData.location}
-              onClick={() => setCurrentStep(3)}
+              disabled={detailsIncomplete}
+              onClick={goNext}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                 padding: '0 20px', height: '38px',
-                background: (!sharedData.incidentType || !sharedData.severity || !sharedData.description || !sharedData.location) ? '#9BAEC8' : '#4A6FA5',
+                background: detailsIncomplete ? '#9BAEC8' : '#4A6FA5',
                 color: '#fff', border: 'none', borderRadius: '4px',
                 fontFamily: 'Roboto, sans-serif', fontSize: '14px', fontWeight: 500,
-                cursor: (!sharedData.incidentType || !sharedData.severity || !sharedData.description || !sharedData.location) ? 'not-allowed' : 'pointer',
+                cursor: detailsIncomplete ? 'not-allowed' : 'pointer',
               }}
             >
-              Next: Per-Student Details <ChevronRight className="h-4 w-4" />
+              Next: {steps[currentStep]?.label ?? 'Review'} <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         </ForgeCard>
       )}
 
-      {/* ── Step 3: Per-Student Details ── */}
-      {currentStep === 3 && (
+      {/* ── Step: Per-Student Details ── */}
+      {stepKey === 'perParty' && incidentCategory === 'student' && (
         <ForgeCard style={{ border: 'none', boxShadow: 'none' }}>
           <div style={{ padding: 'var(--forge-spacing-medium)' }}>
             <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', marginBottom: 4 }}>Per-Student Details</h3>
@@ -934,24 +1711,18 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
                                 style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
                               >
                                 <option value="">Use Shared ({sharedData.incidentType ? getIncidentTypeLabel(sharedData.incidentType) : 'not set'})</option>
-                                {getAllCategories().map(cat => {
-                                  const types = INCIDENT_TYPES.filter(t => t.category === cat && (t.applicableTo === 'student' || t.applicableTo === 'both')).sort((a, b) => a.label.localeCompare(b.label));
-                                  if (!types.length) return null;
-                                  return (
-                                    <optgroup key={cat} label={cat}>
-                                      {types.map(t => (
-                                        <option key={t.id} value={t.id}>
-                                          {t.label}{t.id === sharedData.incidentType ? ' (shared)' : ''}
-                                        </option>
-                                      ))}
-                                    </optgroup>
-                                  );
-                                })}
+                                {/* Flat alphabetical, matching the shared type
+                                    picker on the previous step. */}
+                                {sortedTypesForSubject.map(t => (
+                                  <option key={t.id} value={t.id}>
+                                    {t.label}{t.id === sharedData.incidentType ? ' (shared)' : ''}
+                                  </option>
+                                ))}
                               </select>
                             </forge-text-field>
                             {data.incidentTypeOverride && (
                               <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: '#4A6FA5', marginTop: 4 }}>
-                                {INCIDENT_TYPES.find(t => t.id === data.incidentTypeOverride)?.description}
+                                Overrides the shared type for this student.
                               </p>
                             )}
                           </div>
@@ -1013,12 +1784,12 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
           </div>
 
           <div className="flex justify-between p-4 border-t" style={{ borderColor: 'var(--forge-color-border-subtle)' }}>
-            <ForgeButton type="button" variant="outlined" onClick={() => setCurrentStep(2)} style={{ fontFamily: 'Roboto, sans-serif' }}>
+            <ForgeButton type="button" variant="outlined" onClick={goBack} style={{ fontFamily: 'Roboto, sans-serif' }}>
               ← Back
             </ForgeButton>
             <button
               type="button"
-              onClick={() => setCurrentStep(4)}
+              onClick={goNext}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                 padding: '0 20px', height: '38px',
@@ -1032,13 +1803,137 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
         </ForgeCard>
       )}
 
-      {/* ── Step 4: Review & Submit ── */}
-      {currentStep === 4 && (
+      {/* ── Step: Per-Person Details (staff and third party) ── */}
+      {stepKey === 'perParty' && incidentCategory && incidentCategory !== 'student' && (
+        <ForgeCard style={{ border: 'none', boxShadow: 'none' }}>
+          <div style={{ padding: 'var(--forge-spacing-medium)' }}>
+            <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', marginBottom: 4 }}>Per-Person Details</h3>
+            <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)', marginBottom: 'var(--forge-spacing-medium)' }}>
+              Record each person's role, their own account, and any action taken. Severity can differ per person.
+            </p>
+
+            <div className="space-y-4">
+              {involvedParties.map((p, idx) => (
+                <div
+                  key={p.id}
+                  className="p-4 rounded-lg border"
+                  style={{ borderColor: 'var(--forge-color-border-default)', borderRadius: 'var(--forge-radius-medium)' }}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', minWidth: 20, textAlign: 'center' }}>{idx + 1}</span>
+                    <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 500, flex: 1 }}>{p.name}</p>
+                    <Badge variant="outline" style={{ fontSize: 'var(--text-xs)' }}>
+                      {p.partyType === 'employee' ? 'Employee' : 'Third party'}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Role</Label>
+                      <select
+                        value={p.role}
+                        onChange={(e) => updateParty(p.id, 'role', e.target.value)}
+                        style={{
+                          fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)',
+                          width: '100%', padding: 'var(--forge-spacing-small)',
+                          borderRadius: 'var(--forge-radius-medium)', border: '1px solid var(--border)',
+                          background: 'var(--input-background)',
+                        }}
+                      >
+                        {PARTY_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Severity</Label>
+                      <select
+                        value={p.severityOverride}
+                        onChange={(e) => updateParty(p.id, 'severityOverride', e.target.value)}
+                        style={{
+                          fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)',
+                          width: '100%', padding: 'var(--forge-spacing-small)',
+                          borderRadius: 'var(--forge-radius-medium)', border: '1px solid var(--border)',
+                          background: 'var(--input-background)',
+                        }}
+                      >
+                        <option value="shared">Use shared ({sharedData.severity || 'not set'})</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Their account</Label>
+                    <Textarea
+                      value={p.description}
+                      onChange={(e) => updateParty(p.id, 'description', e.target.value)}
+                      placeholder="What this person said happened, in their words where possible"
+                      rows={2}
+                      style={{ fontFamily: 'Roboto, sans-serif' }}
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Action taken</Label>
+                    <Textarea
+                      value={p.actionTaken}
+                      onChange={(e) => updateParty(p.id, 'actionTaken', e.target.value)}
+                      placeholder="What was done at the scene or immediately after"
+                      rows={2}
+                      style={{ fontFamily: 'Roboto, sans-serif' }}
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Notes</Label>
+                    <Textarea
+                      value={p.notes}
+                      onChange={(e) => updateParty(p.id, 'notes', e.target.value)}
+                      placeholder="Anything else a reviewer should know"
+                      rows={2}
+                      style={{ fontFamily: 'Roboto, sans-serif' }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-between p-4 border-t" style={{ borderColor: 'var(--forge-color-border-subtle)' }}>
+            <ForgeButton type="button" variant="outlined" onClick={goBack} style={{ fontFamily: 'Roboto, sans-serif' }}>
+              ← Back
+            </ForgeButton>
+            <button
+              type="button"
+              onClick={goNext}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                padding: '0 20px', height: '38px',
+                background: '#4A6FA5', color: '#fff', border: 'none', borderRadius: '4px',
+                fontFamily: 'Roboto, sans-serif', fontSize: '14px', fontWeight: 500, cursor: 'pointer',
+              }}
+            >
+              Next: Review &amp; Submit <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </ForgeCard>
+      )}
+
+      {/* ── Step: Review & Submit ── */}
+      {stepKey === 'review' && (
         <ForgeCard style={{ border: 'none', boxShadow: 'none' }}>
           <div style={{ padding: 'var(--forge-spacing-medium)' }}>
             <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', marginBottom: 4 }}>Review & Submit</h3>
             <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)', marginBottom: 'var(--forge-spacing-medium)' }}>
-              Submitting will create <strong>{involvedStudents.length} linked incident record{involvedStudents.length !== 1 ? 's' : ''}</strong> — one for each student below.
+              {incidentCategory === 'student' && (
+                <>Submitting will create <strong>one incident</strong> with the {involvedStudents.length} student{involvedStudents.length !== 1 ? 's' : ''} below associated to it.</>
+              )}
+              {(incidentCategory === 'staff' || incidentCategory === 'thirdParty') && (
+                <>Submitting will create <strong>one incident</strong> with the {involvedParties.length} {involvedParties.length === 1 ? 'person' : 'people'} below associated to it.</>
+              )}
+              {(incidentCategory === 'facility' || incidentCategory === 'vehicle') && (
+                <>Submitting will create <strong>one incident</strong> for <strong>{assetRef || 'the selected asset'}</strong>.</>
+              )}
             </p>
 
             {/* Shared summary */}
@@ -1046,12 +1941,20 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
               <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Shared Incident Details</p>
               <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                 {[
+                  { label: 'Occurred', value: `${sharedData.incidentDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1')}${sharedData.incidentTime ? ` at ${formatTime(sharedData.incidentTime)}` : ''}` },
                   { label: 'Type', value: getIncidentTypeLabel(sharedData.incidentType) },
                   { label: 'Severity', value: sharedData.severity.charAt(0).toUpperCase() + sharedData.severity.slice(1) },
                   { label: 'Location', value: getLocationLabel(sharedData.location) },
+                  ...(assetRef ? [{ label: incidentCategory === 'facility' ? 'Facility' : 'Asset', value: assetRef }] : []),
                   ...(sharedData.bus ? [{ label: 'Vehicle', value: `Vehicle ${sharedData.bus.replace('bus-', '')}` }] : []),
                   ...(sharedData.route ? [{ label: 'Run', value: sharedData.route }] : []),
                   ...(sharedData.driver ? [{ label: 'Driver', value: sharedData.driver }] : []),
+                  ...(sharedData.witnessPresent && normalizeContacts(sharedData.witnesses).length
+                    ? [{ label: 'Witnesses', value: normalizeContacts(sharedData.witnesses).map(c => c.name).join(', ') }]
+                    : []),
+                  ...(sharedData.thirdPartyPresent && normalizeContacts(sharedData.thirdParties).length
+                    ? [{ label: 'Third Parties', value: normalizeContacts(sharedData.thirdParties).map(c => c.name).join(', ') }]
+                    : []),
                   ...(uploadedPhotos.length ? [{ label: 'Photos', value: `${uploadedPhotos.length} attached` }] : []),
                   ...(uploadedDocuments.length ? [{ label: 'Documents', value: `${uploadedDocuments.length} attached` }] : []),
                 ].map(item => (
@@ -1069,10 +1972,45 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
               )}
             </div>
 
+            {/* Per-person summary for non-student subjects */}
+            {incidentCategory !== 'student' && involvedParties.length > 0 && (
+              <>
+                <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+                  {incidentCategory === 'staff' ? 'Employees' : 'People'} ({involvedParties.length})
+                </p>
+                <div className="space-y-2 mb-4">
+                  {involvedParties.map((p, idx) => (
+                    <div key={p.id} className="flex items-start gap-3 p-3 rounded-lg border" style={{ borderColor: 'var(--forge-color-border-default)', borderRadius: 'var(--forge-radius-medium)' }}>
+                      <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', minWidth: 20, textAlign: 'center', paddingTop: 2 }}>{idx + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 500 }}>{p.name}</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          <Badge variant="outline" style={{ fontSize: 'var(--text-xs)' }}>{p.role}</Badge>
+                          {p.severityOverride !== 'shared' && <Badge variant="outline" style={{ fontSize: 'var(--text-xs)' }}>Severity: {p.severityOverride}</Badge>}
+                          {p.description && <Badge variant="outline" style={{ fontSize: 'var(--text-xs)' }}>Account added</Badge>}
+                          {p.actionTaken && <Badge variant="outline" style={{ fontSize: 'var(--text-xs)' }}>Action documented</Badge>}
+                          {p.notes && <Badge variant="outline" style={{ fontSize: 'var(--text-xs)' }}>Notes added</Badge>}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => goToStep('perParty')}
+                        style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: '#4A6FA5', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', flexShrink: 0 }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
             {/* Per-student summary */}
+            {incidentCategory === 'student' && (
             <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
               Students ({involvedStudents.length})
             </p>
+            )}
             <div className="space-y-2 mb-4">
               {involvedStudents.map((student, idx) => {
                 const data = perStudentData[student.id];
@@ -1098,7 +2036,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setCurrentStep(3)}
+                      onClick={() => goToStep('perParty')}
                       style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: '#4A6FA5', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0', flexShrink: 0 }}
                     >
                       Edit
@@ -1110,7 +2048,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
           </div>
 
           <div className="flex justify-between p-4 border-t" style={{ borderColor: 'var(--forge-color-border-subtle)' }}>
-            <ForgeButton type="button" variant="outlined" onClick={() => setCurrentStep(3)} style={{ fontFamily: 'Roboto, sans-serif' }}>
+            <ForgeButton type="button" variant="outlined" onClick={goBack} style={{ fontFamily: 'Roboto, sans-serif' }}>
               ← Back
             </ForgeButton>
             <div className="flex gap-3">
@@ -1126,7 +2064,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
                 }}
               >
                 <Send className="h-4 w-4" />
-                Submit {involvedStudents.length} Incident{involvedStudents.length !== 1 ? 's' : ''}
+                Submit Incident
               </button>
             </div>
           </div>

@@ -19,7 +19,7 @@ defineIconComponent();
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { workflows as importedWorkflows, Workflow, WorkflowStep } from '../../data/workflows';
-import { INCIDENT_TYPES, INCIDENT_CATEGORIES } from '../incidents/IncidentTypes';
+import { INCIDENT_TYPES, INCIDENT_CATEGORIES, getSubjectLabel } from '../incidents/IncidentTypes';
 import { WorkflowStepLibrary, WorkflowStepTemplate } from './WorkflowStepLibrary';
 import { StepTemplateManager } from './StepTemplateManager';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
@@ -84,8 +84,8 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
   const severityLevels = ['Critical', 'High', 'Medium', 'Low'];
 
   // Group incident types by category for the selector
-  const studentIncidentTypes = INCIDENT_TYPES.filter(t => t.applicableTo === 'student' || t.applicableTo === 'both');
-  const driverIncidentTypes = INCIDENT_TYPES.filter(t => t.applicableTo === 'driver' || t.applicableTo === 'both');
+  const studentIncidentTypes = INCIDENT_TYPES.filter(t => t.applicableTo === 'student');
+  const nonStudentIncidentTypes = INCIDENT_TYPES.filter(t => t.applicableTo !== 'student');
 
   // Compute which incident type labels are already linked to an active workflow
   const linkedIncidentTypeLabels = new Set(
@@ -693,8 +693,8 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                         );
                       })}
                     </optgroup>
-                    <optgroup label="Driver Incident Types">
-                      {driverIncidentTypes.map((t) => {
+                    <optgroup label="Non-Student Incident Types">
+                      {nonStudentIncidentTypes.map((t) => {
                         const isLinked = linkedIncidentTypeLabels.has(t.label) || linkedIncidentTypeLabels.has(t.id);
                         return (
                           <option key={t.id} value={t.id} disabled={isLinked} style={isLinked ? { color: 'var(--muted-foreground)' } : {}}>
@@ -715,8 +715,8 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                         border: '1px solid var(--border)',
                       }}>
                         <div style={{ display: 'flex', gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-xxsmall)', flexWrap: 'wrap' }}>
-                          <forge-badge theme={selectedType.applicableTo === 'student' ? 'info-primary' : selectedType.applicableTo === 'driver' ? 'success' : 'default'}>
-                            {selectedType.applicableTo === 'student' ? 'Student' : selectedType.applicableTo === 'driver' ? 'Driver' : 'Both'}
+                          <forge-badge theme={selectedType.applicableTo === 'student' ? 'info-primary' : 'success'}>
+                            {getSubjectLabel(selectedType.applicableTo)}
                           </forge-badge>
                           <forge-badge theme="default">{selectedType.category}</forge-badge>
                           <forge-badge

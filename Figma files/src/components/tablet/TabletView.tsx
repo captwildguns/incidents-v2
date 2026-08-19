@@ -5,6 +5,7 @@ import {
   Home, Mail, ArrowLeft, ArrowUp,
 } from 'lucide-react';
 import tylerLogo from '../../assets/tyler-logo.png';
+import { getIncidentTypesForCategory, type IncidentSubject } from '../incidents/IncidentTypes';
 
 /* ============================================================
    Tyler Drive — working driver tablet mockup
@@ -169,9 +170,22 @@ function TydKeyboard({ value, onChange }: { value: string; onChange: (v: string)
   );
 }
 
+// Subjects a driver can file from the tablet. Vehicle and facility are the
+// valuable additions here: a driver in the yard mostly reports those, and both
+// skip the roster and per-student steps entirely.
+const TABLET_SUBJECTS: Array<{ value: string; label: string; hint: string }> = [
+  { value: 'student', label: 'student', hint: 'one or more students on your run' },
+  { value: 'vehicle', label: 'vehicle', hint: 'bus damage or a mechanical problem, nobody aboard' },
+  { value: 'facility', label: 'facility', hint: 'a garage, yard, or depot problem' },
+  { value: 'thirdParty', label: 'third party', hint: 'another motorist, a parent, or the public' },
+];
+
 export function TabletView({ onExit }: TabletViewProps) {
   const [screen, setScreen] = useState<'home' | 'report' | 'list' | 'detail' | 'messages'>('home');
-  const [step, setStep] = useState(1);
+  // Step 0 is the subject chooser. The student path then runs 1 through 6
+  // exactly as before; non-student paths skip the roster and per-student steps.
+  const [step, setStep] = useState(0);
+  const [subject, setSubject] = useState('student');
   const [selected, setSelected] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');
@@ -193,8 +207,36 @@ export function TabletView({ onExit }: TabletViewProps) {
   const activeThread = (active && threads[active.id]) || [];
 
   const resetReport = () => {
-    setStep(1); setSelected([]); setSearch(''); setType(''); setSeverity('');
+    setStep(0); setSubject('student'); setSelected([]); setSearch(''); setType(''); setSeverity('');
     setPer({}); setStmtIdx(0); setDriverDesc(''); setHasPhoto(false); setPinned(false); setSubmittedId('');
+  };
+
+  // Non-student subjects have no roster and no per-student statements, so they
+  // jump straight from the chooser to the type step and from type to description.
+  const isStudentReport = subject === 'student';
+  const chooseSubject = (s: string) => {
+    setSubject(s);
+    setSelected([]); setPer({}); setType(''); setSeverity('');
+    setStep(s === 'student' ? 1 : 2);
+  };
+  // Types offered for the chosen subject. Student keeps the original hand-written
+  // TABLET list (its wording is tuned for a driver at the wheel); non-student
+  // subjects derive from the shared catalog so the tablet and the desktop form
+  // can never drift apart.
+  const activeTypes = isStudentReport
+    ? TYPES
+    : getIncidentTypesForCategory(subject as IncidentSubject).map(t => ({
+        label: t.label,
+        desc: t.description.length > 60 ? `${t.description.slice(0, 57)}...` : t.description,
+        def: t.defaultSeverity.toLowerCase(),
+      }));
+
+  const stepTotal = isStudentReport ? 6 : 3;
+  // Display number for the current step, so a facility report reads 1..3
+  const stepLabel = (n: number) => {
+    if (isStudentReport) return `step ${n} of 6`;
+    const order: Record<number, number> = { 2: 1, 5: 2, 6: 3 };
+    return `step ${order[n] ?? n} of ${stepTotal}`;
   };
   const startReport = () => { resetReport(); setScreen('report'); };
   const toggleStudent = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -211,10 +253,17 @@ export function TabletView({ onExit }: TabletViewProps) {
     const maxNum = incidents.reduce((m, i) => Math.max(m, parseInt(String(i.id).split('-')[2] || '0', 10) || 0), 63);
     const id = `INC-2025-${String(maxNum + 1).padStart(4, '0')}`;
     const first = selStudents[0];
+    // Non-student reports have no roster, so the title comes from the subject
+    // and the type rather than from a student's name.
+    const title = isStudentReport
+      ? `${first?.name}${selStudents.length > 1 ? ` +${selStudents.length - 1}` : ''} · ${type}`
+      : `${subject === 'thirdParty' ? 'Third party' : subject.charAt(0).toUpperCase() + subject.slice(1)} · ${type}`;
     const rec = {
-      id, date: '2025-03-15', title: `${first?.name}${selStudents.length > 1 ? ` +${selStudents.length - 1}` : ''} · ${type}`,
+      id, date: '2025-03-15', subject, title,
       sub: `Bus 8 · today · you reported this`, status: 'open', type, severity, driverDesc, hasPhoto, pinned,
-      students: selStudents.map(s => ({ ...s, ...per[s.id], severity: per[s.id]?.severity === 'shared' ? severity : per[s.id]?.severity })),
+      students: isStudentReport
+        ? selStudents.map(s => ({ ...s, ...per[s.id], severity: per[s.id]?.severity === 'shared' ? severity : per[s.id]?.severity }))
+        : [],
     };
     setIncidents(prev => [rec, ...prev]);
     setSubmittedId(id); setActive(rec); setStep(7);
@@ -307,6 +356,7 @@ export function TabletView({ onExit }: TabletViewProps) {
       <>
         <NavBar onBack={() => setScreen('home')} />
         <div style={st.screen}>
+          {step === 0 && renderSubject()}
           {step === 1 && renderSelect()}
           {step === 2 && renderType()}
           {step === 3 && renderRoles()}
@@ -318,13 +368,41 @@ export function TabletView({ onExit }: TabletViewProps) {
     );
   };
 
+  // Step 0 — what kind of incident is this?
+  const renderSubject = () => (
+    <>
+      <div style={st.pad}>
+        <div style={st.titleRow}><span style={st.title}>Report incident — what happened?</span></div>
+        <div style={st.sub}>Pick what this report is about. That decides what we ask you for.</div>
+        <div style={st.list}>
+          {TABLET_SUBJECTS.map(s => {
+            const on = subject === s.value;
+            return (
+              <button
+                key={s.value}
+                onClick={() => chooseSubject(s.value)}
+                style={{ ...st.row, background: on ? C.cyanSel : '#fff', borderColor: on ? '#3a9aa8' : '#cfcfcf' }}
+              >
+                <span style={{ flex: 1, textAlign: 'left' }}>
+                  <span style={{ fontSize: 26, fontWeight: 600, textTransform: 'capitalize' }}>{s.label}</span>
+                  <span style={{ display: 'block', fontSize: 18, color: '#5b6673', marginTop: 2 }}>{s.hint}</span>
+                </span>
+                <ChevronRight size={26} color="#7c8aa0" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+
   const renderSelect = () => {
     const list = ROSTER.filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.id.toLowerCase().includes(search.toLowerCase()));
     return (
       <>
         <div style={st.pad}>
           <div style={st.titleRow}><span style={st.title}>Report incident — involved students</span><span style={st.opt}>step 1 of 6</span></div>
-          <div style={st.sub}>Select everyone involved. A linked record is created for each student.</div>
+          <div style={st.sub}>Select everyone involved. They are all associated with this one incident.</div>
           <div style={st.search}><Search size={22} color="#7c8aa0" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="search this run by name or ID…" style={st.searchInput} /></div>
           <div style={st.list}>
             {list.map(s => {
@@ -341,7 +419,7 @@ export function TabletView({ onExit }: TabletViewProps) {
           </div>
         </div>
         <Footer>
-          <Btn kind="orange" onClick={() => setScreen('home')}>back</Btn>
+          <Btn kind="orange" onClick={() => setStep(0)}>back</Btn>
           <Btn kind="orange" onClick={() => setSelected([])}>clear</Btn>
           <Btn kind="green" disabled={selected.length === 0} onClick={() => { goStep2to3(); setStep(2); }}>continue{selected.length ? ` · ${selected.length} selected` : ''}</Btn>
         </Footer>
@@ -352,9 +430,9 @@ export function TabletView({ onExit }: TabletViewProps) {
   const renderType = () => (
     <>
       <div style={st.pad}>
-        <div style={st.titleRow}><span style={st.title}>Incident type</span><span style={st.opt}>step 2 of 6</span></div>
+        <div style={st.titleRow}><span style={st.title}>Incident type</span><span style={st.opt}>{stepLabel(2)}</span></div>
         <div style={st.list}>
-          {TYPES.map(t => {
+          {activeTypes.map(t => {
             const on = type === t.label;
             return (
               <button key={t.label} onClick={() => { setType(t.label); setSeverity(t.def); }} style={{ ...st.row, background: on ? C.cyanSel : '#fff', borderColor: on ? '#3a9aa8' : '#cfcfcf' }}>
@@ -372,9 +450,9 @@ export function TabletView({ onExit }: TabletViewProps) {
         )}
       </div>
       <Footer>
-        <Btn kind="orange" onClick={() => setStep(1)}>back</Btn>
+        <Btn kind="orange" onClick={() => setStep(isStudentReport ? 1 : 0)}>back</Btn>
         <Btn kind="orange" onClick={() => { setType(''); setSeverity(''); }}>clear</Btn>
-        <Btn kind="green" disabled={!type} onClick={() => setStep(3)}>continue</Btn>
+        <Btn kind="green" disabled={!type} onClick={() => setStep(isStudentReport ? 3 : 5)}>continue</Btn>
       </Footer>
     </>
   );
@@ -383,7 +461,7 @@ export function TabletView({ onExit }: TabletViewProps) {
     <>
       <div style={st.pad}>
         <div style={st.titleRow}><span style={st.title}>Role of each student</span><span style={st.opt}>step 3 of 6</span></div>
-        <div style={st.sub}>{type} · {selStudents.length} linked record{selStudents.length !== 1 ? 's' : ''}</div>
+        <div style={st.sub}>{type}{isStudentReport ? ` · ${selStudents.length} student${selStudents.length !== 1 ? 's' : ''} associated` : ''}</div>
         <div style={{ overflowY: 'auto', flex: 1 }}>
           {selStudents.map(s => {
             const d = per[s.id];
@@ -447,7 +525,7 @@ export function TabletView({ onExit }: TabletViewProps) {
   const renderDescription = () => (
     <>
       <div style={{ ...st.pad, paddingBottom: 8 }}>
-        <div style={st.titleRow}><span style={st.title}>Your account & evidence</span><span style={st.opt}>step 5 of 6 · * optional</span></div>
+        <div style={st.titleRow}><span style={st.title}>Your account & evidence</span><span style={st.opt}>{stepLabel(5)} · * optional</span></div>
         <NoteField value={driverDesc} placeholder="Describe what you observed…" height={120} />
         <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
           <button onClick={() => setHasPhoto(true)} style={{ ...st.attach, color: hasPhoto ? '#1E7B34' : '#5F5F5F', borderColor: hasPhoto ? '#3FB152' : '#8a8a8a' }}><Camera size={20} /> {hasPhoto ? 'photo added ✓' : 'take photo'}</button>
@@ -455,7 +533,7 @@ export function TabletView({ onExit }: TabletViewProps) {
         </div>
       </div>
       <Footer>
-        <Btn kind="orange" onClick={() => setStep(4)}>back</Btn>
+        <Btn kind="orange" onClick={() => setStep(isStudentReport ? 4 : 2)}>back</Btn>
         <Btn kind="green" onClick={() => setStep(6)}>review</Btn>
       </Footer>
       <TydKeyboard value={driverDesc} onChange={setDriverDesc} />
@@ -465,12 +543,16 @@ export function TabletView({ onExit }: TabletViewProps) {
   const renderReview = () => (
     <>
       <div style={st.pad}>
-        <div style={st.titleRow}><span style={st.title}>Review & submit</span><span style={st.opt}>step 6 of 6</span></div>
+        <div style={st.titleRow}><span style={st.title}>Review & submit</span><span style={st.opt}>{stepLabel(6)}</span></div>
         <div style={{ display: 'flex', gap: 24, flex: 1, minHeight: 0 }}>
           <div style={{ flex: 1 }}>
             <h4 style={st.sumH}>Incident</h4>
             <div style={st.sumLn}>{type} · <b style={{ color: '#ff9a8d' }}>{severity}</b></div>
-            <div style={st.sumDim}>{selStudents.length} student{selStudents.length !== 1 ? 's' : ''} · {selStudents.length} linked record{selStudents.length !== 1 ? 's' : ''}</div>
+            <div style={st.sumDim}>
+              {isStudentReport
+                ? `one incident · ${selStudents.length} student${selStudents.length !== 1 ? 's' : ''} associated`
+                : `${subject === 'thirdParty' ? 'third party' : subject} incident · 1 record · no students involved`}
+            </div>
             <h4 style={{ ...st.sumH, marginTop: 14 }}>Transportation</h4>
             <div style={st.sumLn}>Run: Washington High PM — Wolf Rd</div>
             <div style={st.sumLn}>Bus 8{pinned ? ' · Lot B (pinned)' : ''}</div>
@@ -488,6 +570,9 @@ export function TabletView({ onExit }: TabletViewProps) {
                   </div>
                 );
               })}
+              {!isStudentReport && !driverDesc.trim() && !hasPhoto && (
+                <div style={{ ...st.sumItem, color: '#8b97a8' }}>Nothing captured yet — your account and a photo are both optional.</div>
+              )}
               {driverDesc.trim() && <div style={st.sumItem}>Driver description <span style={{ fontSize: 16, color: '#9aa6b6' }}>· captured</span></div>}
               {hasPhoto && <div style={st.sumItem}>📷 Photo evidence <span style={{ fontSize: 16, color: '#9aa6b6' }}>· 1 file</span></div>}
             </div>
@@ -507,7 +592,7 @@ export function TabletView({ onExit }: TabletViewProps) {
       <div style={st.screen}><div style={{ ...st.pad, alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 18, display: 'flex', flexDirection: 'column' }}>
         <div style={st.ring}><Check size={78} color={C.flatGreen} strokeWidth={2.5} /></div>
         <h2 style={{ fontSize: 38, margin: 0 }}>Incident submitted</h2>
-        <p style={{ fontSize: 22, color: '#aeb9c9', margin: 0 }}>{selStudents.length} linked record{selStudents.length !== 1 ? 's' : ''} created · your safety coordinator has been notified</p>
+        <p style={{ fontSize: 22, color: '#aeb9c9', margin: 0 }}>{isStudentReport && selStudents.length ? `incident created · ${selStudents.length} student${selStudents.length !== 1 ? 's' : ''} associated` : 'incident created'} · your safety coordinator has been notified</p>
         <div style={{ fontSize: 20, color: '#ffd479', fontFamily: 'monospace' }}>{submittedId}</div>
         <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
           <Btn kind="grey" onClick={() => { resetReport(); setScreen('home'); }}>done</Btn>

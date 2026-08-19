@@ -67,6 +67,10 @@ import {
   tylIconUnfoldMore,
   tylIconVisibility,
   tylIconZoomIn,
+  // New Incident subject chooser (school and directions_bus already above)
+  tylIconWarehouse,
+  tylIconPublic,
+  tylIconBadge,
 } from '@tylertech/tyler-icons';
 
 // Define Forge custom elements (one-time registration)
@@ -95,6 +99,7 @@ IconRegistry.define([
   tylIconDownload, tylIconEdit, tylIconEmail, tylIconError, tylIconMoreVert, tylIconPersonAdd,
   tylIconPhotoCamera, tylIconSearch, tylIconSend, tylIconTrendingDown, tylIconTrendingUp,
   tylIconUnfoldMore, tylIconVisibility, tylIconZoomIn,
+  tylIconWarehouse, tylIconPublic, tylIconBadge,
 ]);
 
 import { GlobalSearch } from './GlobalSearch';

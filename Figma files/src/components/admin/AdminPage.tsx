@@ -29,7 +29,10 @@ import {
 import {
   INCIDENT_TYPES as SEED_INCIDENT_TYPES,
   INCIDENT_CATEGORIES,
+  INCIDENT_SUBJECTS,
   IncidentType,
+  getSubjectLabel,
+  type IncidentSubject,
 } from '../incidents/IncidentTypes';
 import { EmailTemplate, INITIAL_EMAIL_TEMPLATES } from '../../data/email-templates';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
@@ -737,8 +740,8 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
     setIncidentTypes(incidentTypes.filter((t) => t.id !== id));
   };
 
-  const studentItCount = incidentTypes.filter((t) => t.applicableTo === 'student' || t.applicableTo === 'both').length;
-  const driverItCount = incidentTypes.filter((t) => t.applicableTo === 'driver' || t.applicableTo === 'both').length;
+  const studentItCount = incidentTypes.filter((t) => t.applicableTo === 'student').length;
+  const nonStudentItCount = incidentTypes.filter((t) => t.applicableTo !== 'student').length;
 
   // ─── Permission Group Helpers ────────────────────────────────────────────────
 
@@ -1338,6 +1341,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 <thead>
                   <tr>
                     <th className="forge-table-cell forge-table-cell--header">Label</th>
+                    <th className="forge-table-cell forge-table-cell--header">Applies To</th>
                     <th className="forge-table-cell forge-table-cell--header">Category</th>
                     <th className="forge-table-cell forge-table-cell--header">Severity</th>
                     <th className="forge-table-cell forge-table-cell--header">Linked Workflow</th>
@@ -1351,6 +1355,12 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                       <td className="forge-table-cell">
                         <div style={{ fontWeight: 'var(--forge-font-weight-medium)', fontFamily: 'var(--forge-font-family)' }}>{it.label}</div>
                         <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>{it.id}</div>
+                      </td>
+                      <td className="forge-table-cell">
+                        {/* @ts-ignore */}
+                        <forge-badge theme={it.applicableTo === 'student' ? 'default' : 'info-primary'} style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-xs)' }}>
+                          {getSubjectLabel(it.applicableTo)}
+                        </forge-badge>
                       </td>
                       <td className="forge-table-cell">
                         {/* @ts-ignore */}
@@ -1482,6 +1492,25 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 >
                   {allItCategories.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              {/* @ts-ignore */}
+              </forge-text-field>
+            </div>
+
+            {/* Applies To — which incident subject this type belongs to. Drives
+                which types the New Incident wizard offers for a given subject. */}
+            <div>
+              <div style={labelStyle}>Applies To <span style={{ color: 'var(--destructive)' }}>*</span></div>
+              {/* @ts-ignore */}
+              <forge-text-field style={inputWrapperStyle}>
+                <select
+                  value={itForm.applicableTo}
+                  onChange={(e) => setItForm({ ...itForm, applicableTo: e.target.value as IncidentSubject })}
+                  style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-sm)', width: '100%' }}
+                >
+                  {INCIDENT_SUBJECTS.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
                 </select>
               {/* @ts-ignore */}

@@ -82,6 +82,13 @@ const roleOptions = [
   'Counselor',
   'School Principal',
   'Transportation Director',
+  'Mechanic',
+  // Non-student incident roles. Also duplicated in StepConfigDialog and
+  // WorkflowBuilderPage; consolidating the three is a separate cleanup.
+  'Transportation Supervisor',
+  'HR Manager',
+  'Facilities Manager',
+  'Maintenance Manager',
 ];
 
 export function StepTemplateManager({

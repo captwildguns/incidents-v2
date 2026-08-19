@@ -18,6 +18,7 @@ import { CurrentStepActionCard } from './CurrentStepActionCard';
 import { DocumentsViewer } from './DocumentsViewer';
 import { PhotosViewer } from './PhotosViewer';
 import { buildMapUrl } from './IncidentLocationMap';
+import { getSubjectLabel, getSubjectMeta, normalizeContacts } from './IncidentTypes';
 
 interface IncidentDetailPageProps {
   incident: any;
@@ -26,6 +27,27 @@ interface IncidentDetailPageProps {
   allIncidents?: any[];
   onNavigateToIncident?: (incident: any) => void;
 }
+
+// Render a stored 24-hour time ("14:05") for display ("2:05 PM"). Older records
+// predate time capture and have none, so this returns an empty string for them.
+const formatIncidentTime = (value?: string): string => {
+  if (!value) return '';
+  const [h, m] = value.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return value;
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+};
+
+const formatIncidentDate = (value?: string): string =>
+  (value ?? '').replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1');
+
+// "03-11-2025 at 2:05 PM", or just the date when no time was captured
+const formatOccurredAt = (incident: any): string => {
+  const date = formatIncidentDate(incident?.date);
+  const time = formatIncidentTime(incident?.time);
+  return time ? `${date} at ${time}` : date;
+};
 
 export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunication, allIncidents = [], onNavigateToIncident }: IncidentDetailPageProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'workflow' | 'history' | 'photos' | 'documents' | 'communications'>('overview');
@@ -422,7 +444,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
         
         {!(incident.involvedStudents && incident.involvedStudents.length >= 1) && (
           <p style={{ margin: 0, color: 'var(--muted-foreground)' }}>
-            {incident.type} • {incident.date.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1')}
+            {incident.type} • {formatOccurredAt(incident)}
           </p>
         )}
       </div>
@@ -434,16 +456,24 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
         const idx = Math.max(0, students.findIndex((s: any) => s.studentId === selectedStudentId));
         const current = students[idx];
         const roleSolid: Record<string, string> = {
+          // Student roles
           Instigator: '#b91c1c',
           Participant: '#b45309',
           Victim: '#1d4ed8',
           Bystander: '#475569',
+          // Non-student party roles
+          Injured: '#b91c1c',
+          Witness: '#475569',
+          Reporter: '#1d4ed8',
         };
         const roleTint: Record<string, string> = {
           Instigator: 'rgba(185,28,28,0.06)',
           Participant: 'rgba(180,83,9,0.06)',
           Victim: 'rgba(29,78,216,0.06)',
           Bystander: 'rgba(71,85,105,0.06)',
+          Injured: 'rgba(185,28,28,0.06)',
+          Witness: 'rgba(71,85,105,0.06)',
+          Reporter: 'rgba(29,78,216,0.06)',
         };
         const avatarColor = roleSolid[current.role] ?? '#475569';
         const tint = roleTint[current.role] ?? 'rgba(71,85,105,0.06)';
@@ -501,7 +531,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                   )}
                 </div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', fontFamily: 'Roboto, sans-serif', marginTop: 3 }}>
-                  {incident.type} • {incident.date.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1')}
+                  {incident.type} • {formatOccurredAt(incident)}
                 </div>
               </div>
 
@@ -721,10 +751,29 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                   <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                     <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Subject
+                      </div>
+                      <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {/* @ts-ignore */}
+                        <forge-badge theme={(incident.subject ?? 'student') === 'student' ? 'default' : 'info-primary'}>
+                          {getSubjectLabel(incident.subject ?? 'student')}
+                        </forge-badge>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Type
                       </div>
                       <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>
                         {incident.type}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Occurred
+                      </div>
+                      <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>
+                        {formatOccurredAt(incident)}
                       </div>
                     </div>
                     <div>
@@ -799,28 +848,43 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                     </div>
                   )}
 
-                  {/* Witnesses */}
-                  {incident.witnessPresent && (
-                    <div style={{ marginTop: 'var(--forge-spacing-large)', paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '8px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Witnesses
+                  {/* Witnesses and third parties. normalizeContacts accepts both
+                      the legacy string[] on seeded incidents and the structured
+                      contacts the form now produces. */}
+                  {[
+                    { present: incident.witnessPresent, heading: 'Witnesses', raw: incident.witnesses ?? incident.witnessNames, emptyText: 'Witness(es) present, names not recorded' },
+                    { present: incident.thirdPartyPresent, heading: 'Third Parties', raw: incident.thirdParties ?? incident.thirdPartyNames, emptyText: 'Third part(ies) involved, names not recorded' },
+                  ].filter(g => g.present).map(group => {
+                    const contacts = normalizeContacts(group.raw);
+                    return (
+                      <div key={group.heading} style={{ marginTop: 'var(--forge-spacing-large)', paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--border)' }}>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '8px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          {group.heading}
+                        </div>
+                        {contacts.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {contacts.map((c, i) => (
+                              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)' }}>
+                                <Users className="h-3.5 w-3.5" style={{ color: 'var(--brand-blue-medium)', flexShrink: 0, marginTop: 3 }} />
+                                <div>
+                                  <div>{c.name}</div>
+                                  {(c.phone || c.email) && (
+                                    <div style={{ color: 'var(--muted-foreground)', fontSize: 'var(--text-xs)' }}>
+                                      {[c.phone, c.email].filter(Boolean).join('  ·  ')}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
+                            {group.emptyText}
+                          </div>
+                        )}
                       </div>
-                      {incident.witnessNames && incident.witnessNames.length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          {incident.witnessNames.map((name: string, i: number) => (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)' }}>
-                              <Users className="h-3.5 w-3.5" style={{ color: 'var(--brand-blue-medium)', flexShrink: 0 }} />
-                              {name}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
-                          Witness(es) present — names not recorded
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    );
+                  })}
 
                   {/* Tags */}
                   {incident.tags && incident.tags.length > 0 && (
@@ -958,6 +1022,120 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                   </ForgeCard>
                 );
               })()}
+
+              {/* Involved Parties — the non-student equivalent of the Student
+                  Details card above. Deliberately the same shape, because
+                  involvedParties mirrors involvedStudents field for field. */}
+              {incident.involvedParties?.length > 0 && (() => {
+                const labelStyle = { fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase' as const, letterSpacing: '0.5px' };
+                const valueStyle = { fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' };
+                const parties = incident.involvedParties;
+                return (
+                  <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
+                    <div style={{ padding: 'var(--forge-spacing-medium)' }}>
+                      <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-weight-semibold)' }}>
+                        {parties.length === 1 ? 'Involved Party' : `Involved Parties (${parties.length})`}
+                      </h3>
+                      <p style={{ margin: 0, marginTop: 4, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
+                        {incident.subject === 'staff'
+                          ? 'Employees involved in this incident.'
+                          : 'People outside the district involved in this incident.'}
+                      </p>
+                    </div>
+                    <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
+                      {parties.map((p: any, idx: number) => {
+                        const sevTheme = p.severity === 'Critical' ? 'danger' : p.severity === 'High' ? 'error' : p.severity === 'Medium' ? 'warning' : 'info';
+                        return (
+                          <div
+                            key={p.partyId ?? `${p.name}-${idx}`}
+                            style={{
+                              paddingTop: idx === 0 ? 0 : 'var(--forge-spacing-medium)',
+                              marginTop: idx === 0 ? 0 : 'var(--forge-spacing-medium)',
+                              borderTop: idx === 0 ? 'none' : '1px solid var(--forge-theme-border-subtle, #e2e8f0)',
+                            }}
+                          >
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                              <div>
+                                <div style={labelStyle}>Name</div>
+                                <div style={valueStyle}>{p.name}</div>
+                              </div>
+                              <div>
+                                <div style={labelStyle}>Type</div>
+                                <div style={valueStyle}>
+                                  {/* @ts-ignore */}
+                                  <forge-badge theme="default">
+                                    {p.partyType === 'employee' ? 'Employee' : 'Third Party'}
+                                  </forge-badge>
+                                </div>
+                              </div>
+                              {p.role && (
+                                <div>
+                                  <div style={labelStyle}>Role In Incident</div>
+                                  <div style={valueStyle}>
+                                    {/* @ts-ignore */}
+                                    <forge-badge theme="default">{p.role}</forge-badge>
+                                  </div>
+                                </div>
+                              )}
+                              {p.severity && (
+                                <div>
+                                  <div style={labelStyle}>Severity</div>
+                                  <div style={valueStyle}>
+                                    {/* @ts-ignore */}
+                                    <forge-badge theme={sevTheme} strong>{p.severity}</forge-badge>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {p.description && (
+                              <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
+                                <div style={labelStyle}>Their Account</div>
+                                <p style={{ margin: 0, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', lineHeight: '1.6' }}>{p.description}</p>
+                              </div>
+                            )}
+
+                            {p.actionTaken && (
+                              <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
+                                <div style={labelStyle}>Immediate Action Taken</div>
+                                <p style={{ margin: 0, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', lineHeight: '1.6' }}>{p.actionTaken}</p>
+                              </div>
+                            )}
+
+                            {p.notes && (
+                              <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
+                                <div style={labelStyle}>Additional Notes</div>
+                                <p style={{ margin: 0, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', lineHeight: '1.6', color: 'var(--muted-foreground)', fontStyle: 'italic' }}>{p.notes}</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ForgeCard>
+                );
+              })()}
+
+              {/* Affected asset — facility and vehicle incidents may carry no
+                  people at all, so the asset is what identifies the record. */}
+              {incident.assetRef && !incident.involvedStudents?.length && !incident.involvedParties?.length && (
+                <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
+                  <div style={{ padding: 'var(--forge-spacing-medium)' }}>
+                    <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-weight-semibold)' }}>
+                      {incident.subject === 'facility' ? 'Affected Facility' : 'Affected Vehicle'}
+                    </h3>
+                  </div>
+                  <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {incident.subject === 'facility' ? 'Facility' : 'Vehicle'}
+                    </div>
+                    <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>{incident.assetRef}</div>
+                    <p style={{ margin: 0, marginTop: 'var(--forge-spacing-small)', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
+                      No people were recorded on this incident.
+                    </p>
+                  </div>
+                </ForgeCard>
+              )}
             </div>
 
             {/* Right Column: Workflow */}
@@ -1101,6 +1279,8 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                     Instigator: { bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.25)', text: '#b91c1c' },
                     Participant: { bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.25)', text: '#b45309' },
                     Victim: { bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.25)', text: '#1d4ed8' },
+                    Injured: { bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.25)', text: '#b91c1c' },
+                    Reporter: { bg: 'rgba(59,130,246,0.06)', border: 'rgba(59,130,246,0.25)', text: '#1d4ed8' },
                   };
                   const rc = roleColors[s.role] ?? { bg: 'rgba(100,116,139,0.06)', border: 'rgba(100,116,139,0.25)', text: '#475569' };
                   return (
@@ -1962,7 +2142,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                           Incident Created
                         </span>
                         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)' }}>
-                          {incident.date} 7:45 AM
+                          {formatIncidentDate(incident.reportedDate ?? incident.date)}
                         </span>
                       </div>
                       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)', margin: 0 }}>
@@ -2003,7 +2183,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                             Workflow Assigned
                           </span>
                           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)' }}>
-                            {incident.date} 7:46 AM
+                            {formatIncidentDate(incident.reportedDate ?? incident.date)}
                           </span>
                         </div>
                         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)', margin: 0 }}>
