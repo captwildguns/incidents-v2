@@ -443,126 +443,162 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           Incident Details
         </SectionHeading>
 
-        {/* Row 1 is fixed for all five subjects. Incident Type never moves. */}
+        {/* One ordered list of fields flowed into a three-column grid, rather
+            than three hand-built rows.
+
+            The order is the same on every subject, which is what the meeting
+            asked for. A field the subject does not need is simply not rendered,
+            and the ones after it close up: "if one disappears, it doesn't change
+            the entire UI, it's just now that field's no longer there." An earlier
+            version reserved the empty slot to keep neighbours in place, which
+            left a visible hole. */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label style={labelStyle}>Date<Req /></label>
-            {/* @ts-ignore */}
-            <forge-text-field>
-              <input type="date" max={new Date().toISOString().slice(0, 10)} value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} />
-            </forge-text-field>
-          </div>
-          <div>
-            <label style={labelStyle}>Time<Req /></label>
-            {/* @ts-ignore */}
-            <forge-text-field>
-              <input type="time" value={incidentTime} onChange={(e) => setIncidentTime(e.target.value)} />
-            </forge-text-field>
-          </div>
-          <div>
-            <label style={labelStyle}>Incident Type<Req /></label>
-            {/* @ts-ignore */}
-            <forge-text-field>
-              <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)} style={selectStyle}>
-                <option value="">Select type...</option>
-                {typeOptions.map(t => (
-                  <option key={t.id} value={t.label} title={t.description}>{t.label}</option>
-                ))}
-              </select>
-            </forge-text-field>
-          </div>
-        </div>
-
-        {/* Row 2 is fixed too. The asset slot fills or collapses; Vehicle Number
-            and Driver never move because of it. */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginTop: 'var(--forge-spacing-medium)' }}>
-          {assetKind ? (
-            <div>
-              <label style={labelStyle}>
-                {assetKind === 'location' ? 'Affected Location' : 'Affected Vehicle'}<Req />
-              </label>
-              {/* @ts-ignore */}
-              <forge-text-field>
-                <select value={assetRef} onChange={(e) => setAssetRef(e.target.value)} style={selectStyle}>
-                  <option value="">{assetKind === 'location' ? 'Select location...' : 'Select vehicle...'}</option>
-                  {assetKind === 'location'
-                    ? mockLocations.map(l => <option key={l.id} value={l.name}>{l.name}</option>)
-                    : mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
-                </select>
-              </forge-text-field>
-            </div>
-          ) : (
-            // Holds the slot so the two fields beside it keep their position on
-            // the three subjects that name no asset.
-            <div aria-hidden="true" />
-          )}
-
-          <div>
-            <label style={labelStyle}>Vehicle Number</label>
-            {/* @ts-ignore */}
-            <forge-text-field>
-              <select
-                value={assetKind === 'vehicle' ? assetRef : vehicleNumber}
-                onChange={(e) => setVehicleNumber(e.target.value)}
-                disabled={assetKind === 'vehicle'}
-                style={selectStyle}
-              >
-                {/* On a Vehicle incident this mirrors Affected Vehicle read-only
-                    rather than disappearing, so the slot never empties and the
-                    two can never disagree. */}
-                <option value="">{assetKind === 'vehicle' ? 'From Affected Vehicle' : 'Optional...'}</option>
-                {mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
-              </select>
-            </forge-text-field>
-          </div>
-
-          <div>
-            <label style={labelStyle}>Driver</label>
-            {/* @ts-ignore */}
-            <forge-text-field>
-              <select value={driver} onChange={(e) => setDriver(e.target.value)} style={selectStyle}>
-                <option value="">Optional...</option>
-                {mockDrivers
-                  .filter(d => d.status === 'Active')
-                  .sort((a, b) => a.fullName.localeCompare(b.fullName))
-                  .map(d => <option key={d.id} value={d.fullName}>{d.fullName}</option>)}
-              </select>
-            </forge-text-field>
-          </div>
-        </div>
-
-        {/* Row 3 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginTop: 'var(--forge-spacing-medium)' }}>
-          <div>
-            <label style={labelStyle}>Run</label>
-            {/* @ts-ignore */}
-            <forge-text-field>
-              <select value={run} onChange={(e) => setRun(e.target.value)} style={selectStyle}>
-                <option value="">Optional...</option>
-                {RUNS.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </forge-text-field>
-          </div>
-          <div>
-            <label style={labelStyle}>Location Type<Req /></label>
-            {/* @ts-ignore */}
-            <forge-text-field>
-              <select value={locationType} onChange={(e) => setLocationType(e.target.value)} style={selectStyle}>
-                <option value="">Select location type...</option>
-                {LOCATION_TYPES.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </forge-text-field>
-          </div>
-          <div>
-            <label style={labelStyle}>Severity<Req /></label>
-            {/* @ts-ignore */}
-            <forge-text-field>
-              <select value={severity} onChange={(e) => setSeverity(e.target.value)} style={selectStyle}>
-                <option value="">Select severity...</option>
-                {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </forge-text-field>
-          </div>
+          {[
+            {
+              key: 'date',
+              node: (
+                <>
+                  <label style={labelStyle}>Date<Req /></label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <input type="date" max={new Date().toISOString().slice(0, 10)} value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} />
+                  </forge-text-field>
+                </>
+              ),
+            },
+            {
+              key: 'time',
+              node: (
+                <>
+                  <label style={labelStyle}>Time<Req /></label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <input type="time" value={incidentTime} onChange={(e) => setIncidentTime(e.target.value)} />
+                  </forge-text-field>
+                </>
+              ),
+            },
+            {
+              key: 'type',
+              node: (
+                <>
+                  <label style={labelStyle}>Incident Type<Req /></label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)} style={selectStyle}>
+                      <option value="">Select type...</option>
+                      {typeOptions.map(t => (
+                        <option key={t.id} value={t.label} title={t.description}>{t.label}</option>
+                      ))}
+                    </select>
+                  </forge-text-field>
+                </>
+              ),
+            },
+            // The one subject-specific field. Absent on the three subjects that
+            // name no asset.
+            assetKind && {
+              key: 'asset',
+              node: (
+                <>
+                  <label style={labelStyle}>
+                    {assetKind === 'location' ? 'Affected Location' : 'Affected Vehicle'}<Req />
+                  </label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <select value={assetRef} onChange={(e) => setAssetRef(e.target.value)} style={selectStyle}>
+                      <option value="">{assetKind === 'location' ? 'Select location...' : 'Select vehicle...'}</option>
+                      {assetKind === 'location'
+                        ? mockLocations.map(l => <option key={l.id} value={l.name}>{l.name}</option>)
+                        : mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
+                    </select>
+                  </forge-text-field>
+                </>
+              ),
+            },
+            // Dropped on a Vehicle incident, where Affected Vehicle above already
+            // names the vehicle. Asking twice invites the two to disagree.
+            assetKind !== 'vehicle' && {
+              key: 'vehicleNumber',
+              node: (
+                <>
+                  <label style={labelStyle}>Vehicle Number</label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <select value={vehicleNumber} onChange={(e) => setVehicleNumber(e.target.value)} style={selectStyle}>
+                      <option value="">Optional...</option>
+                      {mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
+                    </select>
+                  </forge-text-field>
+                </>
+              ),
+            },
+            {
+              key: 'driver',
+              node: (
+                <>
+                  <label style={labelStyle}>Driver</label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <select value={driver} onChange={(e) => setDriver(e.target.value)} style={selectStyle}>
+                      <option value="">Optional...</option>
+                      {mockDrivers
+                        .filter(d => d.status === 'Active')
+                        .sort((a, b) => a.fullName.localeCompare(b.fullName))
+                        .map(d => <option key={d.id} value={d.fullName}>{d.fullName}</option>)}
+                    </select>
+                  </forge-text-field>
+                </>
+              ),
+            },
+            {
+              key: 'run',
+              node: (
+                <>
+                  <label style={labelStyle}>Run</label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <select value={run} onChange={(e) => setRun(e.target.value)} style={selectStyle}>
+                      <option value="">Optional...</option>
+                      {RUNS.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </forge-text-field>
+                </>
+              ),
+            },
+            {
+              key: 'locationType',
+              node: (
+                <>
+                  <label style={labelStyle}>Location Type<Req /></label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <select value={locationType} onChange={(e) => setLocationType(e.target.value)} style={selectStyle}>
+                      <option value="">Select location type...</option>
+                      {LOCATION_TYPES.map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </forge-text-field>
+                </>
+              ),
+            },
+            {
+              key: 'severity',
+              node: (
+                <>
+                  <label style={labelStyle}>Severity<Req /></label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <select value={severity} onChange={(e) => setSeverity(e.target.value)} style={selectStyle}>
+                      <option value="">Select severity...</option>
+                      {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </forge-text-field>
+                </>
+              ),
+            },
+          ]
+            .filter(Boolean)
+            .map((f: any) => <div key={f.key}>{f.node}</div>)}
         </div>
 
         <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>

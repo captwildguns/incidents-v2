@@ -93,10 +93,12 @@ Adopt the container. Concretely:
 - **One fixed section order for every subject**, with no field ever changing
   position: Subject, Incident Details, People Involved, Evidence and Context,
   Review.
-- **The affected asset gets a permanent slot** in the Incident Details grid. It
-  fills with Affected Vehicle or Affected Location, or collapses. Nothing else
-  moves when it collapses, which is the MyRide container behaviour described in
-  the meeting.
+- **One ordered field list, flowed into a grid.** The order is the same on every
+  subject. A field the subject does not need is not rendered and the ones after
+  it close up, so the grid is always fully packed. This is the MyRide container
+  behaviour from the meeting: if one disappears it does not change the entire UI,
+  that field is just no longer there. Reserving the empty slot to keep neighbours
+  in place was tried first and left a visible hole.
 - **Stop relocating Incident Type.** It stays in the same slot on all five.
 - **People Involved becomes one section, not a step**, always in the same place,
   with the label changing between Students, Employees, and People, and the
