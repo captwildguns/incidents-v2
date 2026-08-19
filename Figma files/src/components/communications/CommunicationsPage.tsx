@@ -20,7 +20,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 
 import { mockIncidents, getIncidentSubjectLabel } from '../incidents/IncidentsPage';
-import { getSubjectLabel } from '../incidents/IncidentTypes';
+import { getSubjectLabel, INCIDENT_SUBJECTS } from '../incidents/IncidentTypes';
 import { mockLocations } from '../../data/locations';
 import { allEmployees } from '../../data/employees';
 
@@ -1350,6 +1350,7 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [subjectFilter, setSubjectFilter] = useState<string[]>([]);
   const [messageText, setMessageText] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -1371,7 +1372,8 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
       searchQuery === '' ||
       comm.incidentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       comm.driver.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      threadContext(comm.incidentId).involved.toLowerCase().includes(searchQuery.toLowerCase());
+      threadContext(comm.incidentId).involved.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      threadContext(comm.incidentId).counterparty.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter.length === 0 ||
@@ -1379,7 +1381,12 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
         s === 'unread' ? comm.unreadMessages > 0 : comm.status === s
       );
 
-    return matchesSearch && matchesStatus;
+    // Filters on the subject label, matching what the row and header display.
+    const matchesSubject =
+      subjectFilter.length === 0 ||
+      subjectFilter.includes(threadContext(comm.incidentId).subjectLabel);
+
+    return matchesSearch && matchesStatus && matchesSubject;
   });
 
   const handleSendMessage = () => {
@@ -1504,6 +1511,15 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
                       onChange={setStatusFilter}
                       placeholder="Status"
                       allLabel="All Status"
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <ForgeMultiSelect
+                      options={INCIDENT_SUBJECTS.map(s => ({ value: s.label, label: s.label }))}
+                      selected={subjectFilter}
+                      onChange={setSubjectFilter}
+                      placeholder="Subject"
+                      allLabel="All Subjects"
                     />
                   </div>
                 </div>
