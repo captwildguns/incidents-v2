@@ -563,6 +563,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [mileageRangeFilter, setMileageRangeFilter] = useState<string[]>([]);
+  const [garageFilter, setGarageFilter] = useState<string[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
@@ -623,6 +624,12 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
 
   const incidentsFor = (vehicle: any) => incidentCountByVehicle.get(vehicle.name) ?? 0;
 
+  // Garage options come from the fleet rather than mockFacilities, so a garage
+  // no vehicle is based at does not appear as an option that filters to nothing.
+  const uniqueGarages = Array.from(
+    new Set(mockVehicles.map(v => v.defaultGarage).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
+
   // Calculate summary statistics
   const totalVehicles = mockVehicles.length;
   const activeVehicles = mockVehicles.filter(v => v.status === 'Active').length;
@@ -654,8 +661,12 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
       return `${bucket}k-${bucket + 10}k`;
     };
     const matchesMaintenance = mileageRangeFilter.length === 0 || mileageRangeFilter.includes(bucketForMileage(vehicle.mileage));
+    // Home garage only, which is the value this grid displays. midDayGarage is
+    // deliberately excluded: filtering on a field the row does not show would
+    // return vehicles whose visible garage disagrees with the filter chip.
+    const matchesGarage = garageFilter.length === 0 || garageFilter.includes(vehicle.defaultGarage);
 
-    return matchesSearch && matchesStatus && matchesMaintenance;
+    return matchesSearch && matchesStatus && matchesMaintenance && matchesGarage;
   });
   
   // Function to handle column header clicks
@@ -858,7 +869,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
       {/* Filters Card */}
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-large)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)', paddingTop: 'var(--forge-spacing-large)' }}>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* Search */}
             <div className="md:col-span-2">
               <forge-text-field>
@@ -907,6 +918,19 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                 onChange={setMileageRangeFilter}
                 placeholder="Mileage Range"
                 allLabel="All Ranges"
+                width="220px"
+              />
+            </div>
+
+            {/* Garage Filter. A facility incident names a garage, so this is how
+                you get from that incident to the vehicles based there. */}
+            <div className="shrink-0">
+              <ForgeMultiSelect
+                options={uniqueGarages.map(g => ({ value: g, label: g }))}
+                selected={garageFilter}
+                onChange={(val) => { setGarageFilter(val); setCurrentPage(1); }}
+                placeholder="Garage"
+                allLabel="All Garages"
                 width="220px"
               />
             </div>

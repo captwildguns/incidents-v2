@@ -516,6 +516,7 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [yearsOfServiceFilter, setYearsOfServiceFilter] = useState<string[]>([]);
+  const [garageFilter, setGarageFilter] = useState<string[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const toastHelper = useForgeToast();
@@ -572,6 +573,12 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
 
   const incidentsFor = (driver: any) => incidentCountByDriver.get(driver.fullName) ?? 0;
 
+  // Garage options come from the roster rather than mockFacilities, so a garage
+  // no driver is based at does not appear as an option that filters to nothing.
+  const uniqueGarages = Array.from(
+    new Set(mockDrivers.map(d => d.defaultGarage).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
+
   // Calculate summary statistics
   const totalDrivers = mockDrivers.length;
   const activeDrivers = mockDrivers.filter(d => d.status === 'Active').length;
@@ -600,6 +607,7 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
       driver.assignedVehicle,
       driver.primaryRoute,
       driver.secondaryRoute,
+      driver.defaultGarage,
     ].some((field: any) => (field ?? '').toLowerCase().includes(q));
 
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(driver.status);
@@ -616,7 +624,10 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
       }
     });
 
-    return matchesSearch && matchesStatus && matchesYears;
+    // Home garage, matching the value now shown under each driver's name.
+    const matchesGarage = garageFilter.length === 0 || garageFilter.includes(driver.defaultGarage);
+
+    return matchesSearch && matchesStatus && matchesYears && matchesGarage;
   });
   
   // Function to handle column header clicks
@@ -822,6 +833,19 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
                 width="220px"
               />
             </div>
+
+            {/* Garage Filter. A facility incident names a garage, so this is how
+                you get from that incident to the drivers based there. */}
+            <div className="shrink-0">
+              <ForgeMultiSelect
+                options={uniqueGarages.map(g => ({ value: g, label: g }))}
+                selected={garageFilter}
+                onChange={(val) => { setGarageFilter(val); setCurrentPage(1); }}
+                placeholder="Garage"
+                allLabel="All Garages"
+                width="220px"
+              />
+            </div>
           </div>
         </div>
       </ForgeCard>
@@ -923,6 +947,13 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
                     </td>
                     <td className="forge-table-cell">
                       <div style={{ fontWeight: 500, fontFamily: 'var(--forge-font-family)' }}>{driver.fullName}</div>
+                      {/* Garage on a sub-line rather than its own column, so the
+                          Garage filter is legible without an eighth column. */}
+                      {driver.defaultGarage && (
+                        <div className="text-muted-foreground" style={{ fontFamily: 'var(--forge-font-family)', fontSize: '0.75rem' }}>
+                          {driver.defaultGarage}
+                        </div>
+                      )}
                     </td>
                     <td className="forge-table-cell">
                       <div style={{ fontSize: '0.875rem' }}>
