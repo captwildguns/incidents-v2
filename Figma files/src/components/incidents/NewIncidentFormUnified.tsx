@@ -21,7 +21,7 @@ import {
   PersonContact,
   emptyContact,
 } from './IncidentTypes';
-import { mockLocations } from './IncidentsPage';
+import { mockLocations } from '../../data/locations';
 import { mockVehicles } from '../vehicles/VehiclesPage';
 import { mockDrivers, allEmployees } from '../../data/employees';
 import { mockStudents } from '../students/StudentsPage';

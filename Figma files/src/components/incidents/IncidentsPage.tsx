@@ -26,6 +26,7 @@ import { assignWorkflowToIncident, Workflow, workflows } from '../../data/workfl
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
 import { EntitySearchField } from '../shared/EntitySearchField';
+import { mockLocations } from '../../data/locations';
 import {
   INCIDENT_TYPES,
   INCIDENT_SUBJECTS,
@@ -1199,16 +1200,6 @@ const rawIncidents = [
       { partyType: 'employee', partyId: 'EMP-102', name: 'Denise Okafor', role: 'Injured', severity: 'High', description: 'Strained her lower back while securing a wheelchair in the forward bay.', actionTaken: 'Sent for same-day medical evaluation. Placed on light duty pending clearance.', notes: 'Second lift-related strain reported at this garage this school year.' },
     ],
   },
-];
-
-// The only location identifiers that exist elsewhere in the app are the
-// defaultGarage and midDayGarage values on mockDrivers and mockVehicles.
-// Seeded here as a small list rather than building a Facilities page.
-export const mockLocations = [
-  { id: 'LOC-001', name: 'Central Service Center' },
-  { id: 'LOC-002', name: 'East Service Center' },
-  { id: 'LOC-003', name: 'North District Garage' },
-  { id: 'LOC-004', name: 'South District Garage' },
 ];
 
 // Normalize to a single model. Two passes:

@@ -120,6 +120,7 @@ const navItems = [
   { id: 'students', label: 'Students', forgeIcon: 'people' },
   { id: 'employees', label: 'Employees', forgeIcon: 'badge' },
   { id: 'vehicles', label: 'Vehicles', forgeIcon: 'directions_bus' },
+  { id: 'locations', label: 'Locations', forgeIcon: 'warehouse' },
   { id: 'communications', label: 'Communications', forgeIcon: 'chat' },
   { id: 'reports', label: 'Reports', forgeIcon: 'description' },
   { id: 'workflows', label: 'Workflows', forgeIcon: 'account_tree' },

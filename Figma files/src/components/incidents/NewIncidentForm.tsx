@@ -31,7 +31,7 @@ import {
   type IncidentSubject,
   type PersonContact,
 } from './IncidentTypes';
-import { mockLocations } from './IncidentsPage';
+import { mockLocations } from '../../data/locations';
 import { mockVehicles } from '../vehicles/VehiclesPage';
 import { IncidentLocationMap } from './IncidentLocationMap';
 import { mockDrivers } from '../../data/employees';
