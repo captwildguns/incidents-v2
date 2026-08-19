@@ -31,7 +31,7 @@ import {
   type IncidentSubject,
   type PersonContact,
 } from './IncidentTypes';
-import { mockFacilities } from './IncidentsPage';
+import { mockLocations } from './IncidentsPage';
 import { mockVehicles } from '../vehicles/VehiclesPage';
 import { IncidentLocationMap } from './IncidentLocationMap';
 import { mockDrivers } from '../drivers/DriversPage';
@@ -92,7 +92,7 @@ interface NewIncidentFormProps {
 }
 
 // Steps are identified by a stable key rather than a position, because the step
-// count varies by subject. A facility incident has no people to name, so its
+// count varies by subject. A location incident has no people to name, so its
 // "Incident Details" step is step 1, where a student incident's is step 2.
 // Gating render on the key keeps both correct without duplicating the markup.
 type StepKey = 'parties' | 'details' | 'perParty' | 'review';
@@ -104,7 +104,7 @@ const STEP_DEFS: Record<IncidentSubject, Array<{ key: StepKey; label: string }>>
     { key: 'perParty', label: 'Per-Student Details' },
     { key: 'review', label: 'Review & Submit' },
   ],
-  staff: [
+  employee: [
     { key: 'parties', label: 'Involved Employees' },
     { key: 'details', label: 'Incident Details' },
     { key: 'perParty', label: 'Per-Person Details' },
@@ -121,7 +121,7 @@ const STEP_DEFS: Record<IncidentSubject, Array<{ key: StepKey; label: string }>>
     { key: 'details', label: 'Incident Details' },
     { key: 'review', label: 'Review & Submit' },
   ],
-  facility: [
+  location: [
     { key: 'details', label: 'Incident Details' },
     { key: 'review', label: 'Review & Submit' },
   ],
@@ -149,9 +149,9 @@ const PARTY_ROLES = ['Participant', 'Witness', 'Reporter', 'Injured'];
 const SUBJECT_ICONS: Record<IncidentSubject, string> = {
   student: 'school',
   vehicle: 'directions_bus',
-  facility: 'warehouse',
+  location: 'warehouse',
   thirdParty: 'public',
-  staff: 'badge',
+  employee: 'badge',
 };
 
 const LOCATION_OPTIONS = [
@@ -179,7 +179,10 @@ const ROUTE_LABELS: Record<string, string> = {
 
 const DRIVER_LOCATION_OPTIONS = [
   ...LOCATION_OPTIONS.slice(0, 1),
-  { category: 'FACILITY', items: [
+  // Named for its contents rather than 'LOCATION', which would sit confusingly
+  // beside the SCHOOL/LOCATION group now that the subject is called Location.
+  // These category strings group the source only; the picker renders flat.
+  { category: 'GARAGE/DEPOT', items: [
     { value: 'garage', label: 'Garage' },
     { value: 'yard', label: 'Yard' },
     { value: 'maintenance-bay', label: 'Maintenance Bay' },
@@ -454,8 +457,8 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
   const [perStudentData, setPerStudentData] = useState<Record<string, PerStudentData>>({});
   const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
 
-  // Non-student subjects: the people involved (staff and thirdParty), and the
-  // affected facility or vehicle (facility and vehicle, which have no people).
+  // Non-student subjects: the people involved (employee and thirdParty), and the
+  // affected location or vehicle (location and vehicle, which have no people).
 
   const [involvedParties, setInvolvedParties] = useState<Party[]>([]);
   const [newPartyName, setNewPartyName] = useState('');
@@ -601,7 +604,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
       reportedDate: today,
       subject,
       // Only student incidents carry the denormalized student fields. Emitting
-      // them as empty strings on a facility incident is what produces blank
+      // them as empty strings on a location incident is what produces blank
       // cells in every student column downstream.
       ...(isStudent ? { student: first?.name || '', studentId: first?.id || '' } : {}),
       type: typeLabel,
@@ -657,13 +660,13 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
     : [];
 
   // Non-student incidents happen in places a student incident never does, so
-  // they get the wider list that includes the FACILITY group.
+  // they get the wider list that includes the LOCATION group.
   const activeLocationOptions =
     incidentCategory && incidentCategory !== 'student' ? DRIVER_LOCATION_OPTIONS : LOCATION_OPTIONS;
 
   // Incident Type is defined once and placed in one of two spots depending on
   // subject: in the top row with date and time normally, or beside Affected
-  // Facility on a facility incident. Defined here so the two placements cannot
+  // Location on a location incident. Defined here so the two placements cannot
   // drift apart.
   const incidentTypeField = (
     <div>
@@ -746,9 +749,9 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
     .slice()
     .sort((a, b) => a.label.localeCompare(b.label));
 
-  // Facility and vehicle incidents must name the affected asset, since they may
+  // Location and vehicle incidents must name the affected asset, since they may
   // carry no people at all and would otherwise be unidentifiable in the list.
-  const assetRequired = incidentCategory === 'facility' || incidentCategory === 'vehicle';
+  const assetRequired = incidentCategory === 'location' || incidentCategory === 'vehicle';
   const detailsIncomplete =
     !sharedData.incidentDate ||
     !sharedData.incidentTime ||
@@ -798,8 +801,8 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
     uploadedPhotos.length > 0 ||
     uploadedDocuments.length > 0;
 
-  // How many records the success banner should claim. Student and staff/third
-  // party incidents create one per person; facility and vehicle create one.
+  // How many records the success banner should claim. Student and employee/third
+  // party incidents create one per person; location and vehicle create one.
   // Submitting always creates exactly ONE incident record. The people are
    // associated to it; they are not separate incidents. This phrase describes
    // who is attached, for the success message.
@@ -1125,7 +1128,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
         </ForgeCard>
       )}
 
-      {/* ── Step: Involved People (staff and third party) ── */}
+      {/* ── Step: Involved People (employee and third party) ── */}
       {stepKey === 'parties' && incidentCategory && incidentCategory !== 'student' && (
         <ForgeCard style={{ border: 'none', boxShadow: 'none' }}>
           <div style={{ padding: 'var(--forge-spacing-medium)' }}>
@@ -1135,10 +1138,10 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
               </div>
               <div>
                 <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', marginBottom: 4 }}>
-                  {incidentCategory === 'staff' ? 'Involved Employees' : 'Involved People'}
+                  {incidentCategory === 'employee' ? 'Involved Employees' : 'Involved People'}
                 </h3>
                 <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)' }}>
-                  {incidentCategory === 'staff'
+                  {incidentCategory === 'employee'
                     ? 'Add each employee involved. Their individual account and any action taken is captured on the next step.'
                     : 'Add each person outside the district involved, such as another motorist, a parent, or a member of the public.'}
                 </p>
@@ -1147,7 +1150,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
 
             {/* Add a person */}
             <div className="mt-5">
-              {incidentCategory === 'staff' ? (
+              {incidentCategory === 'employee' ? (
                 <div className="flex gap-2 items-end">
                   <div className="flex-1">
                     <Label style={{ fontFamily: 'Roboto, sans-serif' }}>Employee</Label>
@@ -1272,10 +1275,10 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
               {incidentCategory === 'student' && (
                 <>These details apply to all {involvedStudents.length} student{involvedStudents.length !== 1 ? 's' : ''}. You can customize per-student details in the next step.</>
               )}
-              {(incidentCategory === 'staff' || incidentCategory === 'thirdParty') && (
+              {(incidentCategory === 'employee' || incidentCategory === 'thirdParty') && (
                 <>These details apply to all {involvedParties.length} {involvedParties.length === 1 ? 'person' : 'people'}. You can customize per-person details in the next step.</>
               )}
-              {incidentCategory === 'facility' && 'Describe what happened and name the facility affected.'}
+              {incidentCategory === 'location' && 'Describe what happened and name the location affected.'}
               {incidentCategory === 'vehicle' && 'Describe what happened and name the vehicle affected.'}
             </p>
 
@@ -1288,11 +1291,11 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
               {/* ── LEFT 50%: three-column field grid ── */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
 
-                {/* First row of fields. Facility incidents move Incident Type
-                    down beside Affected Facility, which would leave a third
+                {/* First row of fields. Location incidents move Incident Type
+                    down beside Affected Location, which would leave a third
                     column empty here, so date and time split the row 50/50
                     instead of sitting in two thirds of a three-column grid. */}
-                {incidentCategory === 'facility' ? (
+                {incidentCategory === 'location' ? (
                   <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                     {dateField}
                     {timeField}
@@ -1311,14 +1314,14 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
                     asking twice invites the two to disagree. That leaves
                     Affected Vehicle and Driver side by side. */}
                 <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-                  {/* Facility incidents get Incident Type here, immediately to
-                      the left of the facility it applies to. */}
-                  {incidentCategory === 'facility' && incidentTypeField}
+                  {/* Location incidents get Incident Type here, immediately to
+                      the left of the location it applies to. */}
+                  {incidentCategory === 'location' && incidentTypeField}
 
-                  {(incidentCategory === 'facility' || incidentCategory === 'vehicle') && (
+                  {(incidentCategory === 'location' || incidentCategory === 'vehicle') && (
                     <div>
                       <Label style={{ fontFamily: 'Roboto, sans-serif' }}>
-                        {incidentCategory === 'facility' ? 'Affected Facility' : 'Affected Vehicle'} <span style={{ color: 'var(--forge-theme-error)' }}>*</span>
+                        {incidentCategory === 'location' ? 'Affected Location' : 'Affected Vehicle'} <span style={{ color: 'var(--forge-theme-error)' }}>*</span>
                       </Label>
                       {/* @ts-ignore */}
                       <forge-text-field>
@@ -1329,10 +1332,10 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
                           style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
                         >
                           <option value="">
-                            {incidentCategory === 'facility' ? 'Select facility...' : 'Select vehicle...'}
+                            {incidentCategory === 'location' ? 'Select location...' : 'Select vehicle...'}
                           </option>
-                          {incidentCategory === 'facility'
-                            ? mockFacilities.map(f => <option key={f.id} value={f.name}>{f.name}</option>)
+                          {incidentCategory === 'location'
+                            ? mockLocations.map(f => <option key={f.id} value={f.name}>{f.name}</option>)
                             : mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
                         </select>
                       </forge-text-field>
@@ -1405,10 +1408,14 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
                         required
                         style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
                       >
-                        <option value="">Select location...</option>
+                        {/* "location type", not "location". On a Location
+                            incident this dropdown sits beside Affected Location,
+                            and two neighbours both reading "Select location..."
+                            would be indistinguishable. */}
+                        <option value="">Select location type...</option>
                         {/* Flat alphabetical. The category headers (ON ROUTE,
-                            FACILITY, ...) added rows to scan without narrowing
-                            anything down, same as the incident type list. */}
+                            GARAGE/DEPOT, ...) added rows to scan without
+                            narrowing anything down, same as the type list. */}
                         {sortedLocationOptions.map(i => (
                           <option key={i.value} value={i.value}>{i.label}</option>
                         ))}
@@ -1803,7 +1810,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
         </ForgeCard>
       )}
 
-      {/* ── Step: Per-Person Details (staff and third party) ── */}
+      {/* ── Step: Per-Person Details (employee and third party) ── */}
       {stepKey === 'perParty' && incidentCategory && incidentCategory !== 'student' && (
         <ForgeCard style={{ border: 'none', boxShadow: 'none' }}>
           <div style={{ padding: 'var(--forge-spacing-medium)' }}>
@@ -1928,10 +1935,10 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
               {incidentCategory === 'student' && (
                 <>Submitting will create <strong>one incident</strong> with the {involvedStudents.length} student{involvedStudents.length !== 1 ? 's' : ''} below associated to it.</>
               )}
-              {(incidentCategory === 'staff' || incidentCategory === 'thirdParty') && (
+              {(incidentCategory === 'employee' || incidentCategory === 'thirdParty') && (
                 <>Submitting will create <strong>one incident</strong> with the {involvedParties.length} {involvedParties.length === 1 ? 'person' : 'people'} below associated to it.</>
               )}
-              {(incidentCategory === 'facility' || incidentCategory === 'vehicle') && (
+              {(incidentCategory === 'location' || incidentCategory === 'vehicle') && (
                 <>Submitting will create <strong>one incident</strong> for <strong>{assetRef || 'the selected asset'}</strong>.</>
               )}
             </p>
@@ -1945,7 +1952,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
                   { label: 'Type', value: getIncidentTypeLabel(sharedData.incidentType) },
                   { label: 'Severity', value: sharedData.severity.charAt(0).toUpperCase() + sharedData.severity.slice(1) },
                   { label: 'Location', value: getLocationLabel(sharedData.location) },
-                  ...(assetRef ? [{ label: incidentCategory === 'facility' ? 'Facility' : 'Asset', value: assetRef }] : []),
+                  ...(assetRef ? [{ label: incidentCategory === 'location' ? 'Location' : 'Asset', value: assetRef }] : []),
                   ...(sharedData.bus ? [{ label: 'Vehicle', value: `Vehicle ${sharedData.bus.replace('bus-', '')}` }] : []),
                   ...(sharedData.route ? [{ label: 'Run', value: sharedData.route }] : []),
                   ...(sharedData.driver ? [{ label: 'Driver', value: sharedData.driver }] : []),
@@ -1976,7 +1983,7 @@ export function NewIncidentForm({ onNavigate }: NewIncidentFormProps) {
             {incidentCategory !== 'student' && involvedParties.length > 0 && (
               <>
                 <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
-                  {incidentCategory === 'staff' ? 'Employees' : 'People'} ({involvedParties.length})
+                  {incidentCategory === 'employee' ? 'Employees' : 'People'} ({involvedParties.length})
                 </p>
                 <div className="space-y-2 mb-4">
                   {involvedParties.map((p, idx) => (

@@ -8,7 +8,7 @@ export const INCIDENT_CATEGORIES = {
   PROHIBITED: 'Prohibited',
   INFORMATIONAL: 'Informational',
   EMPLOYEE_CONDUCT: 'Employee Conduct',
-  FACILITY: 'Facility',
+  LOCATION: 'Location',
   MECHANICAL: 'Mechanical',
   COLLISION: 'Collision',
 } as const;
@@ -19,8 +19,8 @@ export const INCIDENT_CATEGORIES = {
 // labeled in the list and on the detail page.
 export type IncidentSubject =
   | 'student'     // a student is involved
-  | 'staff'       // employees only: driver-on-driver, aide injured, conduct
-  | 'facility'    // depot, garage, yard: burst pipe, vandalism, power loss
+  | 'employee'    // employees only: driver-on-driver, aide injured, conduct
+  | 'location'    // depot, garage, yard: burst pipe, vandalism, power loss
   | 'vehicle'     // bus damage or breakdown, nobody aboard
   | 'thirdParty'; // other motorist, pedestrian, parent, member of the public
 
@@ -47,8 +47,8 @@ export const INCIDENT_SUBJECTS: Array<{
     requiresParties: false,
   },
   {
-    value: 'facility',
-    label: 'Facility',
+    value: 'location',
+    label: 'Location',
     description: 'Depot, garage, or yard problem',
     requiresParties: false,
   },
@@ -59,8 +59,8 @@ export const INCIDENT_SUBJECTS: Array<{
     requiresParties: true,
   },
   {
-    value: 'staff',
-    label: 'Staff',
+    value: 'employee',
+    label: 'Employee',
     description: 'Employees only, no students',
     requiresParties: true,
   },
@@ -126,14 +126,14 @@ export const INCIDENT_TYPES: IncidentType[] = [
     applicableTo: 'student',
   },
 
-  // ─── Staff ─────────────────────────────────────────────────────────────────
+  // ─── Employee ─────────────────────────────────────────────────────────────────
   {
     id: 'employee-altercation',
     label: 'Employee Altercation',
     category: INCIDENT_CATEGORIES.EMPLOYEE_CONDUCT,
     description: 'Physical or verbal altercation between employees, such as two drivers fighting in the yard. No students involved.',
     defaultSeverity: 'High',
-    applicableTo: 'staff',
+    applicableTo: 'employee',
   },
   {
     id: 'employee-misconduct',
@@ -141,7 +141,7 @@ export const INCIDENT_TYPES: IncidentType[] = [
     category: INCIDENT_CATEGORIES.EMPLOYEE_CONDUCT,
     description: 'Policy violation, insubordination, unprofessional conduct, or failure to follow required procedure',
     defaultSeverity: 'Medium',
-    applicableTo: 'staff',
+    applicableTo: 'employee',
   },
   {
     id: 'employee-injury',
@@ -149,7 +149,7 @@ export const INCIDENT_TYPES: IncidentType[] = [
     category: INCIDENT_CATEGORIES.SAFETY,
     description: 'An employee injured on duty, such as an aide hurt during a wheelchair lift or a driver injured during a pre-trip inspection',
     defaultSeverity: 'High',
-    applicableTo: 'staff',
+    applicableTo: 'employee',
   },
   {
     id: 'employee-substance-violation',
@@ -157,7 +157,7 @@ export const INCIDENT_TYPES: IncidentType[] = [
     category: INCIDENT_CATEGORIES.PROHIBITED,
     description: 'Employee suspected of being under the influence, or in possession of alcohol or illegal substances on duty',
     defaultSeverity: 'Critical',
-    applicableTo: 'staff',
+    applicableTo: 'employee',
   },
 
   // ─── Third Party ───────────────────────────────────────────────────────────
@@ -173,7 +173,7 @@ export const INCIDENT_TYPES: IncidentType[] = [
     id: 'third-party-injury',
     label: 'Third Party Injury',
     category: INCIDENT_CATEGORIES.SAFETY,
-    description: 'A pedestrian, motorist, or member of the public injured in connection with a vehicle or facility',
+    description: 'A pedestrian, motorist, or member of the public injured in connection with a vehicle or location',
     defaultSeverity: 'High',
     applicableTo: 'thirdParty',
   },
@@ -181,7 +181,7 @@ export const INCIDENT_TYPES: IncidentType[] = [
     id: 'third-party-conduct',
     label: 'Third Party Conduct',
     category: INCIDENT_CATEGORIES.AGGRESSION,
-    description: 'Aggressive, threatening, or abusive behavior by a parent, guardian, or member of the public toward staff or at a stop',
+    description: 'Aggressive, threatening, or abusive behavior by a parent, guardian, or member of the public toward an employee or at a stop',
     defaultSeverity: 'High',
     applicableTo: 'thirdParty',
   },
@@ -220,30 +220,30 @@ export const INCIDENT_TYPES: IncidentType[] = [
     applicableTo: 'vehicle',
   },
 
-  // ─── Facility ──────────────────────────────────────────────────────────────
+  // ─── Location ──────────────────────────────────────────────────────────────
   {
-    id: 'facility-damage',
-    label: 'Facility Damage',
-    category: INCIDENT_CATEGORIES.FACILITY,
+    id: 'location-damage',
+    label: 'Location Damage',
+    category: INCIDENT_CATEGORIES.LOCATION,
     description: 'Damage or vandalism to a depot, garage, yard, or its equipment, such as a broken bay door or graffiti',
     defaultSeverity: 'Medium',
-    applicableTo: 'facility',
+    applicableTo: 'location',
   },
   {
-    id: 'facility-utility-failure',
+    id: 'location-utility-failure',
     label: 'Utility Failure',
-    category: INCIDENT_CATEGORIES.FACILITY,
+    category: INCIDENT_CATEGORIES.LOCATION,
     description: 'Loss of a utility or building system, such as a burst water pipe, a power outage, or a heating failure',
     defaultSeverity: 'Medium',
-    applicableTo: 'facility',
+    applicableTo: 'location',
   },
   {
-    id: 'facility-safety-hazard',
-    label: 'Facility Safety Hazard',
-    category: INCIDENT_CATEGORIES.FACILITY,
-    description: 'An unsafe condition at a facility, such as a fuel spill, an icy walkway, a blocked fire exit, or exposed wiring',
+    id: 'location-safety-hazard',
+    label: 'Location Safety Hazard',
+    category: INCIDENT_CATEGORIES.LOCATION,
+    description: 'An unsafe condition at a location, such as a fuel spill, an icy walkway, a blocked fire exit, or exposed wiring',
     defaultSeverity: 'High',
-    applicableTo: 'facility',
+    applicableTo: 'location',
   },
 ];
 

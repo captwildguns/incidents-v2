@@ -11,9 +11,9 @@ shows, which incident types are offered, and which workflow is assigned.
 
 - **Student** — one or more students involved
 - **Vehicle** — bus damage or a mechanical problem with nobody aboard
-- **Facility** — a depot, garage, or yard problem such as a burst pipe or power loss
+- **Location** — a depot, garage, or yard problem such as a burst pipe or power loss
 - **Third Party** — another motorist, a pedestrian, a parent, or a member of the public
-- **Staff** — employees only, such as a dispute between drivers or an injured aide. Visibility-restricted.
+- **Employee** — employees only, such as a dispute between drivers or an injured aide. Access is governed by the same resource grants as every other subject; there is no per-subject visibility rule.
 
 ## Incident types by subject
 
@@ -30,10 +30,10 @@ shows, which incident types are offered, and which workflow is assigned.
 - **Mechanical Failure** — breakdown or fault taking a vehicle out of service *(Medium)*
 - **Single Vehicle Collision** — strikes a fixed object with nobody aboard *(Medium)*
 
-### Facility (3)
-- **Facility Damage** — damage or vandalism to a depot, garage, or yard *(Medium)*
+### Location (3)
+- **Location Damage** — damage or vandalism to a depot, garage, or yard *(Medium)*
 - **Utility Failure** — burst pipe, power outage, heating failure *(Medium)*
-- **Facility Safety Hazard** — fuel spill, icy walkway, blocked fire exit, exposed wiring *(High)*
+- **Location Safety Hazard** — fuel spill, icy walkway, blocked fire exit, exposed wiring *(High)*
 
 ### Third Party (4)
 - **Third Party Collision** — collision or near miss with another motorist or cyclist *(High)*
@@ -41,7 +41,7 @@ shows, which incident types are offered, and which workflow is assigned.
 - **Third Party Conduct** — aggressive or abusive behavior by a parent, guardian, or member of the public *(High)*
 - **Public Complaint** — non-disciplinary record of a complaint about a vehicle, route, or driver *(Low)*
 
-### Staff (4)
+### Employee (4)
 - **Employee Altercation** — physical or verbal altercation between employees *(High)*
 - **Employee Misconduct** — policy violation, insubordination, unprofessional conduct *(Medium)*
 - **Employee Injury** — employee injured on duty *(High)*
@@ -52,13 +52,13 @@ shows, which incident types are offered, and which workflow is assigned.
 20 incident types across 5 subjects and 10 categories.
 
 Categories: Behavioral, Safety, Aggression / Violence, Property, Prohibited,
-Informational, Employee Conduct, Facility, Mechanical, Collision.
+Informational, Employee Conduct, Location, Mechanical, Collision.
 
 ## Related fields
 
 - `involvedStudents[]` — present on student incidents. Carries per-student role, severity override, type override, parent notification, and the `noWorkflow` bystander flag.
-- `involvedParties[]` — the non-student equivalent, deliberately the same shape. Present on staff and third party incidents.
-- `assetRef` — names the affected facility or vehicle. Facility and vehicle incidents may carry no people at all, so this is what identifies the record.
+- `involvedParties[]` — the non-student equivalent, deliberately the same shape. Present on employee and third party incidents.
+- `assetRef` — names the affected location or vehicle. Location and vehicle incidents may carry no people at all, so this is what identifies the record.
 - `date` and `time` — when the incident **occurred**, entered by the reporter.
 - `reportedDate` — when the report was **filed**, stamped by the system. Deliberately separate, because reports routinely arrive at the end of a run or the next morning.
 
@@ -67,5 +67,5 @@ Informational, Employee Conduct, Facility, Mechanical, Collision.
 Every incident type maps to a workflow by **label** (not id) via
 `assignWorkflowToIncident` in `src/data/workflows.ts`. Non-student subjects have
 their own workflows (WF-007 through WF-012); WF-004 Property Damage is
-deliberately not reused for facility or vehicle damage because its later steps
+deliberately not reused for location or vehicle damage because its later steps
 are parent restitution and principal discipline.

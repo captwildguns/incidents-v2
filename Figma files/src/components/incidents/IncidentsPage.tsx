@@ -1078,7 +1078,7 @@ const rawIncidents = [
     id: 'INC-2025-0065',
     date: '2025-03-12',
     time: '06:40',
-    subject: 'staff',
+    subject: 'employee',
     type: 'Employee Altercation',
     description: 'Two drivers argued over a fuel island position during the morning pull-out and the dispute escalated to shoving before a supervisor intervened. No injuries. Both drivers were removed from the yard for the remainder of the shift pending review.',
     bus: 'N/A',
@@ -1101,7 +1101,7 @@ const rawIncidents = [
     id: 'INC-2025-0066',
     date: '2025-03-10',
     time: '05:15',
-    subject: 'facility',
+    subject: 'location',
     type: 'Utility Failure',
     description: 'A water supply line above the maintenance bay burst overnight and flooded roughly 400 square feet of the bay floor. Two lifts were taken out of service as a precaution. Facilities contractor called out the same morning.',
     bus: 'N/A',
@@ -1161,8 +1161,8 @@ const rawIncidents = [
     id: 'INC-2025-0069',
     date: '2025-03-04',
     time: '13:50',
-    subject: 'facility',
-    type: 'Facility Safety Hazard',
+    subject: 'location',
+    type: 'Location Safety Hazard',
     description: 'A diesel spill of roughly two gallons was found at the fuel island with no absorbent applied. The area was coned off and spill kit material was applied within the hour. Reported for tracking because the spill was not logged when it occurred.',
     bus: 'N/A',
     route: 'N/A',
@@ -1177,14 +1177,14 @@ const rawIncidents = [
   },
 ];
 
-// The only facility identifiers that exist elsewhere in the app are the
+// The only location identifiers that exist elsewhere in the app are the
 // defaultGarage and midDayGarage values on mockDrivers and mockVehicles.
 // Seeded here as a small list rather than building a Facilities page.
-export const mockFacilities = [
-  { id: 'FAC-001', name: 'Central Service Center' },
-  { id: 'FAC-002', name: 'East Service Center' },
-  { id: 'FAC-003', name: 'North District Garage' },
-  { id: 'FAC-004', name: 'South District Garage' },
+export const mockLocations = [
+  { id: 'LOC-001', name: 'Central Service Center' },
+  { id: 'LOC-002', name: 'East Service Center' },
+  { id: 'LOC-003', name: 'North District Garage' },
+  { id: 'LOC-004', name: 'South District Garage' },
 ];
 
 // Normalize to a single model. Two passes:
@@ -1200,7 +1200,7 @@ export const mockFacilities = [
 //    that already define involvedStudents are left as-is.
 //
 //    Non-student incidents are skipped by this back-fill. Without the subject
-//    guard a facility incident would gain a phantom student with an undefined
+//    guard a location incident would gain a phantom student with an undefined
 //    name, which then renders as a blank cell in every student column.
 export const mockIncidents = rawIncidents.map((raw: any) => {
   const inc = { ...raw, subject: (raw.subject ?? 'student') as IncidentSubject };
@@ -1247,7 +1247,7 @@ export function getIncidentSubjectLabel(incident: any): string {
     return `${parties[0].name} +${parties.length - 1}`;
   }
 
-  // facility and vehicle incidents may have no people at all
+  // location and vehicle incidents may have no people at all
   return incident?.assetRef ?? incident?.bus ?? incident?.location ?? getSubjectLabel(subject);
 }
 
@@ -1266,7 +1266,7 @@ export function getIncidentSubjectSubLabel(incident: any): string {
   if (parties && parties.length > 1) return `${parties.length} people involved`;
   if (parties && parties.length === 1) return parties[0].role ?? '';
 
-  // Facility and vehicle rows have no people. The subject chip already names the
+  // Location and vehicle rows have no people. The subject chip already names the
   // kind, so repeating it here would just say "Vehicle" twice in one cell.
   return '';
 }
@@ -1292,7 +1292,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   // Active (committed) filter values — used to actually filter the table
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm || '');
   const [statusFilter, setStatusFilter] = useState<string[]>(initialStatusFilter ? [initialStatusFilter] : []);
-  // Filters on the subject label ("Student", "Facility", ...) rather than the
+  // Filters on the subject label ("Student", "Location", ...) rather than the
   // raw value, so the committed value matches what the chip displays.
   const [subjectFilter, setSubjectFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
@@ -1358,7 +1358,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   });
 
   // Get unique students from incidents for lookup. Restricted to student
-  // incidents, otherwise a facility row contributes an { undefined, undefined }
+  // incidents, otherwise a location row contributes an { undefined, undefined }
   // entry that renders as a blank option.
   const uniqueStudents = Array.from(
     new Map(
@@ -1397,7 +1397,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       { kind: 'Driver', values: mockIncidents.map((inc: any) => inc.driver) },
       { kind: 'Vehicle', values: mockIncidents.map((inc: any) => inc.bus) },
       { kind: 'Run', values: mockIncidents.map((inc: any) => inc.route) },
-      { kind: 'Facility', values: mockFacilities.map(f => f.name) },
+      { kind: 'Location', values: mockLocations.map(f => f.name) },
     ];
   }, []);
 
@@ -1476,7 +1476,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
     // Simulate export delay
     setTimeout(() => {
       // Create CSV content
-      // "Involved" rather than "Student", since a row may be a facility or a
+      // "Involved" rather than "Student", since a row may be a location or a
       // vehicle. Subject is exported so the two are distinguishable downstream.
       const headers = ['Incident ID', 'Date', 'Time', 'Subject', 'Involved', 'Student ID', 'Type', 'Vehicle', 'Run', 'Driver', 'Severity', 'Status', 'Description'];
       const rows = filteredIncidents.map(inc => [
@@ -1521,7 +1521,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   const filteredIncidents = useMemo(() => incidentsWithWorkflows.filter((incident) => {
     // Driver and every involved party name are matched, not just the subject
     // label. The label collapses a multi-party incident to "First Name +1", so
-    // without this the second person named on a staff incident is unfindable,
+    // without this the second person named on a employee incident is unfindable,
     // and a driver count handed over from the drivers grid lands on nothing.
     const q = searchTerm.trim().toLowerCase();
     const matchesSearch =
@@ -1686,7 +1686,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                 value={pendingSearchTerm}
                 onChange={setPendingSearchTerm}
                 onSubmit={handleSearch}
-                placeholder="Search by person, vehicle, run, or facility..."
+                placeholder="Search by person, vehicle, run, or location..."
                 groups={searchSuggestionGroups}
               />
             </div>

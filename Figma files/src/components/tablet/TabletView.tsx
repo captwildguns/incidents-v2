@@ -170,13 +170,13 @@ function TydKeyboard({ value, onChange }: { value: string; onChange: (v: string)
   );
 }
 
-// Subjects a driver can file from the tablet. Vehicle and facility are the
+// Subjects a driver can file from the tablet. Vehicle and location are the
 // valuable additions here: a driver in the yard mostly reports those, and both
 // skip the roster and per-student steps entirely.
 const TABLET_SUBJECTS: Array<{ value: string; label: string; hint: string }> = [
   { value: 'student', label: 'student', hint: 'one or more students on your run' },
   { value: 'vehicle', label: 'vehicle', hint: 'bus damage or a mechanical problem, nobody aboard' },
-  { value: 'facility', label: 'facility', hint: 'a garage, yard, or depot problem' },
+  { value: 'location', label: 'location', hint: 'a garage, yard, or depot problem' },
   { value: 'thirdParty', label: 'third party', hint: 'another motorist, a parent, or the public' },
 ];
 
@@ -232,7 +232,7 @@ export function TabletView({ onExit }: TabletViewProps) {
       }));
 
   const stepTotal = isStudentReport ? 6 : 3;
-  // Display number for the current step, so a facility report reads 1..3
+  // Display number for the current step, so a location report reads 1..3
   const stepLabel = (n: number) => {
     if (isStudentReport) return `step ${n} of 6`;
     const order: Record<number, number> = { 2: 1, 5: 2, 6: 3 };

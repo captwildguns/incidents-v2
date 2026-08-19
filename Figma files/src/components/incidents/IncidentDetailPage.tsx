@@ -1037,7 +1037,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         {parties.length === 1 ? 'Involved Party' : `Involved Parties (${parties.length})`}
                       </h3>
                       <p style={{ margin: 0, marginTop: 4, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
-                        {incident.subject === 'staff'
+                        {incident.subject === 'employee'
                           ? 'Employees involved in this incident.'
                           : 'People outside the district involved in this incident.'}
                       </p>
@@ -1116,18 +1116,18 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                 );
               })()}
 
-              {/* Affected asset — facility and vehicle incidents may carry no
+              {/* Affected asset — location and vehicle incidents may carry no
                   people at all, so the asset is what identifies the record. */}
               {incident.assetRef && !incident.involvedStudents?.length && !incident.involvedParties?.length && (
                 <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
                   <div style={{ padding: 'var(--forge-spacing-medium)' }}>
                     <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-weight-semibold)' }}>
-                      {incident.subject === 'facility' ? 'Affected Facility' : 'Affected Vehicle'}
+                      {incident.subject === 'location' ? 'Affected Location' : 'Affected Vehicle'}
                     </h3>
                   </div>
                   <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      {incident.subject === 'facility' ? 'Facility' : 'Vehicle'}
+                      {incident.subject === 'location' ? 'Location' : 'Vehicle'}
                     </div>
                     <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>{incident.assetRef}</div>
                     <p style={{ margin: 0, marginTop: 'var(--forge-spacing-small)', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>

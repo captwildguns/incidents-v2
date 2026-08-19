@@ -558,7 +558,7 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
     const bump = (name: string) => counts.set(name, (counts.get(name) ?? 0) + 1);
     for (const inc of mockIncidents as any[]) {
       // A driver is linked either by having been the driver on the incident, or
-      // by being a named employee party on a staff-subject incident. Counted
+      // by being a named employee party on a employee-subject incident. Counted
       // once per incident, so a driver who is both does not count twice.
       const names = new Set<string>();
       if (typeof inc.driver === 'string' && inc.driver && inc.driver !== 'N/A') {
@@ -574,7 +574,7 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
 
   const incidentsFor = (driver: any) => incidentCountByDriver.get(driver.fullName) ?? 0;
 
-  // Garage options come from the roster rather than mockFacilities, so a garage
+  // Garage options come from the roster rather than mockLocations, so a garage
   // no driver is based at does not appear as an option that filters to nothing.
   const uniqueGarages = Array.from(
     new Set(mockDrivers.map(d => d.defaultGarage).filter(Boolean))
@@ -842,7 +842,7 @@ export function DriversPage({ onNavigate, onNavigateToIncidentsMatching }: Drive
               />
             </div>
 
-            {/* Garage Filter. A facility incident names a garage, so this is how
+            {/* Garage Filter. A location incident names a garage, so this is how
                 you get from that incident to the drivers based there. */}
             <div className="shrink-0">
               <ForgeMultiSelect

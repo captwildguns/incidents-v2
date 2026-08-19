@@ -31,7 +31,7 @@ interface Message {
 interface IncidentCommunication {
   incidentId: string;
   incidentDate: string;
-  // Optional: a facility or vehicle incident has no student
+  // Optional: a location or vehicle incident has no student
   student?: string;
   studentId?: string;
   incidentType: string;

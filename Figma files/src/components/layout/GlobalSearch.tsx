@@ -48,7 +48,7 @@ export function GlobalSearch({ onNavigate, onNavigateToIncidentDetail, onNavigat
     const out: SearchResult[] = [];
 
     for (const inc of mockIncidents as any[]) {
-      // Match and display on the subject label, so a facility or vehicle
+      // Match and display on the subject label, so a location or vehicle
       // incident is findable and does not render a leading bullet from a
       // missing student name.
       const involved = getIncidentSubjectLabel(inc);

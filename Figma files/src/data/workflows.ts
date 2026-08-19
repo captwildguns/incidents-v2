@@ -648,9 +648,9 @@ export const workflows: Workflow[] = [
   // ─────────────────────────────────────────────
   {
     id: 'WF-009',
-    name: 'Facility Issue Response',
+    name: 'Location Issue Response',
     description: 'Workflow for a depot, garage, or yard problem such as a burst pipe, power loss, or damage. Routed to Facilities and Maintenance, with no student or parent involvement.',
-    incidentTypes: ['Facility Damage', 'Utility Failure', 'Facility Safety Hazard'],
+    incidentTypes: ['Location Damage', 'Utility Failure', 'Location Safety Hazard'],
     severityLevels: ['Critical', 'High', 'Medium', 'Low'],
     isActive: true,
     createdBy: 'Mike Chen',

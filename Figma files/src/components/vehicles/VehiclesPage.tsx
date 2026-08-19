@@ -625,7 +625,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
 
   const incidentsFor = (vehicle: any) => incidentCountByVehicle.get(vehicle.name) ?? 0;
 
-  // Garage options come from the fleet rather than mockFacilities, so a garage
+  // Garage options come from the fleet rather than mockLocations, so a garage
   // no vehicle is based at does not appear as an option that filters to nothing.
   const uniqueGarages = Array.from(
     new Set(mockVehicles.map(v => v.defaultGarage).filter(Boolean))
@@ -652,7 +652,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
   // Filter vehicles
   const filteredVehicles = mockVehicles.filter((vehicle) => {
     // The garage is matched because the placeholder promised it and because a
-    // facility incident names a garage, which is the only way to get from that
+    // location incident names a garage, which is the only way to get from that
     // incident back to the vehicles based there. Secondary run included since an
     // incident may cite either leg of the day.
     const q = searchTerm.trim().toLowerCase();
@@ -929,7 +929,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
               />
             </div>
 
-            {/* Garage Filter. A facility incident names a garage, so this is how
+            {/* Garage Filter. A location incident names a garage, so this is how
                 you get from that incident to the vehicles based there. */}
             <div className="shrink-0">
               <ForgeMultiSelect
