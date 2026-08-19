@@ -73,22 +73,19 @@ const categoryOptions: Array<'Notification' | 'Review & Action' | 'Close Out'> =
   'Close Out',
 ];
 
+// The seven members of IncidentRoleType, which is what a step can actually be
+// assigned to. Nothing outside this list can be provisioned for a tenant, so do
+// not add to it. Counselor and Transportation Director were here and are not
+// IncidentRoleType members either. Also duplicated in StepConfigDialog and
+// WorkflowBuilderPage; consolidating the three is a separate cleanup.
 const roleOptions = [
   'Safety Coordinator',
   'Administrator',
   'Fleet Manager',
   'Driver',
   'Nurse',
-  'Counselor',
   'School Principal',
-  'Transportation Director',
   'Mechanic',
-  // Non-student incident roles. Also duplicated in StepConfigDialog and
-  // WorkflowBuilderPage; consolidating the three is a separate cleanup.
-  'Transportation Supervisor',
-  'HR Manager',
-  'Facilities Manager',
-  'Maintenance Manager',
 ];
 
 export function StepTemplateManager({

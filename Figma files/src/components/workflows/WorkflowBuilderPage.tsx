@@ -119,6 +119,10 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
   });
 
   const groups = [
+    // The seven members of IncidentRoleType, which is what a step can actually
+    // be assigned to. Nothing outside this list can be provisioned for a
+    // tenant, so do not add to it. Also duplicated in StepConfigDialog and
+    // StepTemplateManager; consolidating the three is a separate cleanup.
     'Driver',
     'Safety Coordinator',
     'Administrator',
@@ -126,13 +130,6 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
     'Mechanic',
     'School Principal',
     'Nurse',
-    // Non-student incident roles. Also duplicated in StepConfigDialog and
-    // StepTemplateManager; consolidating the three is a separate cleanup.
-    'Transportation Supervisor',
-    'Transportation Director',
-    'HR Manager',
-    'Facilities Manager',
-    'Maintenance Manager',
   ];
 
   const addStep = () => {

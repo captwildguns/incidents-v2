@@ -106,6 +106,10 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
   // NOTE: this list is duplicated in WorkflowBuilderPage and StepTemplateManager
   // and the three have historically diverged. Kept in sync here; consolidating
   // them into one shared constant is a separate cleanup.
+  // The seven members of IncidentRoleType, which is what a step can actually
+  // be assigned to. Nothing outside this list can be provisioned for a tenant,
+  // so do not add to it. Still duplicated across this dialog,
+  // WorkflowBuilderPage and StepTemplateManager; consolidating is a cleanup.
   const groups = [
     'Driver',
     'Safety Coordinator',
@@ -114,12 +118,6 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
     'Mechanic',
     'School Principal',
     'Nurse',
-    // Non-student incident roles
-    'Transportation Supervisor',
-    'Transportation Director',
-    'HR Manager',
-    'Facilities Manager',
-    'Maintenance Manager',
   ];
 
   const handleSave = () => {

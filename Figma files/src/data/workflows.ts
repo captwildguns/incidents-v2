@@ -532,14 +532,14 @@ export const workflows: Workflow[] = [
   },
 
   // ─────────────────────────────────────────────
-  // STAFF — EMPLOYEE CONDUCT AND INJURY
-  // Routed through HR rather than a school principal,
+  // EMPLOYEE — CONDUCT AND INJURY
+  // Routed to the administrator rather than a school principal,
   // since there is no student and no parent to notify.
   // ─────────────────────────────────────────────
   {
     id: 'WF-007',
     name: 'Employee Conduct Review',
-    description: 'Workflow for incidents between employees, such as an altercation or a policy violation. Routed to HR rather than a school, with no parent notification and no student discipline.',
+    description: 'Workflow for incidents between employees, such as an altercation or a policy violation. Routed to the administrator rather than a school, with no parent notification and no student discipline.',
     incidentTypes: ['Employee Altercation', 'Employee Misconduct', 'Employee Substance Violation'],
     severityLevels: ['Critical', 'High', 'Medium'],
     isActive: true,
@@ -551,7 +551,7 @@ export const workflows: Workflow[] = [
         id: 'step-1',
         name: 'Separate and Secure',
         description: 'Supervisor separates the employees involved, removes them from duty if needed, and confirms nobody requires medical attention.',
-        assignedRole: 'Transportation Supervisor',
+        assignedRole: 'Safety Coordinator',
         estimatedDuration: '15 minutes',
         required: true,
         order: 1,
@@ -562,7 +562,7 @@ export const workflows: Workflow[] = [
         id: 'step-2',
         name: 'Statement Collection',
         description: 'Collect a written account from each employee involved and from any witnesses. Statements are kept with the incident record.',
-        assignedRole: 'Transportation Supervisor',
+        assignedRole: 'Administrator',
         estimatedDuration: '45 minutes',
         required: true,
         order: 2,
@@ -571,9 +571,9 @@ export const workflows: Workflow[] = [
       },
       {
         id: 'step-3',
-        name: 'HR Review',
-        description: 'HR reviews the statements, determines whether policy was violated, and decides on any corrective action.',
-        assignedRole: 'HR Manager',
+        name: 'Administrative Review',
+        description: 'The administrator reviews the statements, determines whether policy was violated, and decides on any corrective action.',
+        assignedRole: 'Administrator',
         estimatedDuration: '3 business days',
         required: true,
         order: 3,
@@ -585,7 +585,7 @@ export const workflows: Workflow[] = [
         id: 'step-4',
         name: 'Outcome and Return to Duty',
         description: 'Record the outcome, communicate it to the employees involved, and confirm return-to-duty status.',
-        assignedRole: 'HR Manager',
+        assignedRole: 'Administrator',
         estimatedDuration: '1 business day',
         required: true,
         order: 4,
@@ -609,7 +609,7 @@ export const workflows: Workflow[] = [
         id: 'step-1',
         name: 'First Aid and Medical Attention',
         description: 'Provide first aid and arrange medical evaluation. Record whether the employee declined treatment.',
-        assignedRole: 'Transportation Supervisor',
+        assignedRole: 'Nurse',
         estimatedDuration: '30 minutes',
         required: true,
         order: 1,
@@ -620,7 +620,7 @@ export const workflows: Workflow[] = [
         id: 'step-2',
         name: 'Injury Report Filed',
         description: 'Complete the injury report with the mechanism of injury, location, and any equipment involved.',
-        assignedRole: 'Transportation Supervisor',
+        assignedRole: 'Safety Coordinator',
         estimatedDuration: '45 minutes',
         required: true,
         order: 2,
@@ -629,9 +629,9 @@ export const workflows: Workflow[] = [
       },
       {
         id: 'step-3',
-        name: 'HR and Workers Compensation Hand-off',
-        description: 'HR opens the workers compensation claim and tracks any lost time.',
-        assignedRole: 'HR Manager',
+        name: 'Workers Compensation Hand-off',
+        description: 'The administrator opens the workers compensation claim and tracks any lost time.',
+        assignedRole: 'Administrator',
         estimatedDuration: '1 business day',
         required: true,
         order: 3,
@@ -642,14 +642,14 @@ export const workflows: Workflow[] = [
   },
 
   // ─────────────────────────────────────────────
-  // FACILITY
-  // Routed to Facilities. Deliberately NOT reusing WF-004 Property Damage,
+  // LOCATION
+  // Routed to the administrator. Deliberately NOT reusing WF-004 Property Damage,
   // whose later steps are parent restitution and principal discipline.
   // ─────────────────────────────────────────────
   {
     id: 'WF-009',
     name: 'Location Issue Response',
-    description: 'Workflow for a depot, garage, or yard problem such as a burst pipe, power loss, or damage. Routed to Facilities and Maintenance, with no student or parent involvement.',
+    description: 'Workflow for a depot, garage, or yard problem such as a burst pipe, power loss, or damage. Routed to the administrator, with no student or parent involvement.',
     incidentTypes: ['Location Damage', 'Utility Failure', 'Location Safety Hazard'],
     severityLevels: ['Critical', 'High', 'Medium', 'Low'],
     isActive: true,
@@ -661,7 +661,7 @@ export const workflows: Workflow[] = [
         id: 'step-1',
         name: 'Make Area Safe',
         description: 'Cone off or otherwise isolate the affected area and take any equipment out of service. Confirm nobody is at risk.',
-        assignedRole: 'Transportation Supervisor',
+        assignedRole: 'Safety Coordinator',
         estimatedDuration: '20 minutes',
         required: true,
         order: 1,
@@ -670,9 +670,9 @@ export const workflows: Workflow[] = [
       },
       {
         id: 'step-2',
-        name: 'Facilities Assessment',
-        description: 'Facilities inspects the issue, records the extent, and determines whether an outside contractor is needed.',
-        assignedRole: 'Facilities Manager',
+        name: 'Site Assessment',
+        description: 'The administrator inspects the issue, records the extent, and determines whether an outside contractor is needed.',
+        assignedRole: 'Administrator',
         estimatedDuration: '4 hours',
         required: true,
         order: 2,
@@ -683,7 +683,7 @@ export const workflows: Workflow[] = [
         id: 'step-3',
         name: 'Repair Scheduled',
         description: 'Schedule the repair, either in house or with a contractor, and record the expected completion date.',
-        assignedRole: 'Facilities Manager',
+        assignedRole: 'Administrator',
         estimatedDuration: '1 business day',
         required: true,
         order: 3,
@@ -694,7 +694,7 @@ export const workflows: Workflow[] = [
         id: 'step-4',
         name: 'Verify and Return to Service',
         description: 'Confirm the repair is complete and return the affected area or equipment to service.',
-        assignedRole: 'Facilities Manager',
+        assignedRole: 'Administrator',
         estimatedDuration: '30 minutes',
         required: true,
         order: 4,
@@ -706,12 +706,12 @@ export const workflows: Workflow[] = [
 
   // ─────────────────────────────────────────────
   // VEHICLE
-  // Routed to Maintenance. Nobody aboard, so no statements to collect.
+  // Routed to the fleet manager. Nobody aboard, so no statements to collect.
   // ─────────────────────────────────────────────
   {
     id: 'WF-010',
     name: 'Vehicle Damage and Mechanical Response',
-    description: 'Workflow for vehicle damage or a mechanical fault with nobody aboard. Routed to Maintenance for inspection, repair, and return to service.',
+    description: 'Workflow for vehicle damage or a mechanical fault with nobody aboard. Routed to the fleet manager, with the mechanic performing inspection and repair.',
     incidentTypes: ['Vehicle Damage', 'Mechanical Failure', 'Single Vehicle Collision'],
     severityLevels: ['Critical', 'High', 'Medium', 'Low'],
     isActive: true,
@@ -723,7 +723,7 @@ export const workflows: Workflow[] = [
         id: 'step-1',
         name: 'Take Out of Service and Document',
         description: 'Remove the vehicle from service and photograph the damage or record the fault found during inspection.',
-        assignedRole: 'Maintenance Manager',
+        assignedRole: 'Fleet Manager',
         estimatedDuration: '30 minutes',
         required: true,
         order: 1,
@@ -734,7 +734,7 @@ export const workflows: Workflow[] = [
         id: 'step-2',
         name: 'Maintenance Inspection and Estimate',
         description: 'Inspect the vehicle, determine the cause where possible, and produce a repair estimate.',
-        assignedRole: 'Maintenance Manager',
+        assignedRole: 'Mechanic',
         estimatedDuration: '1 business day',
         required: true,
         order: 2,
@@ -745,7 +745,7 @@ export const workflows: Workflow[] = [
         id: 'step-3',
         name: 'Cause Review',
         description: 'Review yard camera footage or driver logs where the cause is unknown, to establish whether the damage is attributable.',
-        assignedRole: 'Transportation Supervisor',
+        assignedRole: 'Fleet Manager',
         estimatedDuration: '2 business days',
         required: false,
         order: 3,
@@ -756,7 +756,7 @@ export const workflows: Workflow[] = [
         id: 'step-4',
         name: 'Repair and Return to Service',
         description: 'Complete the repair, pass inspection, and return the vehicle to service.',
-        assignedRole: 'Maintenance Manager',
+        assignedRole: 'Mechanic',
         estimatedDuration: '3 business days',
         required: true,
         order: 4,
@@ -806,9 +806,9 @@ export const workflows: Workflow[] = [
       },
       {
         id: 'step-3',
-        name: 'Supervisor Review',
-        description: 'Supervisor reviews the account and documentation and determines whether the driver is cleared to continue.',
-        assignedRole: 'Transportation Supervisor',
+        name: 'Safety Review',
+        description: 'The safety coordinator reviews the account and documentation and determines whether the driver is cleared to continue.',
+        assignedRole: 'Safety Coordinator',
         estimatedDuration: '4 hours',
         required: true,
         order: 3,
@@ -820,7 +820,7 @@ export const workflows: Workflow[] = [
         id: 'step-4',
         name: 'Insurance Claim Filed',
         description: 'File the claim with the district insurer and track it to resolution.',
-        assignedRole: 'Transportation Director',
+        assignedRole: 'Safety Coordinator',
         estimatedDuration: '2 business days',
         required: true,
         order: 4,
@@ -844,7 +844,7 @@ export const workflows: Workflow[] = [
         id: 'step-1',
         name: 'Log Complaint',
         description: 'Record the complaint, who raised it, and what they are asking for.',
-        assignedRole: 'Transportation Supervisor',
+        assignedRole: 'Safety Coordinator',
         estimatedDuration: '15 minutes',
         required: true,
         order: 1,
@@ -855,7 +855,7 @@ export const workflows: Workflow[] = [
         id: 'step-2',
         name: 'Investigate and Respond',
         description: 'Review the route, vehicle, or driver as relevant and respond to the complainant with the outcome.',
-        assignedRole: 'Transportation Supervisor',
+        assignedRole: 'Safety Coordinator',
         estimatedDuration: '2 business days',
         required: true,
         order: 2,
