@@ -585,13 +585,20 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
 
   // Filter drivers
   const filteredDrivers = mockDrivers.filter((driver) => {
-    const matchesSearch =
-      driver.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.assignedVehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.primaryRoute.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    // Email and phone are matched because both are columns on this grid, and the
+    // secondary run because an incident may cite either leg of a driver's day.
+    const q = searchTerm.trim().toLowerCase();
+    const matchesSearch = q === '' || [
+      driver.fullName,
+      driver.id,
+      driver.employeeId,
+      driver.email,
+      driver.phone,
+      driver.assignedVehicle,
+      driver.primaryRoute,
+      driver.secondaryRoute,
+    ].some((field: any) => (field ?? '').toLowerCase().includes(q));
+
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(driver.status);
     
     const matchesYears = yearsOfServiceFilter.length === 0 || yearsOfServiceFilter.some((range) => {
@@ -773,7 +780,7 @@ export function DriversPage({ onNavigate }: DriversPageProps) {
                 <forge-icon slot="start" name="search"></forge-icon>
                 <input
                   type="text"
-                  placeholder="Search drivers, vehicles, or runs..."
+                  placeholder="Search drivers, contact details, vehicles, or runs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />

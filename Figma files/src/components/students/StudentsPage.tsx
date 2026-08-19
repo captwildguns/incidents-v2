@@ -1232,11 +1232,18 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   }, []);
 
   const filteredStudents = mockStudents.filter((student) => {
-    // Search filter
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.school.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    // Search filter. Bus and run are matched so a student can be found the way
+    // the incidents grid finds one, from the vehicle or the run rather than only
+    // from their name.
+    const q = searchTerm.trim().toLowerCase();
+    const matchesSearch = q === '' || [
+      student.name,
+      student.id,
+      student.school,
+      student.bus,
+      student.route,
+    ].some((field: any) => (field ?? '').toLowerCase().includes(q));
+
     // Grade filter (empty array = all)
     const matchesGrade = gradeFilter.length === 0 || gradeFilter.includes(student.grade);
     
@@ -1396,7 +1403,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                 <forge-icon slot="start" name="search"></forge-icon>
                 <input
                   type="text"
-                  placeholder="Search by student name, ID, or school..."
+                  placeholder="Search by student name, ID, school, bus, or run..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />

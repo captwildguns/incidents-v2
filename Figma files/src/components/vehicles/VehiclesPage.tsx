@@ -631,12 +631,20 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
 
   // Filter vehicles
   const filteredVehicles = mockVehicles.filter((vehicle) => {
-    const matchesSearch =
-      vehicle.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.driver.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.primaryRoute.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    // The garage is matched because the placeholder promised it and because a
+    // facility incident names a garage, which is the only way to get from that
+    // incident back to the vehicles based there. Secondary run included since an
+    // incident may cite either leg of the day.
+    const q = searchTerm.trim().toLowerCase();
+    const matchesSearch = q === '' || [
+      vehicle.id,
+      vehicle.name,
+      vehicle.driver,
+      vehicle.primaryRoute,
+      vehicle.secondaryRoute,
+      vehicle.defaultGarage,
+    ].some((field: any) => (field ?? '').toLowerCase().includes(q));
+
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(vehicle.status);
     const bucketForMileage = (m: number): string => {
       const bucket = Math.floor(m / 10000) * 10;
@@ -854,7 +862,7 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
                 <forge-icon slot="start" name="search"></forge-icon>
                 <input
                   type="text"
-                  placeholder="Search vehicles, drivers, or default garage..."
+                  placeholder="Search vehicles, drivers, runs, or garage..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
