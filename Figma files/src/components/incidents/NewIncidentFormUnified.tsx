@@ -25,6 +25,7 @@ import { mockLocations } from './IncidentsPage';
 import { mockVehicles } from '../vehicles/VehiclesPage';
 import { mockDrivers } from '../drivers/DriversPage';
 import { mockStudents } from '../students/StudentsPage';
+import { mockNonDriverEmployees } from '../../data/employees';
 import { IncidentLocationMap } from './IncidentLocationMap';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -99,10 +100,17 @@ const RUNS = [
 ];
 
 // What the People Involved section is called, and where its names come from.
-const ROSTER: Partial<Record<IncidentSubject, { label: string; noun: string; freeText: boolean }>> = {
-  student: { label: 'Involved Students', noun: 'student', freeText: false },
-  employee: { label: 'Involved Employees', noun: 'employee', freeText: false },
-  thirdParty: { label: 'Involved People', noun: 'person', freeText: true },
+const ROSTER: Partial<Record<IncidentSubject, {
+  label: string;
+  noun: string;
+  // Full wording rather than an article glued onto noun, which produced
+  // "Add a employee".
+  addPrompt: string;
+  freeText: boolean;
+}>> = {
+  student: { label: 'Involved Students', noun: 'student', addPrompt: 'Add a student...', freeText: false },
+  employee: { label: 'Involved Employees', noun: 'employee', addPrompt: 'Add an employee...', freeText: false },
+  thirdParty: { label: 'Involved People', noun: 'person', addPrompt: 'Type a name and press Enter...', freeText: true },
 };
 
 interface NewIncidentFormUnifiedProps {
@@ -222,6 +230,15 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // Subject the reporter picked while subject-specific answers were already filled
   const [pendingSubject, setPendingSubject] = useState<IncidentSubject | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  // Drivers are employees whose job is driving, so the employee picker offers
+  // both them and everyone in mockNonDriverEmployees. Built inside the component
+  // because mockDrivers comes from DriversPage, which is in an import cycle with
+  // this module's own page; at module level it would still be in its TDZ.
+  const employeeOptions = useMemo(() => [
+    ...mockDrivers.map(d => ({ id: d.id, name: d.fullName, employeeId: d.employeeId, jobRole: 'Driver' })),
+    ...mockNonDriverEmployees.map(e => ({ id: e.id, name: e.fullName, employeeId: e.employeeId, jobRole: e.jobRole })),
+  ].sort((a, b) => a.name.localeCompare(b.name)), []);
 
   const roster = subject ? ROSTER[subject] : undefined;
   const assetKind: 'vehicle' | 'location' | null =
@@ -480,7 +497,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   value={personDraft}
                   onChange={(e) => setPersonDraft(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') addPerson(personDraft); }}
-                  placeholder={`Type a ${roster.noun} name and press Enter...`}
+                  placeholder={roster.addPrompt}
                 />
               ) : (
                 <select
@@ -492,17 +509,17 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   }}
                   style={selectStyle}
                 >
-                  <option value="">{`Add a ${roster.noun}...`}</option>
+                  <option value="">{roster.addPrompt}</option>
                   {subject === 'student'
                     ? mockStudents
                         .filter((s: any) => !people.some(p => p.sourceId === s.id))
                         .map((s: any) => (
                           <option key={s.id} value={`${s.id}|${s.name}`}>{s.name} ({s.id})</option>
                         ))
-                    : mockDrivers
-                        .filter(d => !people.some(p => p.sourceId === d.id))
-                        .map(d => (
-                          <option key={d.id} value={`${d.id}|${d.fullName}`}>{d.fullName} ({d.employeeId})</option>
+                    : employeeOptions
+                        .filter(e => !people.some(p => p.sourceId === e.id))
+                        .map(e => (
+                          <option key={e.id} value={`${e.id}|${e.name}`}>{e.name} ({e.jobRole})</option>
                         ))}
                 </select>
               )}
@@ -991,22 +1008,22 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // ── Step 2: Review ────────────────────────────────────────────────────────
   const reviewRows: Array<[string, string]> = [
     ['Subject', getSubjectLabel(subject)],
-    ['Incident Type', incidentType || '—'],
-    ['Date', incidentDate || '—'],
-    ['Time', incidentTime || '—'],
-    ['Severity', severity || '—'],
-    ['Location Type', locationType || '—'],
-    ...(assetKind ? [[assetKind === 'location' ? 'Affected Location' : 'Affected Vehicle', assetRef || '—'] as [string, string]] : []),
-    ['Vehicle Number', (assetKind === 'vehicle' ? assetRef : vehicleNumber) || '—'],
-    ['Driver', driver || '—'],
-    ['Run', run || '—'],
-    ...(roster ? [[roster.label, people.length ? people.map(p => p.name).join(', ') : '—'] as [string, string]] : []),
-    ['Witnesses', witnesses.filter(w => w.name.trim()).map(w => w.name).join(', ') || '—'],
-    ['Third parties', thirdParties.filter(t => t.name.trim()).map(t => t.name).join(', ') || '—'],
-    ['Tags', tags.join(', ') || '—'],
-    ['Photos', uploadedPhotos.length ? `${uploadedPhotos.length} attached` : '—'],
-    ['Documents', uploadedDocuments.length ? `${uploadedDocuments.length} attached` : '—'],
-    ['Location pin', locationAddress || (locationCoordinates ? `${locationCoordinates.lat.toFixed(4)}, ${locationCoordinates.lng.toFixed(4)}` : '—')],
+    ['Incident Type', incidentType || '-'],
+    ['Date', incidentDate || '-'],
+    ['Time', incidentTime || '-'],
+    ['Severity', severity || '-'],
+    ['Location Type', locationType || '-'],
+    ...(assetKind ? [[assetKind === 'location' ? 'Affected Location' : 'Affected Vehicle', assetRef || '-'] as [string, string]] : []),
+    ['Vehicle Number', (assetKind === 'vehicle' ? assetRef : vehicleNumber) || '-'],
+    ['Driver', driver || '-'],
+    ['Run', run || '-'],
+    ...(roster ? [[roster.label, people.length ? people.map(p => p.name).join(', ') : '-'] as [string, string]] : []),
+    ['Witnesses', witnesses.filter(w => w.name.trim()).map(w => w.name).join(', ') || '-'],
+    ['Third parties', thirdParties.filter(t => t.name.trim()).map(t => t.name).join(', ') || '-'],
+    ['Tags', tags.join(', ') || '-'],
+    ['Photos', uploadedPhotos.length ? `${uploadedPhotos.length} attached` : '-'],
+    ['Documents', uploadedDocuments.length ? `${uploadedDocuments.length} attached` : '-'],
+    ['Location pin', locationAddress || (locationCoordinates ? `${locationCoordinates.lat.toFixed(4)}, ${locationCoordinates.lng.toFixed(4)}` : '-')],
   ];
 
   const reviewStep = (
@@ -1027,7 +1044,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         ))}
         <div style={{ marginTop: 'var(--forge-spacing-small)', paddingTop: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-color-border-subtle)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)' }}>
           <div style={{ color: 'var(--forge-theme-text-medium)', marginBottom: '2px' }}>Description</div>
-          <div>{description || '—'}</div>
+          <div>{description || '-'}</div>
         </div>
       </div>
     </div>

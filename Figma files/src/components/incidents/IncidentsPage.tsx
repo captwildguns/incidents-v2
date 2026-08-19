@@ -1175,6 +1175,30 @@ const rawIncidents = [
     witnessPresent: false,
     tags: ['facilities', 'environmental'],
   },
+  {
+    id: 'INC-2025-0070',
+    date: '2025-03-14',
+    time: '07:20',
+    subject: 'employee',
+    type: 'Employee Injury',
+    description: 'A bus aide strained her lower back while securing a wheelchair on the morning run. The lift cycled normally and no equipment fault was found. She finished the run, reported the injury at the depot, and was sent for evaluation the same morning.',
+    bus: 'Bus 12',
+    route: 'Meyers Middle AM - Yellow',
+    driver: 'John Chen',
+    severity: 'High',
+    status: 'In Progress',
+    createdBy: 'John Chen',
+    assignedTo: 'Sarah Williams',
+    location: 'on-bus',
+    witnessPresent: true,
+    witnessNames: ['John Chen'],
+    tags: ['injury', 'workers-comp'],
+    // The subject is an aide, not a driver. Before mockNonDriverEmployees she
+    // could not be named at all, which is what this row exercises.
+    involvedParties: [
+      { partyType: 'employee', partyId: 'EMP-102', name: 'Denise Okafor', role: 'Injured', severity: 'High', description: 'Strained her lower back while securing a wheelchair in the forward bay.', actionTaken: 'Sent for same-day medical evaluation. Placed on light duty pending clearance.', notes: 'Second lift-related strain reported at this garage this school year.' },
+    ],
+  },
 ];
 
 // The only location identifiers that exist elsewhere in the app are the
