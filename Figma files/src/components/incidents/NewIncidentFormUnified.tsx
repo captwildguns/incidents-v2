@@ -23,9 +23,8 @@ import {
 } from './IncidentTypes';
 import { mockLocations } from './IncidentsPage';
 import { mockVehicles } from '../vehicles/VehiclesPage';
-import { mockDrivers } from '../drivers/DriversPage';
+import { mockDrivers, allEmployees } from '../../data/employees';
 import { mockStudents } from '../students/StudentsPage';
-import { mockNonDriverEmployees } from '../../data/employees';
 import { IncidentLocationMap } from './IncidentLocationMap';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -231,14 +230,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const [pendingSubject, setPendingSubject] = useState<IncidentSubject | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  // Drivers are employees whose job is driving, so the employee picker offers
-  // both them and everyone in mockNonDriverEmployees. Built inside the component
-  // because mockDrivers comes from DriversPage, which is in an import cycle with
-  // this module's own page; at module level it would still be in its TDZ.
-  const employeeOptions = useMemo(() => [
-    ...mockDrivers.map(d => ({ id: d.id, name: d.fullName, employeeId: d.employeeId, jobRole: 'Driver' })),
-    ...mockNonDriverEmployees.map(e => ({ id: e.id, name: e.fullName, employeeId: e.employeeId, jobRole: e.jobRole })),
-  ].sort((a, b) => a.name.localeCompare(b.name)), []);
+  // Drivers are employees whose job is driving, so the picker offers everyone.
+  const employeeOptions = allEmployees;
 
   const roster = subject ? ROSTER[subject] : undefined;
   const assetKind: 'vehicle' | 'location' | null =
@@ -519,7 +512,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                     : employeeOptions
                         .filter(e => !people.some(p => p.sourceId === e.id))
                         .map(e => (
-                          <option key={e.id} value={`${e.id}|${e.name}`}>{e.name} ({e.jobRole})</option>
+                          <option key={e.id} value={`${e.id}|${e.fullName}`}>{e.fullName} ({e.jobRole})</option>
                         ))}
                 </select>
               )}

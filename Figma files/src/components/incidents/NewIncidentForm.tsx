@@ -34,7 +34,7 @@ import {
 import { mockLocations } from './IncidentsPage';
 import { mockVehicles } from '../vehicles/VehiclesPage';
 import { IncidentLocationMap } from './IncidentLocationMap';
-import { mockDrivers } from '../drivers/DriversPage';
+import { mockDrivers } from '../../data/employees';
 import { mockIncidents } from './IncidentsPage';
 
 const mockStudents = [

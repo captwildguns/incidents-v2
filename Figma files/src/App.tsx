@@ -5,7 +5,7 @@ import { IncidentsPage } from './components/incidents/IncidentsPage';
 import { IncidentDetailPage } from './components/incidents/IncidentDetailPage';
 import { StudentsPage } from './components/students/StudentsPage';
 import { VehiclesPage } from './components/vehicles/VehiclesPage';
-import { DriversPage } from './components/drivers/DriversPage';
+import { EmployeesPage } from './components/employees/EmployeesPage';
 import { ReportsPage } from './components/reports/ReportsPage';
 import { CommunicationsPage } from './components/communications/CommunicationsPage';
 import { NewIncidentFormUnified } from './components/incidents/NewIncidentFormUnified';
@@ -231,8 +231,8 @@ export default function App() {
         );
       case 'students':
         return <StudentsPage onNavigate={navigateToPage} initialActiveIncidentsFilter={studentsActiveIncidentsFilter} onNavigateToIncidentDetail={navigateToIncidentDetail} />;
-      case 'drivers':
-        return <DriversPage onNavigate={navigateToPage} onNavigateToIncidentsMatching={navigateToIncidentsMatching} />;
+      case 'employees':
+        return <EmployeesPage onNavigate={navigateToPage} onNavigateToIncidentsMatching={navigateToIncidentsMatching} />;
       case 'vehicles':
         return <VehiclesPage onNavigate={navigateToPage} onNavigateToIncidentsMatching={navigateToIncidentsMatching} />;
       case 'communications':

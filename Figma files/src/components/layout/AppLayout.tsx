@@ -118,7 +118,7 @@ const navItems = [
   { id: 'dashboard', label: 'Dashboard', forgeIcon: 'home' },
   { id: 'incidents', label: 'Incidents', forgeIcon: 'warning' },
   { id: 'students', label: 'Students', forgeIcon: 'people' },
-  { id: 'drivers', label: 'Drivers', forgeIcon: 'person' },
+  { id: 'employees', label: 'Employees', forgeIcon: 'badge' },
   { id: 'vehicles', label: 'Vehicles', forgeIcon: 'directions_bus' },
   { id: 'communications', label: 'Communications', forgeIcon: 'chat' },
   { id: 'reports', label: 'Reports', forgeIcon: 'description' },

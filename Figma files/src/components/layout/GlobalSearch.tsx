@@ -3,7 +3,7 @@ import { Search, AlertCircle, Users, UserCircle, Bus, MessageSquare } from 'luci
 import { mockIncidents, getIncidentSubjectLabel } from '../incidents/IncidentsPage';
 import { getSubjectLabel } from '../incidents/IncidentTypes';
 import { mockStudents } from '../students/StudentsPage';
-import { mockDrivers } from '../drivers/DriversPage';
+import { mockDrivers } from '../../data/employees';
 import { mockVehicles } from '../vehicles/VehiclesPage';
 import { INCIDENTS_WITH_COMMUNICATIONS } from '../communications/communicationsData';
 
@@ -137,7 +137,7 @@ export function GlobalSearch({ onNavigate, onNavigateToIncidentDetail, onNavigat
         onNavigate('students');
         break;
       case 'Drivers':
-        onNavigate('drivers');
+        onNavigate('employees');
         break;
       case 'Vehicles':
         onNavigate('vehicles');
