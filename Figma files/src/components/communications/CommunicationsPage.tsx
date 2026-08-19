@@ -19,9 +19,18 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Alert, AlertDescription } from '../ui/alert';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 
+import { mockIncidents, getIncidentSubjectLabel } from '../incidents/IncidentsPage';
+import { getSubjectLabel } from '../incidents/IncidentTypes';
+import { mockLocations } from '../../data/locations';
+import { allEmployees } from '../../data/employees';
+
 interface Message {
   id: string;
   sender: string;
+  // 'driver' predates non-student subjects and now means "the other party in
+  // this thread", whoever counterpartyFor resolves that to. Left as the stored
+  // value so the 26 seeded threads did not have to be rewritten; the UI reads
+  // it as coordinator or not.
   senderRole: 'coordinator' | 'driver';
   content: string;
   timestamp: string;
@@ -48,6 +57,119 @@ interface IncidentCommunication {
 
 // Mock data
 const mockCommunications: IncidentCommunication[] = [
+  // ─── Non-student subjects ──────────────────────────────────────────────────
+  // No student on any of these. The counterparty is derived from the incident,
+  // so the thread is with the location manager, the fleet manager or the
+  // employee rather than with a driver who was never involved.
+  {
+    incidentId: 'INC-2025-0066',
+    incidentDate: '2025-03-10',
+    incidentType: 'Utility Failure',
+    driver: 'Robert Mills',
+    bus: 'N/A',
+    route: 'N/A',
+    severity: 'Medium',
+    status: 'in-progress',
+    lastMessageTime: '7:15 AM',
+    unreadMessages: 1,
+    assignedTo: 'Mike Chen',
+    messages: [
+      {
+        id: 'MSG-0066-1',
+        sender: 'Robert Mills',
+        senderRole: 'driver',
+        content: 'Water line above the maintenance bay let go overnight. Roughly 400 square feet of standing water. I have coned it off and both lifts are tagged out of service.',
+        timestamp: '2025-03-10 05:40 AM',
+        status: 'read',
+      },
+      {
+        id: 'MSG-0066-2',
+        sender: 'Mike Chen',
+        senderRole: 'coordinator',
+        content: 'Understood. Contractor is called out for this morning. Keep the bay closed until they clear it, and move any pull-out scheduled from those lifts to South District.',
+        timestamp: '2025-03-10 06:05 AM',
+        status: 'read',
+      },
+      {
+        id: 'MSG-0066-3',
+        sender: 'Robert Mills',
+        senderRole: 'driver',
+        content: 'Reassigned the two buses. Contractor on site now, says the line is replaceable but the floor needs to dry before the lifts can be certified again.',
+        timestamp: '2025-03-10 07:15 AM',
+        status: 'delivered',
+      },
+    ],
+  },
+  {
+    incidentId: 'INC-2025-0067',
+    incidentDate: '2025-03-09',
+    incidentType: 'Vehicle Damage',
+    driver: 'Terrance Boyle',
+    bus: 'Bus 18',
+    route: 'N/A',
+    severity: 'Medium',
+    status: 'in-progress',
+    lastMessageTime: '8:20 AM',
+    unreadMessages: 0,
+    assignedTo: 'Mike Chen',
+    messages: [
+      {
+        id: 'MSG-0067-1',
+        sender: 'Mike Chen',
+        senderRole: 'coordinator',
+        content: 'Bus 18 came up on the pre-trip with a cracked mirror housing and a scraped rear quarter. Nobody was aboard and nothing was reported last night. Can you pull the yard camera for the overnight window?',
+        timestamp: '2025-03-09 06:30 AM',
+        status: 'read',
+      },
+      {
+        id: 'MSG-0067-2',
+        sender: 'Terrance Boyle',
+        senderRole: 'driver',
+        content: 'Footage requested. Bus 18 is unassigned so it sat on the far row all night. I will have the mirror on order either way, that is a same-day part.',
+        timestamp: '2025-03-09 08:20 AM',
+        status: 'read',
+      },
+    ],
+  },
+  {
+    incidentId: 'INC-2025-0070',
+    incidentDate: '2025-03-14',
+    incidentType: 'Employee Injury',
+    driver: 'Denise Okafor',
+    bus: 'Bus 12',
+    route: 'Meyers Middle AM - Yellow',
+    severity: 'High',
+    status: 'in-progress',
+    lastMessageTime: '11:30 AM',
+    unreadMessages: 2,
+    assignedTo: 'Sarah Williams',
+    messages: [
+      {
+        id: 'MSG-0070-1',
+        sender: 'Sarah Williams',
+        senderRole: 'coordinator',
+        content: 'I have your injury report from this morning. Before anything else, how are you doing? Occupational health has you on the list for today.',
+        timestamp: '2025-03-14 09:10 AM',
+        status: 'read',
+      },
+      {
+        id: 'MSG-0070-2',
+        sender: 'Denise Okafor',
+        senderRole: 'driver',
+        content: 'Sore but walking. I finished the run because there was nobody else on the bus to secure the chair. Seen at 10:30, they have me on light duty for now.',
+        timestamp: '2025-03-14 11:05 AM',
+        status: 'read',
+      },
+      {
+        id: 'MSG-0070-3',
+        sender: 'Denise Okafor',
+        senderRole: 'driver',
+        content: 'One thing worth flagging: this is the second lift strain out of this garage this year. The forward bay clearance is tight and you end up lifting at an angle.',
+        timestamp: '2025-03-14 11:30 AM',
+        status: 'delivered',
+      },
+    ],
+  },
   {
     incidentId: 'INC-2025-0042',
     incidentDate: '2025-03-15',
@@ -1117,6 +1239,55 @@ export function getCommunicationsByIncidentId(incidentId: string): Message[] | n
 // Export Message type for use in other components
 export type { Message };
 
+// A thread is always the coordinator talking to one counterpart. Which
+// counterpart depends on what the incident is about, so it is derived from the
+// incident rather than stored on the thread: a burst pipe is a conversation with
+// the location manager, not with a driver who was never there.
+function counterpartyFor(inc: any): { name: string; role: string } {
+  const subject = inc?.subject ?? 'student';
+
+  if (subject === 'location') {
+    const loc = mockLocations.find(l => l.name === inc?.assetRef);
+    if (loc && loc.manager !== 'Unassigned') {
+      return { name: loc.manager, role: 'Location manager' };
+    }
+  }
+
+  if (subject === 'vehicle') {
+    const fleet = allEmployees.find(e => e.jobRole === 'Fleet Manager' && e.status === 'Active');
+    if (fleet) return { name: fleet.fullName, role: 'Fleet manager' };
+  }
+
+  if (subject === 'employee') {
+    // The employee the incident is about, not whoever reported it.
+    const party = (inc?.involvedParties ?? []).find((p: any) => p?.partyType === 'employee');
+    if (party?.name) return { name: party.name, role: 'Employee' };
+  }
+
+  // Student and third party incidents happen on a run, so the driver is the
+  // person the coordinator needs.
+  if (typeof inc?.driver === 'string' && inc.driver && inc.driver !== 'N/A') {
+    return { name: inc.driver, role: 'Driver' };
+  }
+
+  return { name: inc?.assignedTo ?? 'Unassigned', role: 'Assignee' };
+}
+
+// Everything about a thread that depends on the incident behind it. Looked up
+// by id, so a thread never carries a stale copy of the incident's own fields.
+function threadContext(incidentId: string) {
+  const inc = (mockIncidents as any[]).find(i => i.id === incidentId);
+  const subject = inc?.subject ?? 'student';
+  return {
+    incident: inc,
+    subjectLabel: getSubjectLabel(subject),
+    // "Involved" rather than "Student", the same wording the incidents grid
+    // uses, because a row may be a location or a vehicle.
+    involved: inc ? getIncidentSubjectLabel(inc) : 'Unknown',
+    counterparty: counterpartyFor(inc),
+  };
+}
+
 interface CommunicationsPageProps {
   initialIncidentId?: string | null;
   initialIncidentData?: any | null;
@@ -1200,7 +1371,7 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
       searchQuery === '' ||
       comm.incidentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       comm.driver.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (comm.student ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+      threadContext(comm.incidentId).involved.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       statusFilter.length === 0 ||
@@ -1288,7 +1459,7 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
       <div className="mb-6">
         <h1 className="text-gray-900 mb-2">Communications</h1>
         <p className="text-muted-foreground">
-          Communicate with drivers about incident reports and follow-ups
+          Message the person handling an incident, whoever that is for the subject
         </p>
       </div>
 
@@ -1312,7 +1483,7 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
                   <forge-text-field>
                     <input
                       type="text"
-                      placeholder="Search incidents, drivers, students..."
+                      placeholder="Search incidents, people, vehicles, or locations..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       style={{ paddingLeft: '2rem' }}
@@ -1359,7 +1530,15 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
                         </span>
                       </div>
                       <div className="text-muted-foreground mb-2" style={{ fontSize: '0.875rem' }}>
-                        {comm.student} • {comm.driver}
+                        {(() => {
+                          const ctx = threadContext(comm.incidentId);
+                          // On an Employee incident the person the incident is
+                          // about is also the person the coordinator is talking
+                          // to, so naming them twice reads as a bug.
+                          return ctx.involved === ctx.counterparty.name
+                            ? `${ctx.involved} • ${ctx.counterparty.role}`
+                            : `${ctx.involved} • ${ctx.counterparty.name}`;
+                        })()}
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <forge-badge theme={severityTheme(comm.severity)} strong>
@@ -1402,23 +1581,36 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
                     </forge-badge>
                   </div>
 
+                  {/* Subject and Involved replace the old Student row, and the
+                      vehicle and run only appear when the incident has them. A
+                      location incident showed "N/A" twice before. */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 pt-3 border-t">
                     <div>
-                      <Label className="text-muted-foreground">Student</Label>
-                      <p className="mt-0.5">{selectedIncident.student}</p>
+                      <Label className="text-muted-foreground">Subject</Label>
+                      <p className="mt-0.5">{threadContext(selectedIncident.incidentId).subjectLabel}</p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">Driver</Label>
-                      <p className="mt-0.5">{selectedIncident.driver}</p>
+                      <Label className="text-muted-foreground">Involved</Label>
+                      <p className="mt-0.5">{threadContext(selectedIncident.incidentId).involved}</p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">Vehicle</Label>
-                      <p className="mt-0.5">{selectedIncident.bus}</p>
+                      <Label className="text-muted-foreground">
+                        {threadContext(selectedIncident.incidentId).counterparty.role}
+                      </Label>
+                      <p className="mt-0.5">{threadContext(selectedIncident.incidentId).counterparty.name}</p>
                     </div>
-                    <div>
-                      <Label className="text-muted-foreground">Run</Label>
-                      <p className="mt-0.5">{selectedIncident.route}</p>
-                    </div>
+                    {selectedIncident.bus && selectedIncident.bus !== 'N/A' && (
+                      <div>
+                        <Label className="text-muted-foreground">Vehicle</Label>
+                        <p className="mt-0.5">{selectedIncident.bus}</p>
+                      </div>
+                    )}
+                    {selectedIncident.route && selectedIncident.route !== 'N/A' && (
+                      <div>
+                        <Label className="text-muted-foreground">Run</Label>
+                        <p className="mt-0.5">{selectedIncident.route}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </ForgeCard>
@@ -1434,7 +1626,7 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
                           New Conversation
                         </p>
                         <p className="text-muted-foreground" style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)' }}>
-                          Send the first message to {selectedIncident.driver} about this incident.
+                          Send the first message to {threadContext(selectedIncident.incidentId).counterparty.name} about this incident.
                         </p>
                       </div>
                     )}
@@ -1492,13 +1684,13 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
                     <Alert className="mb-3 bg-green-50 border-green-200">
                       <forge-icon name="check_circle" style={{ fontSize: '16px', color: '#16a34a' }}></forge-icon>
                       <AlertDescription className="text-green-800">
-                        Message sent successfully to {selectedIncident.driver}
+                        Message sent successfully to {threadContext(selectedIncident.incidentId).counterparty.name}
                       </AlertDescription>
                     </Alert>
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="message">Send Message to {selectedIncident.driver}</Label>
+                    <Label htmlFor="message">Send Message to {threadContext(selectedIncident.incidentId).counterparty.name}</Label>
                     <Textarea
                       id="message"
                       placeholder="Type your message here..."

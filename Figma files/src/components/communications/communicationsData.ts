@@ -26,6 +26,10 @@ export const INCIDENTS_WITH_COMMUNICATIONS = [
   'INC-2025-0019',
   'INC-2025-0018',
   'INC-2025-0017',
+  // Non-student subjects
+  'INC-2025-0066',
+  'INC-2025-0067',
+  'INC-2025-0070',
 ];
 
 export function hasActiveCommunication(incidentId: string): boolean {
