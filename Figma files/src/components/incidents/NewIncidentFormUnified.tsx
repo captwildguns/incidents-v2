@@ -466,11 +466,229 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   );
 
   // ── Step 1: Incident Details ──────────────────────────────────────────────
+  // The roster, held here so the WHO section below can place it. Absent on
+  // Vehicle and Location, which have nobody to name.
+  const rosterSection = roster ? (
+      <div>
+        <div className="flex" style={{ gap: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-small)' }}>
+          <div style={{ flex: 1 }}>
+            {/* @ts-ignore */}
+            <forge-text-field>
+              <forge-icon slot="start" name="search"></forge-icon>
+              {roster.freeText ? (
+                <input
+                  value={personDraft}
+                  onChange={(e) => setPersonDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') addPerson(personDraft); }}
+                  placeholder={`Type a ${roster.noun} name and press Enter...`}
+                />
+              ) : (
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    const [id, ...rest] = e.target.value.split('|');
+                    addPerson(rest.join('|'), id);
+                  }}
+                  style={selectStyle}
+                >
+                  <option value="">{`Add a ${roster.noun}...`}</option>
+                  {subject === 'student'
+                    ? mockStudents
+                        .filter((s: any) => !people.some(p => p.sourceId === s.id))
+                        .map((s: any) => (
+                          <option key={s.id} value={`${s.id}|${s.name}`}>{s.name} ({s.id})</option>
+                        ))
+                    : mockDrivers
+                        .filter(d => !people.some(p => p.sourceId === d.id))
+                        .map(d => (
+                          <option key={d.id} value={`${d.id}|${d.fullName}`}>{d.fullName} ({d.employeeId})</option>
+                        ))}
+                </select>
+              )}
+            </forge-text-field>
+          </div>
+          {roster.freeText && (
+            /* @ts-ignore */
+            <forge-button variant="outlined" onClick={() => addPerson(personDraft)}>Add</forge-button>
+          )}
+        </div>
+
+        {people.length === 0 && (
+          <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: 0 }}>
+            No {roster.noun}s added yet.
+          </p>
+        )}
+
+        {people.map(person => (
+          <div
+            key={person.id}
+            style={{ border: '1px solid var(--forge-color-border-subtle)', borderRadius: 'var(--forge-radius-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
+          >
+            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)', padding: 'var(--forge-spacing-small)' }}>
+              <button
+                onClick={() => toggleExpanded(person.id)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', flex: 1, textAlign: 'left', fontFamily: 'var(--forge-font-family)' }}
+              >
+                <forge-icon name={expanded.has(person.id) ? 'expand_less' : 'expand_more'} style={{ fontSize: '18px' }}></forge-icon>
+                <span style={{ fontWeight: 500 }}>{person.name}</span>
+                {person.role && <forge-badge theme="default">{person.role}</forge-badge>}
+                {person.severityOverride && <forge-badge theme="info">{person.severityOverride}</forge-badge>}
+              </button>
+              {/* @ts-ignore */}
+              <forge-button variant="flat" onClick={() => removePerson(person.id)}>Remove</forge-button>
+            </div>
+
+            {/* Per-person detail, inline. This is what lets all five subjects
+                run the same two steps instead of three needing a third. */}
+            {expanded.has(person.id) && (
+              <div style={{ padding: '0 var(--forge-spacing-small) var(--forge-spacing-small)', borderTop: '1px solid var(--forge-color-border-subtle)', paddingTop: 'var(--forge-spacing-small)' }}>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label style={labelStyle}>Role</label>
+                    {/* @ts-ignore */}
+                    <forge-text-field>
+                      <select value={person.role} onChange={(e) => updatePerson(person.id, { role: e.target.value })} style={selectStyle}>
+                        <option value="">Select role...</option>
+                        {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </forge-text-field>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Severity for this person</label>
+                    {/* @ts-ignore */}
+                    <forge-text-field>
+                      <select value={person.severityOverride} onChange={(e) => updatePerson(person.id, { severityOverride: e.target.value })} style={selectStyle}>
+                        <option value="">Same as incident{severity ? ` (${severity})` : ''}</option>
+                        {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </forge-text-field>
+                  </div>
+                  {subject === 'student' && (
+                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                      <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={person.parentNotified} onChange={(e) => updatePerson(person.id, { parentNotified: e.target.checked })} />
+                        Parent notified
+                      </label>
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
+                  <div>
+                    <label style={labelStyle}>What this person did</label>
+                    {/* @ts-ignore */}
+                    <forge-text-field>
+                      <textarea rows={2} value={person.description} onChange={(e) => updatePerson(person.id, { description: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+                    </forge-text-field>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Action taken</label>
+                    {/* @ts-ignore */}
+                    <forge-text-field>
+                      <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+                    </forge-text-field>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      ) : null;
+
   const detailsStep = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-large)' }}>
+
+      {/* Order is who, what, when and where, then supporting detail. A reporter
+          knows who an incident involves and what happened before they work out
+          the operational context, and the narrative is the most valuable field
+          in the record, so neither it nor the roster belongs at the bottom of
+          the form. */}
+
+      {/* WHO. One slot: the affected asset on the two subjects with no people,
+          the roster on the three that have them. */}
       <div>
-        <SectionHeading hint="When it happened and what happened.">
-          Incident Details
+        {/* The asset and the roster are mutually exclusive: no subject has both,
+            so this one slot is always exactly one control. */}
+        <SectionHeading hint={assetKind
+          ? `Name the ${assetKind === 'location' ? 'location' : 'vehicle'} this incident is about.`
+          : `Name each ${roster ? roster.noun : 'person'} involved, then expand a row to record their role and what was done.`}>
+          {roster ? roster.label : 'Who or what was involved'}
+          {peopleRequired && <Req />}
+        </SectionHeading>
+
+        {assetKind && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label style={labelStyle}>
+                {assetKind === 'location' ? 'Affected Location' : 'Affected Vehicle'}<Req />
+              </label>
+              {/* @ts-ignore */}
+              <forge-text-field>
+                <select value={assetRef} onChange={(e) => setAssetRef(e.target.value)} style={selectStyle}>
+                  <option value="">{assetKind === 'location' ? 'Select location...' : 'Select vehicle...'}</option>
+                  {assetKind === 'location'
+                    ? mockLocations.map(l => <option key={l.id} value={l.name}>{l.name}</option>)
+                    : mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
+                </select>
+              </forge-text-field>
+            </div>
+          </div>
+        )}
+
+        {rosterSection}
+      </div>
+
+      {/* WHAT */}
+      <div>
+        <SectionHeading hint="The kind of incident, how serious it was, and the account of it.">
+          What happened
+        </SectionHeading>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label style={labelStyle}>Incident Type<Req /></label>
+            {/* @ts-ignore */}
+            <forge-text-field>
+              <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)} style={selectStyle}>
+                <option value="">Select type...</option>
+                {typeOptions.map(ty => (
+                  <option key={ty.id} value={ty.label} title={ty.description}>{ty.label}</option>
+                ))}
+              </select>
+            </forge-text-field>
+          </div>
+          <div>
+            <label style={labelStyle}>Severity<Req /></label>
+            {/* @ts-ignore */}
+            <forge-text-field>
+              <select value={severity} onChange={(e) => setSeverity(e.target.value)} style={selectStyle}>
+                <option value="">Select severity...</option>
+                {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </forge-text-field>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
+          <label style={labelStyle}>Incident Description<Req /></label>
+          {/* @ts-ignore */}
+          <forge-text-field>
+            <textarea
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What happened, including any relevant context..."
+              style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
+            />
+          </forge-text-field>
+        </div>
+      </div>
+
+      {/* WHEN AND WHERE */}
+      <div>
+        <SectionHeading hint="When it happened, and the place, vehicle and run it happened on.">
+          When and where
         </SectionHeading>
 
         {/* One ordered list of fields flowed into a three-column grid, rather
@@ -509,44 +727,21 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               ),
             },
             {
-              key: 'type',
+              key: 'locationType',
               node: (
                 <>
-                  <label style={labelStyle}>Incident Type<Req /></label>
+                  <label style={labelStyle}>Location Type<Req /></label>
                   {/* @ts-ignore */}
                   <forge-text-field>
-                    <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)} style={selectStyle}>
-                      <option value="">Select type...</option>
-                      {typeOptions.map(t => (
-                        <option key={t.id} value={t.label} title={t.description}>{t.label}</option>
-                      ))}
+                    <select value={locationType} onChange={(e) => setLocationType(e.target.value)} style={selectStyle}>
+                      <option value="">Select location type...</option>
+                      {LOCATION_TYPES.map(l => <option key={l} value={l}>{l}</option>)}
                     </select>
                   </forge-text-field>
                 </>
               ),
             },
-            // The one subject-specific field. Absent on the three subjects that
-            // name no asset.
-            assetKind && {
-              key: 'asset',
-              node: (
-                <>
-                  <label style={labelStyle}>
-                    {assetKind === 'location' ? 'Affected Location' : 'Affected Vehicle'}<Req />
-                  </label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select value={assetRef} onChange={(e) => setAssetRef(e.target.value)} style={selectStyle}>
-                      <option value="">{assetKind === 'location' ? 'Select location...' : 'Select vehicle...'}</option>
-                      {assetKind === 'location'
-                        ? mockLocations.map(l => <option key={l.id} value={l.name}>{l.name}</option>)
-                        : mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
-                    </select>
-                  </forge-text-field>
-                </>
-              ),
-            },
-            // Dropped on a Vehicle incident, where Affected Vehicle above already
+            // Dropped on a Vehicle incident, where Affected Vehicle already
             // names the vehicle. Asking twice invites the two to disagree.
             assetKind !== 'vehicle' && {
               key: 'vehicleNumber',
@@ -596,195 +791,27 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 </>
               ),
             },
-            {
-              key: 'locationType',
-              node: (
-                <>
-                  <label style={labelStyle}>Location Type<Req /></label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select value={locationType} onChange={(e) => setLocationType(e.target.value)} style={selectStyle}>
-                      <option value="">Select location type...</option>
-                      {LOCATION_TYPES.map(l => <option key={l} value={l}>{l}</option>)}
-                    </select>
-                  </forge-text-field>
-                </>
-              ),
-            },
-            {
-              key: 'severity',
-              node: (
-                <>
-                  <label style={labelStyle}>Severity<Req /></label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select value={severity} onChange={(e) => setSeverity(e.target.value)} style={selectStyle}>
-                      <option value="">Select severity...</option>
-                      {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </forge-text-field>
-                </>
-              ),
-            },
           ]
             .filter(Boolean)
             .map((f: any) => <div key={f.key}>{f.node}</div>)}
         </div>
 
+        {/* No label of our own: the map component supplies its own heading, and
+            two "Incident Location Pin" headings stacked read as a mistake. */}
         <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
-          <label style={labelStyle}>Incident Description<Req /></label>
-          {/* @ts-ignore */}
-          <forge-text-field>
-            <textarea
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What happened, including any relevant context..."
-              style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
-            />
-          </forge-text-field>
+          <IncidentLocationMap
+            location={locationCoordinates}
+            onLocationChange={setLocationCoordinates}
+            address={locationAddress}
+            onAddressChange={setLocationAddress}
+          />
         </div>
       </div>
 
-      {/* People Involved: a section in a fixed position, not a step. Hidden
-          entirely for Vehicle and Location, which have nobody to name. */}
-      {roster && (
-        <div>
-          <SectionHeading hint={`Name each ${roster.noun} involved, then expand a row to record their role and what was done.`}>
-            {roster.label}
-            {peopleRequired && <Req />}
-          </SectionHeading>
-
-          <div className="flex" style={{ gap: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-small)' }}>
-            <div style={{ flex: 1 }}>
-              {/* @ts-ignore */}
-              <forge-text-field>
-                <forge-icon slot="start" name="search"></forge-icon>
-                {roster.freeText ? (
-                  <input
-                    value={personDraft}
-                    onChange={(e) => setPersonDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') addPerson(personDraft); }}
-                    placeholder={`Type a ${roster.noun} name and press Enter...`}
-                  />
-                ) : (
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (!e.target.value) return;
-                      const [id, ...rest] = e.target.value.split('|');
-                      addPerson(rest.join('|'), id);
-                    }}
-                    style={selectStyle}
-                  >
-                    <option value="">{`Add a ${roster.noun}...`}</option>
-                    {subject === 'student'
-                      ? mockStudents
-                          .filter((s: any) => !people.some(p => p.sourceId === s.id))
-                          .map((s: any) => (
-                            <option key={s.id} value={`${s.id}|${s.name}`}>{s.name} ({s.id})</option>
-                          ))
-                      : mockDrivers
-                          .filter(d => !people.some(p => p.sourceId === d.id))
-                          .map(d => (
-                            <option key={d.id} value={`${d.id}|${d.fullName}`}>{d.fullName} ({d.employeeId})</option>
-                          ))}
-                  </select>
-                )}
-              </forge-text-field>
-            </div>
-            {roster.freeText && (
-              /* @ts-ignore */
-              <forge-button variant="outlined" onClick={() => addPerson(personDraft)}>Add</forge-button>
-            )}
-          </div>
-
-          {people.length === 0 && (
-            <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: 0 }}>
-              No {roster.noun}s added yet.
-            </p>
-          )}
-
-          {people.map(person => (
-            <div
-              key={person.id}
-              style={{ border: '1px solid var(--forge-color-border-subtle)', borderRadius: 'var(--forge-radius-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
-            >
-              <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)', padding: 'var(--forge-spacing-small)' }}>
-                <button
-                  onClick={() => toggleExpanded(person.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', flex: 1, textAlign: 'left', fontFamily: 'var(--forge-font-family)' }}
-                >
-                  <forge-icon name={expanded.has(person.id) ? 'expand_less' : 'expand_more'} style={{ fontSize: '18px' }}></forge-icon>
-                  <span style={{ fontWeight: 500 }}>{person.name}</span>
-                  {person.role && <forge-badge theme="default">{person.role}</forge-badge>}
-                  {person.severityOverride && <forge-badge theme="info">{person.severityOverride}</forge-badge>}
-                </button>
-                {/* @ts-ignore */}
-                <forge-button variant="flat" onClick={() => removePerson(person.id)}>Remove</forge-button>
-              </div>
-
-              {/* Per-person detail, inline. This is what lets all five subjects
-                  run the same two steps instead of three needing a third. */}
-              {expanded.has(person.id) && (
-                <div style={{ padding: '0 var(--forge-spacing-small) var(--forge-spacing-small)', borderTop: '1px solid var(--forge-color-border-subtle)', paddingTop: 'var(--forge-spacing-small)' }}>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label style={labelStyle}>Role</label>
-                      {/* @ts-ignore */}
-                      <forge-text-field>
-                        <select value={person.role} onChange={(e) => updatePerson(person.id, { role: e.target.value })} style={selectStyle}>
-                          <option value="">Select role...</option>
-                          {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                      </forge-text-field>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Severity for this person</label>
-                      {/* @ts-ignore */}
-                      <forge-text-field>
-                        <select value={person.severityOverride} onChange={(e) => updatePerson(person.id, { severityOverride: e.target.value })} style={selectStyle}>
-                          <option value="">Same as incident{severity ? ` (${severity})` : ''}</option>
-                          {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </forge-text-field>
-                    </div>
-                    {subject === 'student' && (
-                      <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                        <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={person.parentNotified} onChange={(e) => updatePerson(person.id, { parentNotified: e.target.checked })} />
-                          Parent notified
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
-                    <div>
-                      <label style={labelStyle}>What this person did</label>
-                      {/* @ts-ignore */}
-                      <forge-text-field>
-                        <textarea rows={2} value={person.description} onChange={(e) => updatePerson(person.id, { description: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                      </forge-text-field>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Action taken</label>
-                      {/* @ts-ignore */}
-                      <forge-text-field>
-                        <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                      </forge-text-field>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Context and evidence, identical for all five */}
+      {/* SUPPORTING DETAIL. All optional, and identical on all five. */}
       <div>
         <SectionHeading hint="Anyone else present, and anything to attach.">
-          Context and Evidence
+          Supporting detail
         </SectionHeading>
 
         <div className="flex flex-wrap" style={{ gap: 'var(--forge-spacing-large)', marginBottom: 'var(--forge-spacing-small)' }}>
@@ -957,16 +984,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
         {/* Where on the map, as distinct from Location Type, which is the kind
             of place. Same on every subject. */}
-        {/* No label of our own: the map component supplies its own heading, and
-            two "Incident Location Pin" headings stacked read as a mistake. */}
-        <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
-          <IncidentLocationMap
-            location={locationCoordinates}
-            onLocationChange={setLocationCoordinates}
-            address={locationAddress}
-            onAddressChange={setLocationAddress}
-          />
-        </div>
       </div>
     </div>
   );
