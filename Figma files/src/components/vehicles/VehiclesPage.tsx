@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ForgeCard, ForgeButton, useForgeToast } from '@tylertech/forge-react';
 import {
   defineCardComponent,
@@ -19,8 +19,9 @@ defineIconComponent();
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
-import { 
-  BlueBirdVisionIcon, 
+import { mockIncidents } from '../incidents/IncidentsPage';
+import {
+  BlueBirdVisionIcon,
   ICBusCESeriesIcon, 
   ThomasSafTLinerC2Icon, 
   ThomasSafTLinerHDXIcon, 
@@ -343,7 +344,9 @@ export const mockVehicles = [
     licensePlate: 'SCH-1017',
     capacity: 84,
     status: 'Active',
-    driver: 'Angela Foster',
+    // Was Angela Foster, who mockDrivers assigns to Bus 6. Cleared rather than
+    // reassigned so no driver appears on two vehicles.
+    driver: 'Unassigned',
     primaryRoute: 'Riverside High AM - Maroon',
     secondaryRoute: 'Riverside High PM - Maroon',
     defaultGarage: 'South District Garage',
@@ -437,6 +440,116 @@ export const mockVehicles = [
     fuelType: 'Diesel',
     notes: 'New stop sign arm installed 2025-02-10'
   },
+
+  // ─── Vehicles back-filled from mockDrivers ─────────────────────────────────
+  // These four were assigned to drivers and referenced by incidents but had no
+  // vehicle record, so their incidents landed on no row at all. Driver, runs,
+  // and garage are copied from the matching mockDrivers entry, which is the
+  // authoritative driver-to-vehicle assignment.
+  {
+    id: 'VEH-004',
+    name: 'Bus 4',
+    make: 'Blue Bird',
+    model: 'Vision',
+    year: 2021,
+    vin: '1BABNBYA3MF334455',
+    licensePlate: 'SCH-1004',
+    capacity: 72,
+    status: 'Active',
+    driver: 'Marcus Washington',
+    primaryRoute: 'Eastside Middle AM - Teal',
+    secondaryRoute: 'Eastside Middle PM - Teal',
+    defaultGarage: 'East Service Center',
+    midDayGarage: 'Central Service Center',
+    gpsHardwareId: 'GPS-4B7N1P5',
+    hourmeter: 4120,
+    useTydAvl: true,
+    lastInspection: '2025-02-08',
+    nextInspection: '2025-05-08',
+    maintenanceStatus: 'Good',
+    incidentCount: 3,
+    mileage: 51870,
+    fuelType: 'Diesel',
+    notes: ''
+  },
+  {
+    id: 'VEH-006',
+    name: 'Bus 6',
+    make: 'IC Bus',
+    model: 'CE Series',
+    year: 2020,
+    vin: '4DRBUAAN5LB556677',
+    licensePlate: 'SCH-1006',
+    capacity: 66,
+    status: 'Active',
+    driver: 'Angela Foster',
+    primaryRoute: 'Oakwood Elementary AM - Bronze',
+    secondaryRoute: 'Oakwood Elementary PM - Bronze',
+    defaultGarage: 'Central Service Center',
+    midDayGarage: 'North District Garage',
+    gpsHardwareId: 'GPS-6C9Q2R7',
+    hourmeter: 5240,
+    useTydAvl: true,
+    lastInspection: '2025-01-30',
+    nextInspection: '2025-04-30',
+    maintenanceStatus: 'Good',
+    incidentCount: 2,
+    mileage: 63410,
+    fuelType: 'Diesel',
+    notes: ''
+  },
+  {
+    id: 'VEH-010',
+    name: 'Bus 10',
+    make: 'Thomas Built',
+    model: 'Saf-T-Liner C2',
+    year: 2023,
+    vin: '1T8HFEA15PF778899',
+    licensePlate: 'SCH-1010',
+    capacity: 84,
+    status: 'Active',
+    driver: 'Derek Coleman',
+    primaryRoute: 'Parkview Middle AM - Navy',
+    secondaryRoute: 'Parkview Middle PM - Navy',
+    defaultGarage: 'East Service Center',
+    midDayGarage: 'South District Garage',
+    gpsHardwareId: 'GPS-1D3S5T9',
+    hourmeter: 1980,
+    useTydAvl: true,
+    lastInspection: '2025-02-26',
+    nextInspection: '2025-05-26',
+    maintenanceStatus: 'Excellent',
+    incidentCount: 2,
+    mileage: 24650,
+    fuelType: 'Diesel',
+    notes: ''
+  },
+  {
+    id: 'VEH-011',
+    name: 'Bus 11',
+    make: 'Blue Bird',
+    model: 'All American',
+    year: 2019,
+    vin: '1BAAKCPA9KF990011',
+    licensePlate: 'SCH-1011',
+    capacity: 78,
+    status: 'Active',
+    driver: 'Thomas Nguyen',
+    primaryRoute: 'Hillcrest High AM - Crimson',
+    secondaryRoute: 'Hillcrest High PM - Crimson',
+    defaultGarage: 'South District Garage',
+    midDayGarage: 'East Service Center',
+    gpsHardwareId: 'GPS-8E5U7V1',
+    hourmeter: 6830,
+    useTydAvl: true,
+    lastInspection: '2025-01-24',
+    nextInspection: '2025-04-24',
+    maintenanceStatus: 'Needs Attention',
+    incidentCount: 2,
+    mileage: 78920,
+    fuelType: 'Diesel',
+    notes: 'Rear suspension inspection scheduled'
+  },
 ];
 
 interface VehiclesPageProps {
@@ -480,13 +593,40 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
     }
   };
 
+  // Incident counts derived from mockIncidents rather than read from the seeded
+  // incidentCount field, so filing a vehicle incident actually moves the number
+  // on this grid. Keyed by vehicle name ('Bus 15'), which is the only vehicle
+  // identifier an incident carries.
+  //
+  // This must stay inside the component. VehiclesPage and IncidentsPage sit in
+  // an import cycle (IncidentsPage -> NewIncidentForm -> VehiclesPage), so at
+  // this module's top level mockIncidents is still in its temporal dead zone.
+  const incidentCountByVehicle = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const inc of mockIncidents as any[]) {
+      // A vehicle is linked either by the bus the incident happened on, or by
+      // assetRef on a vehicle-subject incident. 'N/A' is the seeded placeholder
+      // for incidents with no vehicle at all.
+      const names = new Set(
+        [inc.bus, inc.subject === 'vehicle' ? inc.assetRef : null]
+          .filter((n: any) => typeof n === 'string' && n && n !== 'N/A')
+      );
+      for (const name of names) {
+        counts.set(name as string, (counts.get(name as string) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, []);
+
+  const incidentsFor = (vehicle: any) => incidentCountByVehicle.get(vehicle.name) ?? 0;
+
   // Calculate summary statistics
   const totalVehicles = mockVehicles.length;
   const activeVehicles = mockVehicles.filter(v => v.status === 'Active').length;
   const inMaintenance = mockVehicles.filter(v => v.status === 'Maintenance').length;
   const needsAttention = mockVehicles.filter(v => v.maintenanceStatus === 'Needs Attention' || v.maintenanceStatus === 'In Repair').length;
   const inactiveVehicles = mockVehicles.filter(v => v.status !== 'Active').length;
-  const avgIncidents = (mockVehicles.reduce((sum, v) => sum + v.incidentCount, 0) / totalVehicles).toFixed(1);
+  const avgIncidents = (mockVehicles.reduce((sum, v) => sum + incidentsFor(v), 0) / totalVehicles).toFixed(1);
   const avgMileage = Math.round(mockVehicles.reduce((sum, v) => sum + v.mileage, 0) / totalVehicles);
 
   // Filter vehicles
@@ -546,7 +686,7 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
                        (maintenanceOrder[b.maintenanceStatus as keyof typeof maintenanceOrder] || 0);
         break;
       case 'incidents':
-        compareResult = a.incidentCount - b.incidentCount;
+        compareResult = incidentsFor(a) - incidentsFor(b);
         break;
       case 'mileage':
         compareResult = a.mileage - b.mileage;
@@ -638,7 +778,7 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
       const rows = filteredVehicles.map(v => [
         v.id, v.name, v.make, v.model, v.year, `"${v.driver}"`,
         `"${v.primaryRoute}"`, v.status, v.maintenanceStatus,
-        v.incidentCount, v.mileage, v.lastInspection
+        incidentsFor(v), v.mileage, v.lastInspection
       ].join(','));
 
       const csvContent = [headers.join(','), ...rows].join('\n');
@@ -881,8 +1021,8 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
                       </span>
                     </td>
                     <td className="forge-table-cell">
-                      <span style={{ fontWeight: vehicle.incidentCount > 8 ? 600 : 'normal' }}>
-                        {vehicle.incidentCount}
+                      <span style={{ fontWeight: incidentsFor(vehicle) > 8 ? 600 : 'normal' }}>
+                        {incidentsFor(vehicle)}
                       </span>
                     </td>
                     <td className="forge-table-cell">
@@ -1003,7 +1143,7 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
                   </div>
                   <div>
                     <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Vehicle Incident Count</div>
-                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.incidentCount} incidents this year</div>
+                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{incidentsFor(selectedVehicle)} incidents this year</div>
                   </div>
                 </div>
               </div>
