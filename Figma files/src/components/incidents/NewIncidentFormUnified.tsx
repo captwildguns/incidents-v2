@@ -814,7 +814,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       {/* Still the same run of fields, just the optional ones. */}
       <div>
 
-        <div className="flex flex-wrap" style={{ gap: 'var(--forge-spacing-large)', marginBottom: 'var(--forge-spacing-small)' }}>
+        {/* Witnesses, third parties and tags share one row. Each of the three is
+            small on its own, and tags on its own line pushed the evidence
+            buttons below the fold for no reason. */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
           <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', cursor: 'pointer' }}>
             <input
               type="checkbox"
@@ -837,6 +840,37 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             />
             Third part(ies) involved
           </label>
+
+          <div>
+              <label style={labelStyle}>Tags</label>
+            <div className="flex flex-wrap items-center" style={{ gap: '6px' }}>
+              {tags.map(t => (
+                <forge-badge key={t} theme="default">
+                  {t}
+                  <button
+                    onClick={() => setTags(ts => ts.filter(x => x !== t))}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '4px', color: 'inherit' }}
+                  >
+                    ×
+                  </button>
+                </forge-badge>
+              ))}
+            </div>
+            {/* @ts-ignore */}
+            <forge-text-field style={{ marginTop: '6px' }}>
+              <input
+                value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && tagDraft.trim()) {
+                    setTags(ts => Array.from(new Set([...ts, tagDraft.trim()])));
+                    setTagDraft('');
+                  }
+                }}
+                placeholder="Type a tag and press Enter..."
+              />
+            </forge-text-field>
+          </div>
         </div>
 
         {witnessPresent && (
@@ -877,36 +911,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           </div>
         )}
 
-        <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
-          <label style={labelStyle}>Tags</label>
-          <div className="flex flex-wrap items-center" style={{ gap: '6px' }}>
-            {tags.map(t => (
-              <forge-badge key={t} theme="default">
-                {t}
-                <button
-                  onClick={() => setTags(ts => ts.filter(x => x !== t))}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '4px', color: 'inherit' }}
-                >
-                  ×
-                </button>
-              </forge-badge>
-            ))}
-          </div>
-          {/* @ts-ignore */}
-          <forge-text-field style={{ marginTop: '6px' }}>
-            <input
-              value={tagDraft}
-              onChange={(e) => setTagDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && tagDraft.trim()) {
-                  setTags(ts => Array.from(new Set([...ts, tagDraft.trim()])));
-                  setTagDraft('');
-                }
-              }}
-              placeholder="Type a tag and press Enter..."
-            />
-          </forge-text-field>
-        </div>
 
         {/* Both uploads share a row, since each is only a button until
             something is attached. */}
