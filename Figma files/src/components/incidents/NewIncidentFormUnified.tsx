@@ -817,29 +817,48 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         {/* Witnesses, third parties and tags share one row. Each of the three is
             small on its own, and tags on its own line pushed the evidence
             buttons below the fold for no reason. */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
-          <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={witnessPresent}
-              onChange={(e) => {
-                setWitnessPresent(e.target.checked);
-                if (e.target.checked && witnesses.length === 0) setWitnesses([emptyContact()]);
-              }}
-            />
-            Witness(es) present
-          </label>
-          <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={thirdPartyPresent}
-              onChange={(e) => {
-                setThirdPartyPresent(e.target.checked);
-                if (e.target.checked && thirdParties.length === 0) setThirdParties([emptyContact()]);
-              }}
-            />
-            Third part(ies) involved
-          </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
+          {/* Label above a bordered control, the same shape as every other
+              field. As bare inline checkboxes these two sat at a different
+              height to their neighbours and had no field box, which made the
+              row look unfinished. */}
+          <div>
+            <label style={labelStyle}>Witnesses</label>
+            {/* @ts-ignore */}
+            <forge-text-field>
+              <select
+                value={witnessPresent ? 'yes' : 'no'}
+                onChange={(e) => {
+                  const on = e.target.value === 'yes';
+                  setWitnessPresent(on);
+                  if (on && witnesses.length === 0) setWitnesses([emptyContact()]);
+                }}
+                style={selectStyle}
+              >
+                <option value="no">None</option>
+                <option value="yes">One or more present</option>
+              </select>
+            </forge-text-field>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Third parties</label>
+            {/* @ts-ignore */}
+            <forge-text-field>
+              <select
+                value={thirdPartyPresent ? 'yes' : 'no'}
+                onChange={(e) => {
+                  const on = e.target.value === 'yes';
+                  setThirdPartyPresent(on);
+                  if (on && thirdParties.length === 0) setThirdParties([emptyContact()]);
+                }}
+                style={selectStyle}
+              >
+                <option value="no">None</option>
+                <option value="yes">One or more involved</option>
+              </select>
+            </forge-text-field>
+          </div>
 
           <div>
               <label style={labelStyle}>Tags</label>
