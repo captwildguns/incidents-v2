@@ -203,6 +203,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const [incidentTime, setIncidentTime] = useState('');
   const [incidentType, setIncidentType] = useState('');
   const [severity, setSeverity] = useState('');
+  // True while severity still holds the value the incident type set. Cleared
+  // the moment the reporter picks a different one.
+  const [severityFromType, setSeverityFromType] = useState(false);
   const [description, setDescription] = useState('');
   const [locationType, setLocationType] = useState('');
   const [vehicleNumber, setVehicleNumber] = useState('');
@@ -248,6 +251,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     // kept, because they are true regardless of what the incident turns out to
     // be about.
     setIncidentType('');
+    setSeverityFromType(false);
     setAssetRef('');
     setPeople([]);
     setExpanded(new Set());
@@ -659,7 +663,22 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 <label style={labelStyle}>Incident Type<Req /></label>
                 {/* @ts-ignore */}
                 <forge-text-field>
-                  <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)} style={selectStyle}>
+                  <select
+                    value={incidentType}
+                    onChange={(e) => {
+                      const label = e.target.value;
+                      setIncidentType(label);
+                      // Every type in the catalogue carries a defaultSeverity, so
+                      // picking one sets severity rather than leaving the
+                      // reporter to guess. Overridable below.
+                      const picked = typeOptions.find(ty => ty.label === label);
+                      if (picked) {
+                        setSeverity(picked.defaultSeverity);
+                        setSeverityFromType(true);
+                      }
+                    }}
+                    style={selectStyle}
+                  >
                     <option value="">Select type...</option>
                     {typeOptions.map(ty => (
                       <option key={ty.id} value={ty.label} title={ty.description}>{ty.label}</option>
@@ -671,16 +690,49 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           },
           {
             key: 'severity',
+            // Spans the rest of the row so all four options are visible at once.
+            // A radio group rather than a select because the value is usually
+            // already correct from the type, and a closed select hides both what
+            // it is and that it can be changed.
+            spanTwo: true,
             node: (
               <>
-                <label style={labelStyle}>Severity<Req /></label>
-                {/* @ts-ignore */}
-                <forge-text-field>
-                  <select value={severity} onChange={(e) => setSeverity(e.target.value)} style={selectStyle}>
-                    <option value="">Select severity...</option>
-                    {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </forge-text-field>
+                <label style={labelStyle}>
+                  Severity<Req />
+                  {severityFromType && (
+                    <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)' }}>
+                      {'  '}set from incident type, change if needed
+                    </span>
+                  )}
+                </label>
+                <div className="flex flex-wrap" style={{ gap: '8px', paddingTop: '2px' }}>
+                  {SEVERITIES.map(s => (
+                    <label
+                      key={s}
+                      className="flex items-center"
+                      style={{
+                        gap: '6px',
+                        padding: '7px 12px',
+                        border: `1px solid ${severity === s ? 'var(--forge-theme-primary)' : 'var(--forge-color-border-default)'}`,
+                        borderRadius: 'var(--forge-radius-medium)',
+                        background: severity === s ? 'var(--forge-theme-primary-container-minimum)' : 'transparent',
+                        cursor: 'pointer',
+                        fontFamily: 'var(--forge-font-family)',
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="severity"
+                        value={s}
+                        checked={severity === s}
+                        onChange={() => { setSeverity(s); setSeverityFromType(false); }}
+                      />
+                      <forge-badge theme={s === 'Critical' ? 'danger' : s === 'High' ? 'error' : s === 'Medium' ? 'warning' : 'info'}>
+                        {s}
+                      </forge-badge>
+                    </label>
+                  ))}
+                </div>
               </>
             ),
           },
@@ -799,7 +851,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         ]
           .filter(Boolean)
           .map((f: any) => (
-            <div key={f.key} className={f.span ? 'sm:col-span-3' : undefined}>{f.node}</div>
+            <div key={f.key} className={f.span ? 'sm:col-span-3' : f.spanTwo ? 'sm:col-span-2' : undefined}>{f.node}</div>
           ))}
       </div>
 
