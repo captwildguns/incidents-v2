@@ -141,8 +141,9 @@ New Incident on the incidents grid or the New Incident page. It contains nothing
 that would not ship: no design-comparison toggle, no reviewer commentary in the
 help text, no browser confirm dialogs.
 
-The previous multi-step version stays in the repository as NewIncidentForm.tsx,
-unreferenced, so it can be brought back or diffed if the group prefers it.
+The previous multi-step version has been deleted. It is recoverable from git
+history if the group prefers it: it was last referenced at commit 2ae4a1d and
+the file is NewIncidentForm.tsx.
 
 ## How this consolidates the tickets
 
