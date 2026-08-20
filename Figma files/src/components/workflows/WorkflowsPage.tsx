@@ -18,7 +18,7 @@ defineTooltipComponent();
 defineIconComponent();
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { workflows as importedWorkflows, Workflow, WorkflowStep } from '../../data/workflows';
+import { workflows as importedWorkflows, Workflow, WorkflowStep, resolveWorkflowOwner } from '../../data/workflows';
 import { INCIDENT_TYPES, INCIDENT_CATEGORIES, getSubjectLabel } from '../incidents/IncidentTypes';
 import { WorkflowStepLibrary, WorkflowStepTemplate } from './WorkflowStepLibrary';
 import { StepTemplateManager } from './StepTemplateManager';
@@ -43,6 +43,9 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
     description: w.description,
     category: 'Safety', // Default category
     severity: w.severityLevels?.[0] || 'Medium',
+    ownerRole: w.ownerRole,
+    ownerName: w.ownerName,
+    owner: resolveWorkflowOwner(w),
     incidentTypes: w.incidentTypes,
     steps: w.steps,
     active: w.isActive,
@@ -382,6 +385,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Workflow Name</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Category</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Status</th>
+                      <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Incident Owner</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Severity</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>Steps</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Last Modified</th>
@@ -422,6 +426,25 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                             <forge-badge theme={workflow.active ? 'success' : 'default'}>
                               {workflow.active ? 'Active' : 'Inactive'}
                             </forge-badge>
+                          </td>
+                          {/* Who an incident on this workflow is assigned to at
+                              creation. The role is what is configured; the name
+                              is who currently holds it. */}
+                          <td className="forge-table-cell">
+                            {workflow.owner ? (
+                              <>
+                                <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-base)' }}>
+                                  {workflow.owner}
+                                </div>
+                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', marginTop: '2px' }}>
+                                  {workflow.ownerName ? 'Named on this workflow' : workflow.ownerRole}
+                                </div>
+                              </>
+                            ) : (
+                              <span style={{ fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>
+                                Unassigned
+                              </span>
+                            )}
                           </td>
                           <td className="forge-table-cell">
                             <forge-badge

@@ -26,6 +26,7 @@ import { mockVehicles } from '../vehicles/VehiclesPage';
 import { mockDrivers, allEmployees } from '../../data/employees';
 import { mockStudents } from '../students/StudentsPage';
 import { IncidentLocationMap } from './IncidentLocationMap';
+import { assignWorkflowToIncident, resolveWorkflowOwner } from '../../data/workflows';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The container form.
@@ -339,6 +340,16 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     if (parts.length <= 1) return parts[0] ?? 'nothing';
     return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
   })();
+
+  // Workflow selection already keys off type and severity, so as soon as both
+  // are set the routing is known. Showing it on review means the reporter sees
+  // who picks this up rather than finding out afterwards.
+  const routed = useMemo(() => {
+    if (!incidentType || !severity) return null;
+    const wf = assignWorkflowToIncident(incidentType, severity);
+    if (!wf) return null;
+    return { workflow: wf.name, owner: resolveWorkflowOwner(wf), ownerRole: wf.ownerRole };
+  }, [incidentType, severity]);
 
   const peopleRequired = subject ? subjectRequiresParties(subject) : false;
 
@@ -1079,6 +1090,14 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     ['Witnesses', witnesses.filter(w => w.name.trim()).map(w => w.name).join(', ') || '-'],
     ['Third parties', thirdParties.filter(t => t.name.trim()).map(t => t.name).join(', ') || '-'],
     ['Tags', tags.join(', ') || '-'],
+    ['Workflow', routed ? routed.workflow : 'None matches this type and severity'],
+    // Unassigned is a real outcome per #197: a workflow with no owner creates
+    // the incident unassigned and it lands in the triage queue.
+    ['Assigned to', routed
+      ? (routed.owner
+          ? `${routed.owner}${routed.ownerRole ? ` (${routed.ownerRole})` : ''}`
+          : 'Unassigned, goes to triage')
+      : '-'],
     ['Photos', uploadedPhotos.length ? `${uploadedPhotos.length} attached` : '-'],
     ['Documents', uploadedDocuments.length ? `${uploadedDocuments.length} attached` : '-'],
     ['Location pin', locationAddress || (locationCoordinates ? `${locationCoordinates.lat.toFixed(4)}, ${locationCoordinates.lng.toFixed(4)}` : '-')],
