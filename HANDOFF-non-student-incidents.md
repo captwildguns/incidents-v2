@@ -1,99 +1,149 @@
-# Handoff: non-student incident subjects (GH #191)
+# Handoff: non-student incident subjects (GH #191, #196, #197)
 
-Written 2026-08-19. Work is committed on branch `non-student-incident-subjects`
-(commit `667fe2d`), branched from `main` at `7a2d468`. Nothing is pushed.
+Rewritten 2026-08-20. Branch `non-student-incident-subjects`, 30 commits since
+the previous handoff at `cf7253f`. Working tree clean, build green, **nothing
+pushed**. Nothing has been posted to GitHub or Monday.
 
-## State
+The previous version of this file described the state at `cf7253f`. That is all
+superseded.
 
-All 11 planned tasks are done and the build is green (`npm run build` from
-`Figma files`). The original plan lives at
-`C:\Users\Gabe.guzman\.claude\plans\lets-talk-about-changing-atomic-hamster.md`.
+## Where the work stands
 
-I posted a progress comment on #191:
-https://github.com/tyler-technologies/transportation-incidents/issues/191#issuecomment-5269037250
-Screenshots for it are in `issue-191-screenshots/`. Gabe was going to drag them
-into the comment, replacing the four `_[screenshot N: ...]_` placeholders.
+Every page on the site is now subject-aware and runs off derived data with one
+source of truth, with one deliberate exception.
 
-## Open items for the 11:30 meeting (Review Incident Issues, BK + Justin)
+Done this session, by area:
 
-1. **#114 closed without a Subject filter.** Closed 2026-08-18 14:59 as
-   completed. Without it you cannot isolate facility incidents or keep staff
-   records out of a student view, which several #191 acceptance criteria assume.
-   The Type filter on that card may also still be hardcoded to the six student
-   labels, which would leave all 14 new types unfilterable. Suggested action was
-   to reopen #114 with a comment rather than file new work. Nothing posted.
+**Grids.** Incident counts on the vehicles, employees and students grids derive
+from `mockIncidents` instead of stale seeded scalars. Counts are clickable and
+open the incidents grid scoped to that entity. Search on every grid matches the
+fields its placeholder promises, and all four grids share one Forge typeahead
+(`components/shared/EntitySearchField.tsx`).
 
-2. **#188 role seeding.** Assigned to Jon Jungman. Creates
-   `SeedIncidentWorkflowDefaults`, seeding Incident role GUIDs into step
-   templates and workflows. The four new non-student roles (Transportation
-   Supervisor, HR Manager, Facilities Manager, Maintenance Manager) must exist
-   in that proc or the non-student workflows ship with no valid assignee.
+**Vocabulary.** Facility became Location and Staff became Employee across the
+subject union, labels, categories, type ids and labels, form, tablet, detail
+page, workflows and the reference doc. Decided Aug 12, carried through here.
 
-3. **Export moved to SSRS PDF for V1** (Jon, #117, 2026-08-18). CSV and Excel
-   deferred to V2. The CSV export here was repaired to stop emitting `undefined`
-   for non-student rows; that same blank-student-column bug very likely now
-   lives in the SSRS report, which is outside this repo.
+**Workflow roles.** The four invented roles (Transportation Supervisor, HR
+Manager, Facilities Manager, Maintenance Manager) are gone. All 46 step
+assignments use one of the seven `IncidentRoleType` members, so #188 stays a
+five GUID procedure.
 
-4. **Cy-Fair demo request.** Cheryll Hill replied 2026-08-18 that Dr Smith,
-   herself, and new Assistant Director Tamra Besch all want to see the product.
-   Cy-Fair is one of the two districts #191 cites as driving non-student
-   incidents. BK owns the thread.
+**New incident form.** Rebuilt as one container
+(`NewIncidentFormUnified.tsx`), the only new-incident form left. Identical
+two-step flow for all five subjects, one continuous field sequence, severity
+auto-assigned from the incident type.
 
-5. **Kristen Michalski, unanswered since 2026-08-13.** David assigned her PR
-   #19990 (Incident dashboard reporting sprocs), labeled `qa: not needed`, and
-   she asked whether there is anything she should actually be testing. She
-   flagged it as not pressing. A draft reply was offered but never written.
+**Pages.** Drivers became Employees with a job role filter and non-driver
+staff. A Locations page was added. Communications became subject-aware with a
+derived counterparty and a Subject filter. The dashboard's charts and KPIs are
+derived rather than hardcoded.
 
-6. **Seana Baughman requested access** to the "Incidents Training Review"
-   meeting recording in Gabe's OneDrive (2026-08-18 17:37). Needs Gabe to
-   accept or decline.
+**Workflow ownership.** Workflows carry an `ownerRole` that routes new incidents
+to whoever holds it, with an optional named override.
 
-## Deliberately not done
+## Decisions that are easy to reverse and worth knowing
 
-- The stakeholder doc the plan asked for first,
-  `Presentation/Non-Student-Incidents.md`. Gabe chose code first. Writing it now
-  against what shipped would be more accurate than writing it from the plan.
-- School filtering and the studentless bypass: backend concerns, no auth layer
-  in the prototype.
-- Staff visibility restriction was **removed entirely** at Gabe's direction.
-  Access is governed the same as any other subject; the `restricted` field is
-  gone from the subject model, not just hidden.
-- Role list is still duplicated across `StepConfigDialog`,
-  `WorkflowBuilderPage`, and `StepTemplateManager`. Kept in sync and commented;
-  consolidating is a separate cleanup.
+- **Sequence, not sections.** The who, what, when-and-where order in the new
+  incident form is about the order a reporter thinks in. It is deliberately not
+  three headed sections; that was tried and rejected.
+- **Witnesses and third parties are selects, not checkboxes.** Only way to make
+  them match the other fields. Revert if the checkbox convention matters more.
+- **Changing incident type re-applies its default severity**, discarding a
+  manual override. The type is the bigger decision.
+- **Role badges on the Employees grid are all one theme.** Job role is a
+  category, not a status.
+- **Locations includes two locations nothing references** (Transportation
+  Administration, West Bus Yard). They exercise the zero case; drop them if they
+  read as noise.
+- **Reports is deliberately untouched.** Out of scope by instruction.
 
-## Gotchas for whoever picks this up
+## Open items
+
+1. **Reports runs on its own private incident list.** `ReportsPage.tsx` declares
+   a local `mockIncidents` of 20 rows, none carrying a subject, shadowing the
+   shared one. Every number on that page is fiction and cannot agree with
+   anything else. Four open issues sit on it (#183, #184, #185, #186). Left
+   alone by instruction, but it is the largest known inconsistency on the site.
+
+2. **#196 gap: `assetRef` is a name, not a reference.** A Location incident
+   stores the location's name as a string, so renaming a location orphans every
+   incident that named it. #196's first acceptance criterion. Noted in a comment
+   at the top of `data/locations.ts`.
+
+3. **#196 gap: drill-through is a name search, not an identity filter.** Clicking
+   an incident count pushes the entity's name in as free text. Fine for a bus
+   number, over-matches on people: two employees sharing a surname return each
+   other's incidents. Also means a single-digit bus name is a prefix of the
+   two-digit ones (Bus 1 has no incidents today, so nothing is clickable, but it
+   would over-match if it got one).
+
+4. **#197 is ahead of its own gate.** Workflow ownership is built, but #197 says
+   the design should be confirmed against the Cy-Fair discovery on how that
+   district actually assigns incidents. That session is not scheduled.
+
+5. **#114 closed without a Subject filter.** Still not reopened, still not
+   commented on. The reverse-lookup work this session strengthens the argument.
+
+6. **#191 item 2 not built.** Description on witness and third party contacts, so
+   a person nobody can name can still be filed. The smallest of the three items
+   on the #191 "left to build" list; items 1 and 3 are done.
+
+7. **The Tuesday Aug 25 package.** BK asked for a final V1 issue list, the shared
+   versus specific field inventory, an inventory of the issues that were updated
+   rather than created, and all of it on the Monday board. Only the field
+   inventory exists, in `Presentation/Incident-Form-Approach.md`. This is the
+   only outstanding item with a hard date.
+
+8. **Older, unchanged from the last handoff:** Kristen Michalski unanswered since
+   2026-08-13 on PR #19990; Seana Baughman's OneDrive access request from
+   2026-08-18; the Cy-Fair demo request that BK owns; the blank-student-column
+   bug that probably still lives in the SSRS report outside this repo.
+
+## Gotchas
 
 - **TypeScript is not installed.** `npm run build` transpiles without
-  typechecking, so type errors ship as wrong behavior rather than failing the
+  typechecking, so type errors ship as wrong behaviour rather than failing the
   build. Build after every structural edit and verify in the browser.
-- **Vite HMR white-screens on a compile error and does not self-recover.** If
-  the app goes blank, hard reload (Ctrl+Shift+R) before assuming it is broken.
-- **The prototype has a password gate**, `My-Drop-Site`, hardcoded at
-  `src/App.tsx:20`.
-- **Node is not on PATH by default.** Use:
+- **A green build proves almost nothing about behaviour.** Three of this
+  session's real defects (stale workflow on the detail page, `undefined` in
+  global search, the vehicle chart disagreeing with the vehicles grid) were only
+  found by clicking through. Walk the five subjects.
+- **The password gate is `My-Drop-Site`, hardcoded at `src/App.tsx:20`.** It is
+  per-tab sessionStorage, so a new tab always hits it. Claude will not type it;
+  a human has to unlock the tab.
+- **The slideout nav is unreliable under scripted clicks.** Open it, screenshot
+  to get real positions, then click. The global search in the header is a more
+  reliable way to reach an incident.
+- **Import cycles around `IncidentsPage`.** It imports the incident form and the
+  form imports several pages, so anything exported from `IncidentsPage` has to be
+  read inside a component to dodge its temporal dead zone. Roster and location
+  data were moved into `data/` this session to remove that hazard; `mockIncidents`
+  still has it.
+- **Node is not on PATH by default:**
   `export PATH="/c/Program Files/nodejs:/c/Users/Gabe.guzman/AppData/Roaming/npm:$PATH"`
-- **GitHub Pages is not configured** for `captwildguns/incidents-v2`, despite
-  the URL in CLAUDE.md. There is no gh-pages branch and the Pages API 404s. The
-  app runs only at `http://localhost:3000/incidents-v2/` via `npm run dev`.
-- **The driver tablet has no URL.** No router; it is `currentPage === 'tablet'`
-  reached by clicking the avatar at the top of the slideout drawer.
-- **Teams search rate-limits (Graph 429)** when date filters are used, because
-  that path scans up to 50 chats. The non-date search path usually works.
+- **GitHub Pages is not configured** for `captwildguns/incidents-v2`. The app runs
+  only at `http://localhost:3000/incidents-v2/` via `npm run dev`.
+- **The driver tablet has no URL.** It is `currentPage === 'tablet'`, reached by
+  clicking the avatar at the top of the slideout drawer.
+- **Teams search rate-limits (Graph 429)** when date filters are used. The
+  non-date path usually works.
 
-## Last few form changes (unverified visually)
+## Seed data reconciliations made this session
 
-The password gate blocked browser verification for these, so they are built and
-committed but never seen running:
+Worth knowing, because the numbers moved and any screenshot taken before this is
+stale:
 
-- Incident type description is now a `title` tooltip, not inline copy, in both
-  the shared picker and the per-student override
-- Facility incidents: Date and Time split 50/50, Incident Type moved down beside
-  Affected Facility
-- Vehicle incidents: Vehicle Number dropdown removed (Affected Vehicle already
-  captures it), Driver moved up beside Affected Vehicle
-- Location Type flat alphabetical, category groups dropped
-- Removed the helper lines under Date, Time, and Run
-- Subject added as a sortable column on the incidents grid
-
-Worth eyeballing the facility path first: all of these stack up there.
+- 54 incidents. Added `INC-2025-0070`, an aide injured on a wheelchair lift, so
+  the Employee subject is exercised by a non-driver.
+- Added VEH-004, 006, 010, 011, which `mockDrivers` referenced but `mockVehicles`
+  did not have. Bus 22 and Bus 31 on two incidents were repointed to real buses.
+- Two employee party ids on `INC-2025-0065` pointed at the wrong people. Fixed,
+  and counts now match on name rather than id.
+- 47 students. Chris Park, `STU-3890`, was a named bystander with no student
+  record.
+- Student incident counts now derive from `mockIncidents`, which dropped 13 stale
+  entries using retired type names. Totals moved from 61 to 55 and repeat
+  offenders from 5 to 1.
+- The dashboard's vehicle chart agrees with the vehicles grid for the first time:
+  Bus 8 is 10 and Bus 15 is 10.
