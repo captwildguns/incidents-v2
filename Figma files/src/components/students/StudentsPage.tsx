@@ -50,6 +50,19 @@ const malePhotos = [
 // them, or the students grid will disagree with the incidents grid again.
 export const mockStudents = [
   {
+    id: 'STU-3890',
+    name: 'Chris Park',
+    photoUrl: malePhotos[3],
+    grade: '5th Grade',
+    school: 'Lincoln Elementary',
+    bus: 'Bus 9',
+    route: 'Lincoln Elementary AM - Green',
+    // Legacy fields, no longer read. Both pages derive from mockIncidents.
+    incidentCount: 1,
+    lastIncident: '2025-03-01',
+    incidents: [],
+  },
+  {
     id: 'STU-2891',
     name: 'Sarah Mitchell',
     photoUrl: femalePhotos[0],
