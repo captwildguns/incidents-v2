@@ -7,6 +7,7 @@ defineBadgeComponent();
 defineMenuComponent();
 defineIconButtonComponent();
 import { EditIncidentDialog } from '../incidents/EditIncidentDialog';
+import { NewIncidentFormUnified } from '../incidents/NewIncidentFormUnified';
 import { mockIncidents, getIncidentSubjectLabel } from '../incidents/IncidentsPage';
 import { getSubjectLabel, INCIDENT_SUBJECTS } from '../incidents/IncidentTypes';
 import { defineButtonComponent } from '@tylertech/forge';
@@ -543,6 +544,8 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
   const triageDialogRef = useRef<HTMLElement>(null);
   const editDialogRef = useRef<HTMLElement>(null);
   const reassignDialogRef = useRef<HTMLElement>(null);
+  const newIncidentDialogRef = useRef<HTMLElement>(null);
+  const [isNewIncidentDialogOpen, setIsNewIncidentDialogOpen] = useState(false);
 
   // Sync triageDetailsOpen state with forge-dialog
   useEffect(() => { const el = triageDialogRef.current as any; if (!el) return; el.open = triageDetailsOpen; }, [triageDetailsOpen]);
@@ -551,6 +554,11 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
   // Sync editDialogOpen state with forge-dialog
   useEffect(() => { const el = editDialogRef.current as any; if (!el) return; el.open = editDialogOpen; }, [editDialogOpen]);
   useEffect(() => { const el = editDialogRef.current as any; if (!el) return; const handler = () => setEditDialogOpen(false); el.addEventListener('forge-dialog-close', handler); return () => el.removeEventListener('forge-dialog-close', handler); }, []);
+
+  // Sync the New Incident dialog. Filing starts in a modal here exactly as it
+  // does on the incidents page, rather than navigating away from the dashboard.
+  useEffect(() => { const el = newIncidentDialogRef.current as any; if (!el) return; el.open = isNewIncidentDialogOpen; }, [isNewIncidentDialogOpen]);
+  useEffect(() => { const el = newIncidentDialogRef.current as any; if (!el) return; const handler = () => setIsNewIncidentDialogOpen(false); el.addEventListener('forge-dialog-close', handler); return () => el.removeEventListener('forge-dialog-close', handler); }, []);
 
   // Sync reassignDialogOpen state with forge-dialog
   useEffect(() => { const el = reassignDialogRef.current as any; if (!el) return; el.open = reassignDialogOpen; }, [reassignDialogOpen]);
@@ -635,7 +643,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
         {/* Same markup as the incidents page button, so the two read as one
             control rather than two similar ones. */}
         <button
-          onClick={() => onNavigate('new-incident')}
+          onClick={() => setIsNewIncidentDialogOpen(true)}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
             padding: '8px 16px',
@@ -1208,6 +1216,30 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
           )}
         </div>
       {/* @ts-ignore */}
+      </forge-dialog>
+
+      {/* New Incident. Same dialog as the incidents page, including the capped
+          width, so filing from either place is the same experience. */}
+      {/* @ts-ignore */}
+      <forge-dialog ref={newIncidentDialogRef} aria-label="Report New Incident">
+        <div style={{ width: 'min(1240px, 95vw)', maxWidth: '95vw', maxHeight: '95vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+          <div className="sticky top-0 bg-white z-10 border-b px-6 py-4">
+            <h2 style={{ margin: 0, fontFamily: 'var(--forge-font-family)', fontWeight: 'var(--forge-font-weight-medium)', fontSize: 'var(--forge-font-size-xl)' }}>
+              Report New Incident
+            </h2>
+            <p style={{ margin: 0, marginTop: 'var(--forge-spacing-xxsmall)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--muted-foreground)' }}>
+              Choose what the incident is about, then fill out the details
+            </p>
+          </div>
+          <div className="px-6 pb-6">
+            <NewIncidentFormUnified onNavigate={(page) => {
+              setIsNewIncidentDialogOpen(false);
+              if (page === 'incidents') {
+                toast.success('Incident reported successfully!');
+              }
+            }} />
+          </div>
+        </div>
       </forge-dialog>
     </div>
   );
