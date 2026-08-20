@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ForgeCard, ForgeButton, ForgeMenu, ForgeIconButton } from '@tylertech/forge-react';
+import { ForgeCard, ForgeButton, ForgeMenu, ForgeIconButton, useForgeToast } from '@tylertech/forge-react';
 import { defineCardComponent, defineDialogComponent, defineBadgeComponent, defineMenuComponent, defineIconButtonComponent } from '@tylertech/forge';
 defineCardComponent();
 defineDialogComponent();
@@ -545,6 +545,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
   const editDialogRef = useRef<HTMLElement>(null);
   const reassignDialogRef = useRef<HTMLElement>(null);
   const newIncidentDialogRef = useRef<HTMLElement>(null);
+  const toastHelper = useForgeToast();
   const [isNewIncidentDialogOpen, setIsNewIncidentDialogOpen] = useState(false);
 
   // Sync triageDetailsOpen state with forge-dialog
@@ -1235,7 +1236,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
             <NewIncidentFormUnified onNavigate={(page) => {
               setIsNewIncidentDialogOpen(false);
               if (page === 'incidents') {
-                toast.success('Incident reported successfully!');
+                toastHelper[0]({ message: 'Incident reported successfully!', theme: 'success', duration: 3000 } as any);
               }
             }} />
           </div>
