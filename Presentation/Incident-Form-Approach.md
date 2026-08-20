@@ -90,12 +90,16 @@ subject-specific for three reasons, none of which are about the data:
 
 Adopt the container. Concretely:
 
-- **One fixed section order for every subject**, ordered by how critical the
+- **One fixed field sequence for every subject**, ordered by how critical the
   data is rather than by how the old wizard happened to be laid out: who or what
-  was involved, what happened, when and where, then supporting detail. A
+  was involved, what happened, when and where, then the optional detail. A
   reporter knows who an incident involves and what happened before they work out
   the operational context, and the narrative is the most valuable field in the
   record, so neither it nor the roster belongs near the bottom.
+
+  Sequence, not sections. The fields run continuously with no interior
+  headings; the order is about the order a reporter thinks in, not about
+  carving the form into labelled blocks.
 - **One ordered field list, flowed into a grid.** The order is the same on every
   subject. A field the subject does not need is not rendered and the ones after
   it close up, so the grid is always fully packed. This is the MyRide container
