@@ -211,6 +211,12 @@ export default function App() {
       case 'incident-detail':
         return selectedIncidentForDetail ? (
           <IncidentDetailPage 
+            // Remount on a different incident. The page seeds workflow steps,
+            // messages and the selected student from props once, so an incident
+            // opened straight from another one kept the previous workflow on
+            // screen: an Employee Injury showed the Location workflow's
+            // "Make Area Safe" step.
+            key={selectedIncidentForDetail.id}
             incident={selectedIncidentForDetail} 
             onNavigate={navigateToPage} 
             onNavigateToCommunication={navigateToCommunication}

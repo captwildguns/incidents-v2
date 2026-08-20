@@ -793,6 +793,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         ) : '—'}
                       </div>
                     </div>
+                    {incident.bus && incident.bus !== 'N/A' && (
                     <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Vehicle
@@ -801,6 +802,8 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         {incident.bus}
                       </div>
                     </div>
+                    )}
+                    {incident.driver && incident.driver !== 'N/A' && (
                     <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Driver
@@ -809,6 +812,8 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         {incident.driver}
                       </div>
                     </div>
+                    )}
+                    {incident.route && incident.route !== 'N/A' && (
                     <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Run
@@ -817,6 +822,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         {incident.route}
                       </div>
                     </div>
+                    )}
                     <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Severity

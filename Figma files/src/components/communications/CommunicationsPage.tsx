@@ -21,8 +21,7 @@ import { ForgeMultiSelect } from '../ui/forge-multiselect';
 
 import { mockIncidents, getIncidentSubjectLabel } from '../incidents/IncidentsPage';
 import { getSubjectLabel, INCIDENT_SUBJECTS } from '../incidents/IncidentTypes';
-import { mockLocations } from '../../data/locations';
-import { allEmployees } from '../../data/employees';
+import { counterpartyFor } from '../../data/incident-counterparty';
 
 interface Message {
   id: string;
@@ -1238,40 +1237,6 @@ export function getCommunicationsByIncidentId(incidentId: string): Message[] | n
 
 // Export Message type for use in other components
 export type { Message };
-
-// A thread is always the coordinator talking to one counterpart. Which
-// counterpart depends on what the incident is about, so it is derived from the
-// incident rather than stored on the thread: a burst pipe is a conversation with
-// the location manager, not with a driver who was never there.
-function counterpartyFor(inc: any): { name: string; role: string } {
-  const subject = inc?.subject ?? 'student';
-
-  if (subject === 'location') {
-    const loc = mockLocations.find(l => l.name === inc?.assetRef);
-    if (loc && loc.manager !== 'Unassigned') {
-      return { name: loc.manager, role: 'Location manager' };
-    }
-  }
-
-  if (subject === 'vehicle') {
-    const fleet = allEmployees.find(e => e.jobRole === 'Fleet Manager' && e.status === 'Active');
-    if (fleet) return { name: fleet.fullName, role: 'Fleet manager' };
-  }
-
-  if (subject === 'employee') {
-    // The employee the incident is about, not whoever reported it.
-    const party = (inc?.involvedParties ?? []).find((p: any) => p?.partyType === 'employee');
-    if (party?.name) return { name: party.name, role: 'Employee' };
-  }
-
-  // Student and third party incidents happen on a run, so the driver is the
-  // person the coordinator needs.
-  if (typeof inc?.driver === 'string' && inc.driver && inc.driver !== 'N/A') {
-    return { name: inc.driver, role: 'Driver' };
-  }
-
-  return { name: inc?.assignedTo ?? 'Unassigned', role: 'Assignee' };
-}
 
 // Everything about a thread that depends on the incident behind it. Looked up
 // by id, so a thread never carries a stale copy of the incident's own fields.

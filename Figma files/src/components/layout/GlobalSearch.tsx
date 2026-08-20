@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, AlertCircle, Users, UserCircle, Bus, MessageSquare } from 'lucide-react';
 import { mockIncidents, getIncidentSubjectLabel } from '../incidents/IncidentsPage';
+import { counterpartyFor } from '../../data/incident-counterparty';
 import { getSubjectLabel } from '../incidents/IncidentTypes';
 import { mockStudents } from '../students/StudentsPage';
 import { mockDrivers } from '../../data/employees';
@@ -105,7 +106,12 @@ export function GlobalSearch({ onNavigate, onNavigateToIncidentDetail, onNavigat
           id: `comm-${inc.id}`,
           category: 'Communications',
           title: `${inc.id} — ${inc.type}`,
-          subtitle: `${involved} (${getSubjectLabel(inc.subject ?? 'student')}) ↔ ${inc.driver} (Employee)`,
+          // Was `${inc.driver} (Employee)`, which printed "undefined (Employee)"
+          // on any incident with no driver and mislabelled the rest.
+          subtitle: (() => {
+            const other = counterpartyFor(inc);
+            return `${involved} (${getSubjectLabel(inc.subject ?? 'student')}) to ${other.name} (${other.role})`;
+          })(),
           payload: inc.id,
         });
       }
