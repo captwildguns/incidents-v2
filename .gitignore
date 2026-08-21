@@ -7,3 +7,8 @@ install-gh.ps1
 
 # Local Netlify folder
 .netlify
+
+# Internal working notes, kept local now the repo is public
+HANDOFF-*.md
+Presentation/Incident-Module-Internal-Training-Agenda.*
+Presentation/build-training-agenda.py

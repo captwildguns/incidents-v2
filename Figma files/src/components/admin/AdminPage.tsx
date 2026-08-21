@@ -29,7 +29,10 @@ import {
 import {
   INCIDENT_TYPES as SEED_INCIDENT_TYPES,
   INCIDENT_CATEGORIES,
+  INCIDENT_SUBJECTS,
   IncidentType,
+  getSubjectLabel,
+  type IncidentSubject,
 } from '../incidents/IncidentTypes';
 import { EmailTemplate, INITIAL_EMAIL_TEMPLATES } from '../../data/email-templates';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
@@ -49,7 +52,7 @@ const sectionHeaderStyle: React.CSSProperties = {
 const cardStyle: React.CSSProperties = {
   background: 'var(--card)',
   border: '1px solid var(--border)',
-  borderRadius: 'var(--forge-radius-large)',
+  borderRadius: 'var(--forge-shape-large)',
   padding: 'var(--forge-spacing-large)',
   boxShadow: 'var(--forge-elevation-1)',
 };
@@ -76,7 +79,7 @@ const inputWrapperStyle: React.CSSProperties = {
 const selectStyle: React.CSSProperties = {
   width: '100%',
   padding: 'var(--forge-spacing-small)',
-  borderRadius: 'var(--forge-radius-medium)',
+  borderRadius: 'var(--forge-shape-medium)',
   border: '1px solid var(--border)',
   fontSize: 'var(--text-base)',
   fontFamily: 'var(--forge-font-family)',
@@ -98,7 +101,7 @@ const tableCellStyle: React.CSSProperties = {
   fontSize: 'var(--text-base)',
   fontFamily: 'var(--forge-font-family)',
   color: 'var(--foreground)',
-  borderBottom: '1px solid var(--forge-color-border-subtle)',
+  borderBottom: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
   verticalAlign: 'middle',
 };
 
@@ -737,8 +740,8 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
     setIncidentTypes(incidentTypes.filter((t) => t.id !== id));
   };
 
-  const studentItCount = incidentTypes.filter((t) => t.applicableTo === 'student' || t.applicableTo === 'both').length;
-  const driverItCount = incidentTypes.filter((t) => t.applicableTo === 'driver' || t.applicableTo === 'both').length;
+  const studentItCount = incidentTypes.filter((t) => t.applicableTo === 'student').length;
+  const nonStudentItCount = incidentTypes.filter((t) => t.applicableTo !== 'student').length;
 
   // ─── Permission Group Helpers ────────────────────────────────────────────────
 
@@ -907,7 +910,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div style={{ marginTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', paddingTop: 'var(--forge-spacing-medium)' }}>
+                    <div style={{ marginTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', paddingTop: 'var(--forge-spacing-medium)' }}>
                       {/* Variables */}
                       <div style={{ marginBottom: 'var(--forge-spacing-medium)' }}>
                         <div style={{ ...labelStyle, marginBottom: 'var(--forge-spacing-xsmall)' }}>Template Variables</div>
@@ -927,8 +930,8 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                         <pre
                           style={{
                             background: 'var(--input-background)',
-                            border: '1px solid var(--forge-color-border-subtle)',
-                            borderRadius: 'var(--forge-radius-medium)',
+                            border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
+                            borderRadius: 'var(--forge-shape-medium)',
                             padding: 'var(--forge-spacing-medium)',
                             fontSize: 'var(--text-sm)',
                             fontFamily: 'var(--forge-font-family)',
@@ -1211,7 +1214,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
               <div
                 style={{
                   border: '1px solid var(--border)',
-                  borderRadius: 'var(--forge-radius-large)',
+                  borderRadius: 'var(--forge-shape-large)',
                   overflow: 'hidden',
                 }}
               >
@@ -1338,6 +1341,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 <thead>
                   <tr>
                     <th className="forge-table-cell forge-table-cell--header">Label</th>
+                    <th className="forge-table-cell forge-table-cell--header">Applies To</th>
                     <th className="forge-table-cell forge-table-cell--header">Category</th>
                     <th className="forge-table-cell forge-table-cell--header">Severity</th>
                     <th className="forge-table-cell forge-table-cell--header">Linked Workflow</th>
@@ -1351,6 +1355,12 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                       <td className="forge-table-cell">
                         <div style={{ fontWeight: 'var(--forge-font-weight-medium)', fontFamily: 'var(--forge-font-family)' }}>{it.label}</div>
                         <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>{it.id}</div>
+                      </td>
+                      <td className="forge-table-cell">
+                        {/* @ts-ignore */}
+                        <forge-badge theme={it.applicableTo === 'student' ? 'default' : 'info-primary'} style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-xs)' }}>
+                          {getSubjectLabel(it.applicableTo)}
+                        </forge-badge>
                       </td>
                       <td className="forge-table-cell">
                         {/* @ts-ignore */}
@@ -1421,7 +1431,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 </tbody>
               </table>
             </div>
-            <div style={{ padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>
+            <div style={{ padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>
               Showing {filteredIncidentTypes.length} of {incidentTypes.length} incident types
             </div>
           </div>
@@ -1488,6 +1498,25 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
               </forge-text-field>
             </div>
 
+            {/* Applies To — which incident subject this type belongs to. Drives
+                which types the New Incident wizard offers for a given subject. */}
+            <div>
+              <div style={labelStyle}>Applies To <span style={{ color: 'var(--destructive)' }}>*</span></div>
+              {/* @ts-ignore */}
+              <forge-text-field style={inputWrapperStyle}>
+                <select
+                  value={itForm.applicableTo}
+                  onChange={(e) => setItForm({ ...itForm, applicableTo: e.target.value as IncidentSubject })}
+                  style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-sm)', width: '100%' }}
+                >
+                  {INCIDENT_SUBJECTS.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              {/* @ts-ignore */}
+              </forge-text-field>
+            </div>
+
             {/* Default Severity */}
             <div>
               <div style={labelStyle}>Default Severity <span style={{ color: 'var(--destructive)' }}>*</span></div>
@@ -1500,7 +1529,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                     style={{
                       flex: 1,
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: itForm.defaultSeverity === sev ? '2px solid var(--primary)' : '1px solid var(--border)',
                       background: itForm.defaultSeverity === sev
                         ? (sev === 'Critical' ? 'rgba(176, 0, 32, 0.16)' : sev === 'High' ? 'rgba(176, 0, 32, 0.08)' : sev === 'Medium' ? 'rgba(255, 193, 7, 0.12)' : 'rgba(159, 168, 112, 0.15)')
@@ -1522,7 +1551,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
             </div>
 
             {/* ─── Linked Workflow ─── */}
-            <div style={{ borderTop: '1px solid var(--forge-color-border-subtle)', paddingTop: 'var(--forge-spacing-medium)' }}>
+            <div style={{ borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', paddingTop: 'var(--forge-spacing-medium)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-small)' }}>
                 <GitBranch size={16} style={{ color: 'var(--primary)' }} />
                 <span style={{ ...labelStyle, margin: 0 }}>Linked Workflow <span style={{ color: 'var(--destructive)' }}>*</span></span>
@@ -1545,7 +1574,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                     style={{
                       flex: 1,
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: itWorkflowOption === opt ? '2px solid var(--primary)' : '1px solid var(--border)',
                       background: itWorkflowOption === opt ? 'rgba(63, 81, 181, 0.08)' : 'var(--input-background)',
                       color: itWorkflowOption === opt ? 'var(--primary)' : 'var(--foreground)',
@@ -1599,8 +1628,8 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                           marginTop: 'var(--forge-spacing-small)',
                           padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)',
                           background: 'var(--input-background)',
-                          borderRadius: 'var(--forge-radius-medium)',
-                          border: '1px solid var(--forge-color-border-subtle)',
+                          borderRadius: 'var(--forge-shape-medium)',
+                          border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
                         }}
                       >
                         <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--foreground)', marginBottom: '2px' }}>
@@ -1626,8 +1655,8 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                   style={{
                     padding: 'var(--forge-spacing-medium)',
                     background: 'var(--input-background)',
-                    borderRadius: 'var(--forge-radius-medium)',
-                    border: '1px solid var(--forge-color-border-subtle)',
+                    borderRadius: 'var(--forge-shape-medium)',
+                    border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 'var(--forge-spacing-small)',

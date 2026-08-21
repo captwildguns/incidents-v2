@@ -181,7 +181,7 @@ export function WorkflowStepLibrary({ onAddStep, selectedCategory, addedTemplate
               onClick={() => setFilterCategory(category)}
               style={{
                 padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-medium)',
-                borderRadius: 'var(--forge-radius-full, 9999px)',
+                borderRadius: 'var(--forge-shape-full, 9999px)',
                 border: '1px solid',
                 background: filterCategory === category ? 'var(--brand-blue-dark)' : 'transparent',
                 color: filterCategory === category ? 'white' : 'var(--foreground)',
@@ -206,7 +206,7 @@ export function WorkflowStepLibrary({ onAddStep, selectedCategory, addedTemplate
               key={template.id}
               style={{
                 border: '1px solid var(--border)',
-                borderRadius: 'var(--forge-radius-medium)',
+                borderRadius: 'var(--forge-shape-medium)',
                 padding: 'var(--forge-spacing-medium)',
                 background: 'var(--card)',
                 fontFamily: 'var(--forge-font-family)',
@@ -217,7 +217,7 @@ export function WorkflowStepLibrary({ onAddStep, selectedCategory, addedTemplate
                   style={{
                     display: 'inline-block',
                     padding: '2px 8px',
-                    borderRadius: 'var(--forge-radius-full, 9999px)',
+                    borderRadius: 'var(--forge-shape-full, 9999px)',
                     fontSize: '11px',
                     fontWeight: 500,
                   }}
@@ -259,7 +259,7 @@ export function WorkflowStepLibrary({ onAddStep, selectedCategory, addedTemplate
                     alignItems: 'center',
                     gap: '4px',
                     padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-medium)',
-                    borderRadius: 'var(--forge-radius-medium)',
+                    borderRadius: 'var(--forge-shape-medium)',
                     border: '1px solid',
                     fontSize: 'var(--text-xs)',
                     fontFamily: 'var(--forge-font-family)',

@@ -103,6 +103,13 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
   const [newRecipient, setNewRecipient] = useState('');
   const [newApprover, setNewApprover] = useState('');
 
+  // NOTE: this list is duplicated in WorkflowBuilderPage and StepTemplateManager
+  // and the three have historically diverged. Kept in sync here; consolidating
+  // them into one shared constant is a separate cleanup.
+  // The seven members of IncidentRoleType, which is what a step can actually
+  // be assigned to. Nothing outside this list can be provisioned for a tenant,
+  // so do not add to it. Still duplicated across this dialog,
+  // WorkflowBuilderPage and StepTemplateManager; consolidating is a cleanup.
   const groups = [
     'Driver',
     'Safety Coordinator',
@@ -278,7 +285,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                     width: '100%',
                     marginTop: 'var(--forge-spacing-xsmall)',
                     padding: 'var(--forge-spacing-small)',
-                    borderRadius: 'var(--forge-radius-medium)',
+                    borderRadius: 'var(--forge-shape-medium)',
                     border: '1px solid var(--border)',
                     fontSize: 'var(--text-base)',
                     background: 'var(--input-background)',
@@ -330,7 +337,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
               style={{
                 padding: 'var(--forge-spacing-medium)',
                 background: 'var(--input-background)',
-                borderRadius: 'var(--forge-radius-medium)',
+                borderRadius: 'var(--forge-shape-medium)',
                 border: '1px solid var(--border)',
               }}
             >
@@ -433,7 +440,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                   width: '100%',
                   marginTop: 'var(--forge-spacing-xsmall)',
                   padding: 'var(--forge-spacing-small)',
-                  borderRadius: 'var(--forge-radius-medium)',
+                  borderRadius: 'var(--forge-shape-medium)',
                   border: '1px solid var(--border)',
                   fontSize: 'var(--text-base)',
                   fontFamily: 'var(--forge-font-family)',
@@ -538,7 +545,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
               style={{
                 padding: 'var(--forge-spacing-medium)',
                 background: 'var(--input-background)',
-                borderRadius: 'var(--forge-radius-medium)',
+                borderRadius: 'var(--forge-shape-medium)',
                 border: '1px solid var(--border)',
               }}
             >
@@ -570,7 +577,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                       style={{
                         flex: 1,
                         padding: 'var(--forge-spacing-small)',
-                        borderRadius: 'var(--forge-radius-medium)',
+                        borderRadius: 'var(--forge-shape-medium)',
                         border: '1px solid var(--border)',
                         fontSize: 'var(--text-base)',
                         background: 'var(--input-background)',
@@ -616,7 +623,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                   style={{
                     padding: 'var(--forge-spacing-medium)',
                     background: 'rgba(255, 193, 7, 0.1)',
-                    borderRadius: 'var(--forge-radius-medium)',
+                    borderRadius: 'var(--forge-shape-medium)',
                     border: '1px solid rgba(255, 193, 7, 0.3)',
                   }}
                 >

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ForgeCard, ForgeButton, ForgeIconButton, useForgeToast } from '@tylertech/forge-react';
 import {
   defineCardComponent,
@@ -20,11 +20,21 @@ defineIconComponent();
 defineIconButtonComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import { EditIncidentDialog } from './EditIncidentDialog';
-import { NewIncidentForm } from './NewIncidentForm';
+import { NewIncidentFormUnified } from './NewIncidentFormUnified';
 import { hasActiveCommunication } from '../communications/communicationsData';
 import { assignWorkflowToIncident, Workflow, workflows } from '../../data/workflows';
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
+import { EntitySearchField } from '../shared/EntitySearchField';
+import { mockLocations } from '../../data/locations';
+import {
+  INCIDENT_TYPES,
+  INCIDENT_SUBJECTS,
+  getSubjectLabel,
+  getSubjectMeta,
+  yearForDate,
+  type IncidentSubject,
+} from './IncidentTypes';
 
 // Get default workflow for direct reference
 
@@ -911,8 +921,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0026',
-    date: '2025-02-12',
+    id: 'INC-2024-0026',
+    date: '2024-02-12',
     student: 'Harper Clark',
     studentId: 'STU-8905',
     type: 'Safety Violation',
@@ -926,8 +936,8 @@ const rawIncidents = [
     assignedTo: 'Sarah Williams',
   },
   {
-    id: 'INC-2025-0025',
-    date: '2025-02-10',
+    id: 'INC-2024-0025',
+    date: '2024-02-10',
     student: 'Benjamin Lewis',
     studentId: 'STU-9016',
     type: 'Safety Violation',
@@ -941,8 +951,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0024',
-    date: '2025-02-07',
+    id: 'INC-2024-0024',
+    date: '2024-02-07',
     student: 'Amelia Robinson',
     studentId: 'STU-1127',
     type: 'Safety Violation',
@@ -956,8 +966,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0023',
-    date: '2025-02-05',
+    id: 'INC-2024-0023',
+    date: '2024-02-05',
     student: 'Henry Walker',
     studentId: 'STU-2238',
     type: 'Disruptive Behavior',
@@ -971,8 +981,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0022',
-    date: '2025-02-03',
+    id: 'INC-2024-0022',
+    date: '2024-02-03',
     student: 'Evelyn Hall',
     studentId: 'STU-3349',
     type: 'Disruptive Behavior',
@@ -986,8 +996,8 @@ const rawIncidents = [
     assignedTo: 'Sarah Williams',
   },
   {
-    id: 'INC-2025-0021',
-    date: '2025-01-31',
+    id: 'INC-2024-0021',
+    date: '2024-01-31',
     student: 'Alexander Young',
     studentId: 'STU-4450',
     type: 'Property Damage',
@@ -1001,8 +1011,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0020',
-    date: '2025-01-28',
+    id: 'INC-2024-0020',
+    date: '2024-01-28',
     student: 'Abigail King',
     studentId: 'STU-5561',
     type: 'Disruptive Behavior',
@@ -1016,8 +1026,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0019',
-    date: '2025-01-24',
+    id: 'INC-2024-0019',
+    date: '2024-01-24',
     student: 'Daniel Wright',
     studentId: 'STU-6672',
     type: 'Physical Altercation',
@@ -1031,8 +1041,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0018',
-    date: '2025-01-21',
+    id: 'INC-2024-0018',
+    date: '2024-01-21',
     student: 'Emily Scott',
     studentId: 'STU-7783',
     type: 'Safety Violation',
@@ -1045,9 +1055,43 @@ const rawIncidents = [
     createdBy: 'David Park',
     assignedTo: 'Sarah Williams',
   },
+  // Prior-term history. Marcus Johnson and Ethan Lee both have 2025 incidents,
+  // so these give the incidents list and the student profile an actual year
+  // boundary to divide on. Without them every incident sat in one calendar year
+  // and the divider had nothing to separate.
   {
-    id: 'INC-2025-0017',
-    date: '2025-01-17',
+    id: 'INC-2024-0015',
+    date: '2024-02-26',
+    student: 'Marcus Johnson',
+    studentId: 'STU-3421',
+    type: 'Disruptive Behavior',
+    description: 'Repeatedly shouted over the driver during the afternoon run and refused to lower his voice when asked.',
+    bus: 'Bus 8',
+    route: 'Washington High PM - Wolf Rd',
+    driver: 'Lisa Anderson',
+    severity: 'Low',
+    status: 'Closed',
+    createdBy: 'Lisa Anderson',
+    assignedTo: 'Jane Doe',
+  },
+  {
+    id: 'INC-2024-0016',
+    date: '2024-01-30',
+    student: 'Ethan Lee',
+    studentId: 'STU-1045',
+    type: 'Safety Violation',
+    description: 'Stood in the aisle while the bus was moving and did not sit down until the second request.',
+    bus: 'Bus 8',
+    route: 'Washington High PM - Wolf Rd',
+    driver: 'Lisa Anderson',
+    severity: 'Low',
+    status: 'Closed',
+    createdBy: 'Lisa Anderson',
+    assignedTo: 'Jane Doe',
+  },
+  {
+    id: 'INC-2024-0017',
+    date: '2024-01-17',
     student: 'Matthew Green',
     studentId: 'STU-8894',
     type: 'Safety Violation',
@@ -1060,14 +1104,158 @@ const rawIncidents = [
     createdBy: 'Lisa Anderson',
     assignedTo: 'Jane Doe',
   },
+
+  // ─── Non-student incidents ─────────────────────────────────────────────────
+  // These carry an explicit `subject` and deliberately have no `student` or
+  // `studentId`. They exercise the four non-student subjects end to end: the
+  // Involved column, the Subject filter, the involved-parties detail section,
+  // and the studentless workflow assignment path.
+  {
+    id: 'INC-2025-0065',
+    date: '2025-03-12',
+    time: '06:40',
+    subject: 'employee',
+    type: 'Employee Altercation',
+    description: 'Two drivers argued over a fuel island position during the morning pull-out and the dispute escalated to shoving before a supervisor intervened. No injuries. Both drivers were removed from the yard for the remainder of the shift pending review.',
+    bus: 'N/A',
+    route: 'N/A',
+    severity: 'High',
+    status: 'Open',
+    createdBy: 'Sarah Williams',
+    assignedTo: 'Sarah Williams',
+    location: 'fuel-station',
+    assetRef: 'Central Service Center',
+    witnessPresent: true,
+    witnessNames: ['Yard Supervisor R. Mills'],
+    tags: ['hr-review'],
+    involvedParties: [
+      { partyType: 'employee', partyId: 'DRV-007', name: 'Lisa Anderson', role: 'Participant', severity: 'High', description: 'Stated the other driver cut in front of her at the fuel island after she had already staged.', actionTaken: 'Removed from yard for remainder of shift. Referred to HR review.', notes: 'No prior conduct incidents on record.' },
+      { partyType: 'employee', partyId: 'DRV-008', name: 'David Park', role: 'Participant', severity: 'High', description: 'Stated he was waved forward by the fueling attendant and did not see the other bus staged.', actionTaken: 'Removed from yard for remainder of shift. Referred to HR review.', notes: 'Second conduct report this school year.' },
+    ],
+  },
+  {
+    id: 'INC-2025-0066',
+    date: '2025-03-10',
+    time: '05:15',
+    subject: 'location',
+    type: 'Utility Failure',
+    description: 'A water supply line above the maintenance bay burst overnight and flooded roughly 400 square feet of the bay floor. Two lifts were taken out of service as a precaution. Facilities contractor called out the same morning.',
+    bus: 'N/A',
+    route: 'N/A',
+    severity: 'Medium',
+    status: 'In Progress',
+    createdBy: 'Mike Chen',
+    assignedTo: 'Mike Chen',
+    location: 'maintenance-bay',
+    assetRef: 'North District Garage',
+    witnessPresent: false,
+    tags: ['facilities', 'out-of-service'],
+  },
+  {
+    id: 'INC-2025-0067',
+    date: '2025-03-09',
+    time: '06:05',
+    subject: 'vehicle',
+    type: 'Vehicle Damage',
+    description: 'Bus 18 was found with a cracked passenger-side mirror housing and a scraped rear quarter panel during the morning pre-trip. Nobody was aboard at the time and no collision was reported the prior evening. Yard camera review requested.',
+    bus: 'Bus 18',
+    route: 'N/A',
+    severity: 'Medium',
+    status: 'Open',
+    createdBy: 'Mike Chen',
+    assignedTo: 'Mike Chen',
+    location: 'yard',
+    assetRef: 'Bus 18',
+    witnessPresent: false,
+    tags: ['maintenance', 'camera-review'],
+  },
+  {
+    id: 'INC-2025-0068',
+    date: '2025-03-07',
+    time: '16:20',
+    subject: 'thirdParty',
+    type: 'Third Party Collision',
+    description: 'A passenger vehicle failed to stop for the extended stop arm and clipped the front bumper of Bus 14 while the bus was stationary with no students aboard on the deadhead leg. Police responded and cited the other motorist. No injuries.',
+    bus: 'Bus 14',
+    route: 'Roosevelt High PM - Red',
+    driver: 'Robert Thompson',
+    severity: 'High',
+    status: 'In Progress',
+    createdBy: 'Robert Thompson',
+    assignedTo: 'Sarah Williams',
+    location: 'bus-stop',
+    locationCoordinates: { lat: 42.6803, lng: -73.8259 },
+    locationAddress: 'Central Ave & Colvin Ave, Albany, NY 12206',
+    witnessPresent: true,
+    witnessNames: ['Officer M. Reyes (APD)'],
+    tags: ['police-involved', 'stop-arm-violation'],
+    involvedParties: [
+      { partyType: 'thirdParty', name: 'Unnamed motorist (cited)', role: 'Participant', severity: 'High', description: 'Driver of a grey sedan that passed the extended stop arm and struck the bus bumper.', actionTaken: 'Cited at the scene by responding officer. Insurance information exchanged.', notes: 'Police report reference pending.' },
+    ],
+  },
+  {
+    id: 'INC-2025-0069',
+    date: '2025-03-04',
+    time: '13:50',
+    subject: 'location',
+    type: 'Location Safety Hazard',
+    description: 'A diesel spill of roughly two gallons was found at the fuel island with no absorbent applied. The area was coned off and spill kit material was applied within the hour. Reported for tracking because the spill was not logged when it occurred.',
+    bus: 'N/A',
+    route: 'N/A',
+    severity: 'High',
+    status: 'Closed',
+    createdBy: 'Sarah Williams',
+    assignedTo: 'Mike Chen',
+    location: 'fuel-station',
+    assetRef: 'South District Garage',
+    witnessPresent: false,
+    tags: ['facilities', 'environmental'],
+  },
+  {
+    id: 'INC-2025-0070',
+    date: '2025-03-14',
+    time: '07:20',
+    subject: 'employee',
+    type: 'Employee Injury',
+    description: 'A bus aide strained her lower back while securing a wheelchair on the morning run. The lift cycled normally and no equipment fault was found. She finished the run, reported the injury at the depot, and was sent for evaluation the same morning.',
+    bus: 'Bus 12',
+    route: 'Meyers Middle AM - Yellow',
+    driver: 'John Chen',
+    severity: 'High',
+    status: 'In Progress',
+    createdBy: 'John Chen',
+    assignedTo: 'Sarah Williams',
+    location: 'on-bus',
+    witnessPresent: true,
+    witnessNames: ['John Chen'],
+    tags: ['injury', 'workers-comp'],
+    // The subject is an aide, not a driver. Before mockNonDriverEmployees she
+    // could not be named at all, which is what this row exercises.
+    involvedParties: [
+      { partyType: 'employee', partyId: 'EMP-102', name: 'Denise Okafor', role: 'Injured', severity: 'High', description: 'Strained her lower back while securing a wheelchair in the forward bay.', actionTaken: 'Sent for same-day medical evaluation. Placed on light duty pending clearance.', notes: 'Second lift-related strain reported at this garage this school year.' },
+    ],
+  },
 ];
 
-// Normalize to a single model: every incident carries an involvedStudents
-// array. Single-student incidents become a 1-element array derived from the
-// top-level student fields (no role — role only applies to multi-student
-// conflicts). Incidents that already define involvedStudents are left as-is.
-export const mockIncidents = rawIncidents.map((inc: any) =>
-  inc.involvedStudents && inc.involvedStudents.length > 0
+// Normalize to a single model. Two passes:
+//
+// 1. Every incident carries an explicit `subject`. Seed rows written before
+//    non-student incidents existed have none, so they default to 'student'.
+//    Defaulting here rather than editing every seed row means a new row can
+//    never silently miss the field.
+//
+// 2. Every STUDENT incident carries an involvedStudents array. Single-student
+//    incidents become a 1-element array derived from the top-level student
+//    fields (no role, role only applies to multi-student conflicts). Incidents
+//    that already define involvedStudents are left as-is.
+//
+//    Non-student incidents are skipped by this back-fill. Without the subject
+//    guard a location incident would gain a phantom student with an undefined
+//    name, which then renders as a blank cell in every student column.
+export const mockIncidents = rawIncidents.map((raw: any) => {
+  const inc = { ...raw, subject: (raw.subject ?? 'student') as IncidentSubject };
+
+  return inc.subject !== 'student' || (inc.involvedStudents && inc.involvedStudents.length > 0)
     ? inc
     : {
         ...inc,
@@ -1082,8 +1270,56 @@ export const mockIncidents = rawIncidents.map((inc: any) =>
             notes: '',
           },
         ],
-      }
-);
+      };
+});
+
+// Resolve the human-readable subject of an incident, whatever its kind.
+// Student incidents keep their existing single and multi-student wording.
+// Non-student incidents fall back through their involved parties, then the
+// affected asset, then the location, so a row is never blank.
+//
+// Examples: "Marcus Chen", "M. Chen +2", "Two drivers", "Transportation Depot",
+// "Bus 214".
+export function getIncidentSubjectLabel(incident: any): string {
+  const subject: IncidentSubject = incident?.subject ?? 'student';
+
+  if (subject === 'student') {
+    const students = incident?.involvedStudents;
+    if (students && students.length > 1) {
+      return `${students[0].name} +${students.length - 1}`;
+    }
+    return incident?.student ?? students?.[0]?.name ?? 'Unknown student';
+  }
+
+  const parties = incident?.involvedParties;
+  if (parties && parties.length > 0) {
+    if (parties.length === 1) return parties[0].name;
+    return `${parties[0].name} +${parties.length - 1}`;
+  }
+
+  // location and vehicle incidents may have no people at all
+  return incident?.assetRef ?? incident?.bus ?? incident?.location ?? getSubjectLabel(subject);
+}
+
+// Secondary line under the subject label in the list, mirroring the student ID
+// slot. Returns an empty string when there is nothing useful to add.
+export function getIncidentSubjectSubLabel(incident: any): string {
+  const subject: IncidentSubject = incident?.subject ?? 'student';
+
+  if (subject === 'student') {
+    const students = incident?.involvedStudents;
+    if (students && students.length > 1) return `${students.length} students involved`;
+    return incident?.studentId ?? '';
+  }
+
+  const parties = incident?.involvedParties;
+  if (parties && parties.length > 1) return `${parties.length} people involved`;
+  if (parties && parties.length === 1) return parties[0].role ?? '';
+
+  // Location and vehicle rows have no people. The subject chip already names the
+  // kind, so repeating it here would just say "Vehicle" twice in one cell.
+  return '';
+}
 
 interface IncidentsPageProps {
   onNavigate: (page: string) => void;
@@ -1093,24 +1329,31 @@ interface IncidentsPageProps {
   initialStatusFilter?: string | null;
   initialSeverityFilter?: string | null;
   initialDateAfterFilter?: string | null;
+  // Pre-fills the search box, so another page can hand off a vehicle name or a
+  // driver name and land the user on an already scoped list.
+  initialSearchTerm?: string | null;
   onSortedFilteredIncidentsChange?: (incidents: any[]) => void;
 }
 
-type SortField = 'id' | 'date' | 'student' | 'type' | 'severity' | 'status' | 'workflow';
+type SortField = 'id' | 'date' | 'student' | 'subject' | 'type' | 'severity' | 'status' | 'workflow';
 type SortDirection = 'asc' | 'desc' | null;
 
-export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigateToIncidentDetail, initialAssignedToFilter = null, initialStatusFilter = null, initialSeverityFilter = null, initialDateAfterFilter = null, onSortedFilteredIncidentsChange }: IncidentsPageProps) {
+export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigateToIncidentDetail, initialAssignedToFilter = null, initialStatusFilter = null, initialSeverityFilter = null, initialDateAfterFilter = null, initialSearchTerm = null, onSortedFilteredIncidentsChange }: IncidentsPageProps) {
   // Active (committed) filter values — used to actually filter the table
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm || '');
   const [statusFilter, setStatusFilter] = useState<string[]>(initialStatusFilter ? [initialStatusFilter] : []);
+  // Filters on the subject label ("Student", "Location", ...) rather than the
+  // raw value, so the committed value matches what the chip displays.
+  const [subjectFilter, setSubjectFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [assignedToFilter, setAssignedToFilter] = useState<string[]>(initialAssignedToFilter ? [initialAssignedToFilter] : []);
   const [severityFilter, setSeverityFilter] = useState<string[]>(initialSeverityFilter ? [initialSeverityFilter] : []);
   const [dateAfterFilter, setDateAfterFilter] = useState(initialDateAfterFilter || '');
 
   // Pending (uncommitted) filter values — updated by inputs, applied on Search click
-  const [pendingSearchTerm, setPendingSearchTerm] = useState('');
+  const [pendingSearchTerm, setPendingSearchTerm] = useState(initialSearchTerm || '');
   const [pendingStatusFilter, setPendingStatusFilter] = useState<string[]>(initialStatusFilter ? [initialStatusFilter] : []);
+  const [pendingSubjectFilter, setPendingSubjectFilter] = useState<string[]>([]);
   const [pendingTypeFilter, setPendingTypeFilter] = useState<string[]>([]);
   const [pendingAssignedToFilter, setPendingAssignedToFilter] = useState<string[]>(initialAssignedToFilter ? [initialAssignedToFilter] : []);
   const [pendingSeverityFilter, setPendingSeverityFilter] = useState<string[]>(initialSeverityFilter ? [initialSeverityFilter] : []);
@@ -1164,10 +1407,14 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
     };
   });
 
-  // Get unique students from incidents for lookup
+  // Get unique students from incidents for lookup. Restricted to student
+  // incidents, otherwise a location row contributes an { undefined, undefined }
+  // entry that renders as a blank option.
   const uniqueStudents = Array.from(
     new Map(
-      mockIncidents.map(inc => [inc.studentId, { id: inc.studentId, name: inc.student }])
+      mockIncidents
+        .filter((inc: any) => (inc.subject ?? 'student') === 'student' && inc.studentId)
+        .map((inc: any) => [inc.studentId, { id: inc.studentId, name: inc.student }])
     ).values()
   );
 
@@ -1175,6 +1422,34 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   const uniqueAssignedUsers = Array.from(
     new Set(mockIncidents.map(inc => inc.assignedTo))
   ).sort();
+
+  // Type filter options, grouped by subject so a long flat list of every type
+  // across all five subjects stays navigable. Derived from INCIDENT_TYPES, plus
+  // any type present on a seeded incident but missing from the catalog, so no
+  // existing row becomes unfilterable.
+  const typeFilterOptions = useMemo(() => {
+    const catalogLabels = INCIDENT_TYPES.map(t => t.label);
+    const seededLabels = mockIncidents.map((inc: any) => inc.type);
+    return Array.from(new Set([...catalogLabels, ...seededLabels]))
+      .sort((a, b) => a.localeCompare(b))
+      .map(label => ({ value: label, label }));
+  }, []);
+
+  // Typeahead groups for the search box. Every group is a field the filter below
+  // actually matches, so a suggestion can never point at rows the grid discards.
+  const searchSuggestionGroups = useMemo(() => {
+    const partyNames = mockIncidents.flatMap((inc: any) =>
+      (inc.involvedParties ?? []).map((p: any) => p?.name)
+    );
+    return [
+      { kind: 'Student', values: uniqueStudents.map(s => s.name) },
+      { kind: 'Person', values: partyNames },
+      { kind: 'Driver', values: mockIncidents.map((inc: any) => inc.driver) },
+      { kind: 'Vehicle', values: mockIncidents.map((inc: any) => inc.bus) },
+      { kind: 'Run', values: mockIncidents.map((inc: any) => inc.route) },
+      { kind: 'Location', values: mockLocations.map(f => f.name) },
+    ];
+  }, []);
 
   // Sync New Incident Dialog open state to forge-dialog
   useEffect(() => {
@@ -1210,11 +1485,11 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   const handleSearch = () => {
     setSearchTerm(pendingSearchTerm);
     setStatusFilter(pendingStatusFilter);
+    setSubjectFilter(pendingSubjectFilter);
     setTypeFilter(pendingTypeFilter);
     setAssignedToFilter(pendingAssignedToFilter);
     setSeverityFilter(pendingSeverityFilter);
     setDateAfterFilter(pendingDateAfterFilter);
-    setShowAllIncidents(false);
   };
 
   const handleSort = (field: SortField) => {
@@ -1251,16 +1526,20 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
     // Simulate export delay
     setTimeout(() => {
       // Create CSV content
-      const headers = ['Incident ID', 'Date', 'Student', 'Student ID', 'Type', 'Vehicle', 'Run', 'Driver', 'Severity', 'Status', 'Description'];
+      // "Involved" rather than "Student", since a row may be a location or a
+      // vehicle. Subject is exported so the two are distinguishable downstream.
+      const headers = ['Incident ID', 'Date', 'Time', 'Subject', 'Involved', 'Student ID', 'Type', 'Vehicle', 'Run', 'Driver', 'Severity', 'Status', 'Description'];
       const rows = filteredIncidents.map(inc => [
         inc.id,
         inc.date,
-        `"${inc.student}"`,
-        inc.studentId,
+        inc.time ?? '',
+        getSubjectLabel(inc.subject ?? 'student'),
+        `"${getIncidentSubjectLabel(inc)}"`,
+        inc.studentId ?? '',
         `"${inc.type}"`,
-        inc.bus,
-        `"${inc.route}"`,
-        `"${inc.driver}"`,
+        inc.bus ?? '',
+        `"${inc.route ?? ''}"`,
+        `"${inc.driver ?? ''}"`,
         inc.severity,
         inc.status,
         `"${inc.description}"`
@@ -1290,21 +1569,30 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   };
 
   const filteredIncidents = useMemo(() => incidentsWithWorkflows.filter((incident) => {
+    // Driver and every involved party name are matched, not just the subject
+    // label. The label collapses a multi-party incident to "First Name +1", so
+    // without this the second person named on a employee incident is unfindable,
+    // and a driver count handed over from the drivers grid lands on nothing.
     const q = searchTerm.trim().toLowerCase();
     const matchesSearch =
       q === '' ||
-      incident.student.toLowerCase().includes(q) ||
-      incident.bus.toLowerCase().includes(q) ||
-      incident.route.toLowerCase().includes(q);
-    
+      getIncidentSubjectLabel(incident).toLowerCase().includes(q) ||
+      (incident.bus ?? '').toLowerCase().includes(q) ||
+      (incident.route ?? '').toLowerCase().includes(q) ||
+      (incident.driver ?? '').toLowerCase().includes(q) ||
+      (incident.assetRef ?? '').toLowerCase().includes(q) ||
+      (incident.involvedParties ?? []).some((p: any) => (p?.name ?? '').toLowerCase().includes(q)) ||
+      (incident.involvedStudents ?? []).some((s: any) => (s?.name ?? '').toLowerCase().includes(q));
+
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(incident.status);
+    const matchesSubject = subjectFilter.length === 0 || subjectFilter.includes(getSubjectLabel(incident.subject ?? 'student'));
     const matchesType = typeFilter.length === 0 || typeFilter.includes(incident.type);
     const matchesAssignedTo = assignedToFilter.length === 0 || assignedToFilter.includes(incident.assignedTo);
     const matchesSeverity = severityFilter.length === 0 || severityFilter.includes(incident.severity);
     const matchesDateAfter = !dateAfterFilter || incident.date >= dateAfterFilter;
 
-    return matchesSearch && matchesStatus && matchesType && matchesAssignedTo && matchesSeverity && matchesDateAfter;
-  }), [incidentsWithWorkflows, searchTerm, statusFilter, typeFilter, assignedToFilter, severityFilter, dateAfterFilter]);
+    return matchesSearch && matchesStatus && matchesSubject && matchesType && matchesAssignedTo && matchesSeverity && matchesDateAfter;
+  }), [incidentsWithWorkflows, searchTerm, statusFilter, subjectFilter, typeFilter, assignedToFilter, severityFilter, dateAfterFilter]);
 
   // Sort incidents
   const sortedIncidents = useMemo(() => [...filteredIncidents].sort((a, b) => {
@@ -1320,7 +1608,10 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
         comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
         break;
       case 'student':
-        comparison = a.student.localeCompare(b.student);
+        comparison = getIncidentSubjectLabel(a).localeCompare(getIncidentSubjectLabel(b));
+        break;
+      case 'subject':
+        comparison = getSubjectLabel(a.subject ?? 'student').localeCompare(getSubjectLabel(b.subject ?? 'student'));
         break;
       case 'type':
         comparison = a.type.localeCompare(b.type);
@@ -1381,7 +1672,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
         <div>
           <h1 style={{ margin: 0, marginBottom: 'var(--forge-spacing-xxsmall)', fontFamily: 'Roboto, sans-serif' }}>Incidents</h1>
           <p className="text-muted-foreground" style={{ margin: 0, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--forge-font-size-base)' }}>
-            Track and manage all student incidents
+            Track and manage all incidents
           </p>
         </div>
         <button
@@ -1436,54 +1727,18 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       </div>
 
       {/* Filters Card */}
-      <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-large)', borderRadius: 'var(--forge-radius-large)', borderColor: 'var(--forge-color-border-default)' }}>
+      <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-large)', borderRadius: 'var(--forge-shape-large)', borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }}>
           <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
             {/* Search */}
             <div className="flex-1 min-w-0">
-              <forge-autocomplete
-                allow-unmatched
-                filter-on-focus
-                ref={(el: any) => {
-                  if (!el) return;
-                  el.filter = (filterText: string) => {
-                    const q = (filterText || '').toLowerCase();
-                    if (!q) return [];
-                    const studentMatches = uniqueStudents
-                      .filter(s => s.name.toLowerCase().includes(q))
-                      .map(s => ({ label: `${s.name} (Student)`, value: s.name }));
-                    const busMatches = Array.from(new Set(mockIncidents.map(i => i.bus)))
-                      .filter(b => b.toLowerCase().includes(q))
-                      .map(b => ({ label: `${b} (Vehicle)`, value: b }));
-                    const routeMatches = Array.from(new Set(mockIncidents.map(i => i.route)))
-                      .filter(r => r.toLowerCase().includes(q))
-                      .map(r => ({ label: `${r} (Run)`, value: r }));
-                    return [...studentMatches, ...busMatches, ...routeMatches].slice(0, 20);
-                  };
-                  const handler = (e: any) => {
-                    const val = e.detail?.value;
-                    if (val !== undefined) setPendingSearchTerm(val);
-                  };
-                  el.removeEventListener('forge-autocomplete-change', handler);
-                  el.addEventListener('forge-autocomplete-change', handler);
-                }}
-              >
-                <forge-text-field>
-                  <forge-icon slot="start" name="search"></forge-icon>
-                  <input
-                    type="text"
-                    placeholder="Search by student, vehicle, or run..."
-                    value={pendingSearchTerm}
-                    onChange={(e) => setPendingSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSearch();
-                      }
-                    }}
-                    style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--forge-font-size-base)' }}
-                  />
-                </forge-text-field>
-              </forge-autocomplete>
+              <EntitySearchField
+                value={pendingSearchTerm}
+                onChange={setPendingSearchTerm}
+                onSubmit={handleSearch}
+                placeholder="Search by person, vehicle, run, or location..."
+                groups={searchSuggestionGroups}
+              />
             </div>
 
             {/* Status Filter */}
@@ -1503,17 +1758,23 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
               />
             </div>
 
-            {/* Type Filter */}
+            {/* Subject Filter */}
             <div className="shrink-0">
               <ForgeMultiSelect
-                options={[
-                  { value: 'Disruptive Behavior', label: 'Disruptive Behavior' },
-                  { value: 'Safety Violation', label: 'Safety Violation' },
-                  { value: 'Physical Altercation', label: 'Physical Altercation' },
-                  { value: 'Property Damage', label: 'Property Damage' },
-                  { value: 'Weapon / Prohibited Items', label: 'Weapon / Prohibited Items' },
-                  { value: 'Witness / Bystander Statement', label: 'Witness / Bystander Statement' },
-                ]}
+                options={INCIDENT_SUBJECTS.map(s => ({ value: s.label, label: s.label }))}
+                selected={pendingSubjectFilter}
+                onChange={setPendingSubjectFilter}
+                placeholder="Subject"
+                allLabel="All Subjects"
+                width="160px"
+              />
+            </div>
+
+            {/* Type Filter. Derived from INCIDENT_TYPES rather than a hardcoded
+                list, otherwise any newly added type is silently unfilterable. */}
+            <div className="shrink-0">
+              <ForgeMultiSelect
+                options={typeFilterOptions}
                 selected={pendingTypeFilter}
                 onChange={setPendingTypeFilter}
                 placeholder="Type"
@@ -1560,8 +1821,8 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                 fontFamily: 'Roboto, sans-serif',
                 fontSize: 'var(--forge-font-size-base)',
                 fontWeight: 'var(--forge-font-weight-medium)',
-                borderRadius: 'var(--forge-radius-medium)',
-                borderColor: 'var(--forge-color-border-default)',
+                borderRadius: 'var(--forge-shape-medium)',
+                borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))',
               }}
             >
               <forge-icon slot="start" name="search"></forge-icon>
@@ -1572,14 +1833,21 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       </ForgeCard>
 
       {/* Active Filter Banner */}
-      {(severityFilter.length > 0 || statusFilter.length > 0 || dateAfterFilter) && (
-        <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #eff6ff)', border: '1px solid var(--forge-color-border-info, #bfdbfe)', borderRadius: 'var(--forge-radius-medium)', fontFamily: 'var(--forge-font-family)' }}>
+      {(severityFilter.length > 0 || statusFilter.length > 0 || subjectFilter.length > 0 || dateAfterFilter || searchTerm.trim()) && (
+        <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #eff6ff)', border: '1px solid var(--forge-color-border-info, #bfdbfe)', borderRadius: 'var(--forge-shape-medium)', fontFamily: 'var(--forge-font-family)' }}>
           <forge-icon name="error" style={{ fontSize: '16px', flexShrink: 0, color: 'var(--forge-color-text-info, #2563eb)' }}></forge-icon>
           <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-color-text-info, #1e40af)' }}>
-            Filtered view: 
-            {severityFilter.length > 0 && ` Severity = ${severityFilter.join(', ')}`}
-            {statusFilter.length > 0 && ` • Status = ${statusFilter.join(', ')}`}
-            {dateAfterFilter && ` • Created after ${dateAfterFilter}`}
+            {/* Joined rather than each line prefixing its own separator, which
+                left a dangling bullet whenever the first filter was unset. */}
+            Filtered view: {[
+              // Search first, since it is what an incoming link from the drivers
+              // or vehicles grid sets, and the user did not type it themselves.
+              searchTerm.trim() && `Matching "${searchTerm.trim()}"`,
+              severityFilter.length > 0 && `Severity = ${severityFilter.join(', ')}`,
+              statusFilter.length > 0 && `Status = ${statusFilter.join(', ')}`,
+              subjectFilter.length > 0 && `Subject = ${subjectFilter.join(', ')}`,
+              dateAfterFilter && `Created after ${dateAfterFilter}`,
+            ].filter(Boolean).join(' • ')}
           </span>
           <ForgeButton
             variant="flat"
@@ -1591,12 +1859,14 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
               setSeverityFilter([]);
               setDateAfterFilter('');
               setAssignedToFilter([]);
+              setSubjectFilter([]);
               setTypeFilter([]);
               setSearchTerm('');
               setPendingStatusFilter([]);
               setPendingSeverityFilter([]);
               setPendingDateAfterFilter('');
               setPendingAssignedToFilter([]);
+              setPendingSubjectFilter([]);
               setPendingTypeFilter([]);
               setPendingSearchTerm('');
             }}
@@ -1648,10 +1918,21 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       onClick={() => handleSort('student')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
                     >
-                      Student
+                      Involved
                       {sortField === 'student' && sortDirection === 'desc' && <forge-icon name="arrow_downward" style={{ fontSize: '14px' }}></forge-icon>}
                       {sortField === 'student' && sortDirection === 'asc' && <forge-icon name="arrow_upward" style={{ fontSize: '14px' }}></forge-icon>}
                       {sortField !== 'student' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
+                    </button>
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '120px' }}>
+                    <button
+                      onClick={() => handleSort('subject')}
+                      className="flex items-center gap-1 hover:text-primary transition-colors"
+                    >
+                      Subject
+                      {sortField === 'subject' && sortDirection === 'desc' && <forge-icon name="arrow_downward" style={{ fontSize: '14px' }}></forge-icon>}
+                      {sortField === 'subject' && sortDirection === 'asc' && <forge-icon name="arrow_upward" style={{ fontSize: '14px' }}></forge-icon>}
+                      {sortField !== 'subject' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
                     </button>
                   </th>
                   <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>
@@ -1693,9 +1974,38 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                 </tr>
               </thead>
               <tbody>
-                {displayedIncidents.map((incident) => (
+                {displayedIncidents.map((incident, rowIndex) => {
+                  // Year divider. Asked for in the Aug 19 review so older
+                  // incidents read as their own block instead of blending into
+                  // the current year. Only while sorted by date, because in any
+                  // other sort order the years interleave and a divider would
+                  // be meaningless rather than helpful.
+                  const showYearDivider =
+                    sortField === 'date' &&
+                    yearForDate(incident.date) !== yearForDate(displayedIncidents[rowIndex - 1]?.date);
+                  return (
+                  <React.Fragment key={incident.id}>
+                  {showYearDivider && (
+                    <tr className="forge-table-row" aria-hidden="true">
+                      <td
+                        colSpan={10}
+                        className="forge-table-cell"
+                        style={{
+                          background: 'var(--forge-theme-surface-container-minimum, #f5f7f9)',
+                          borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+                          fontFamily: 'Roboto, sans-serif',
+                          fontSize: 'var(--forge-font-size-sm, 0.875rem)',
+                          fontWeight: 500,
+                          letterSpacing: '0.5px',
+                          color: 'var(--forge-theme-text-medium)',
+                          padding: '6px 12px',
+                        }}
+                      >
+                        {yearForDate(incident.date)}
+                      </td>
+                    </tr>
+                  )}
                   <tr
-                    key={incident.id}
                     className="forge-table-row cursor-pointer"
                     onClick={() => onNavigateToIncidentDetail(incident)}
                     style={{ transition: 'background-color 0.15s' }}
@@ -1707,6 +2017,9 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       </td>
                       <td className="forge-table-cell">{incident.date.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1')}</td>
                       <td className="forge-table-cell">
+                        {/* Multi-student rows keep their existing "+N more"
+                            treatment. Everything else, student or not, goes
+                            through the subject label helper so no row is blank. */}
                         {incident.involvedStudents && incident.involvedStudents.length > 1 ? (
                           <>
                             <div title={incident.involvedStudents.map((s: any) => `${s.name} (${s.role})`).join(', ')}>
@@ -1721,12 +2034,21 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                           </>
                         ) : (
                           <>
-                            <div>{incident.student}</div>
+                            <div>{getIncidentSubjectLabel(incident)}</div>
                             <div style={{ fontSize: 'calc(var(--forge-font-size-sm) - 2px)', color: 'var(--forge-theme-text-low)' }}>
-                              {incident.studentId}
+                              {getIncidentSubjectSubLabel(incident)}
                             </div>
                           </>
                         )}
+                      </td>
+                      {/* Subject is its own column now, shown on every row.
+                          It used to be a chip tucked inside the Involved cell
+                          and only on non-student rows, which made it easy to
+                          miss and impossible to sort on. */}
+                      <td className="forge-table-cell">
+                        <forge-badge theme={(incident.subject ?? 'student') === 'student' ? 'default' : 'info-primary'}>
+                          {getSubjectLabel(incident.subject ?? 'student')}
+                        </forge-badge>
                       </td>
                       <td className="forge-table-cell">
                         <forge-badge theme="default">{incident.type}</forge-badge>
@@ -1765,12 +2087,14 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                         )}
                       </td>
                     </tr>
-                ))}
+                  </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
           {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', marginTop: 'var(--forge-spacing-medium)' }}>
+          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', whiteSpace: 'nowrap' }}>
                 Showing {sortedIncidents.length === 0 ? 0 : startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedIncidents.length)} of {sortedIncidents.length} incidents
@@ -1844,17 +2168,20 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       {/* New Incident Dialog */}
       {/* @ts-ignore */}
       <forge-dialog ref={newIncidentDialogRef} aria-label="Report New Incident">
-        <div style={{ width: '95vw', maxWidth: '95vw', maxHeight: '95vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+        {/* Capped rather than a flat 95vw. On a wide monitor 95vw produced a
+            very large mostly-empty dialog; 1240px is enough for the two-column
+            details step and still collapses on smaller screens. */}
+        <div style={{ width: 'min(1240px, 95vw)', maxWidth: '95vw', maxHeight: '95vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
           <div className="sticky top-0 bg-white z-10 border-b px-6 py-4">
             <h2 style={{ margin: 0, fontFamily: 'var(--forge-font-family)', fontWeight: 'var(--forge-font-weight-medium)', fontSize: 'var(--forge-font-size-xl)' }}>
               Report New Incident
             </h2>
             <p style={{ margin: 0, marginTop: 'var(--forge-spacing-xxsmall)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--muted-foreground)' }}>
-              Fill out the form below to report a new student incident
+              Choose what the incident is about, then fill out the details
             </p>
           </div>
           <div className="px-6 pb-6">
-            <NewIncidentForm onNavigate={(page) => {
+            <NewIncidentFormUnified onNavigate={(page) => {
               setIsNewIncidentDialogOpen(false);
               if (page === 'incidents') {
                 toastHelper[0]({ message: 'Incident reported successfully!', theme: 'success', duration: 3000 } as any);

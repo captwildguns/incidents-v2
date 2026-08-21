@@ -58,7 +58,7 @@ export function IncidentWorkflowProgress({ workflow }: IncidentWorkflowProgressP
             flex: 1,
             height: '6px',
             background: 'var(--muted)',
-            borderRadius: 'var(--forge-radius-full)',
+            borderRadius: 'var(--forge-shape-full)',
             overflow: 'hidden',
           }}
         >

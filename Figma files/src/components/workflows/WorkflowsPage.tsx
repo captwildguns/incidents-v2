@@ -18,8 +18,8 @@ defineTooltipComponent();
 defineIconComponent();
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { workflows as importedWorkflows, Workflow, WorkflowStep } from '../../data/workflows';
-import { INCIDENT_TYPES, INCIDENT_CATEGORIES } from '../incidents/IncidentTypes';
+import { workflows as importedWorkflows, Workflow, WorkflowStep, resolveWorkflowOwner } from '../../data/workflows';
+import { INCIDENT_TYPES, INCIDENT_CATEGORIES, getSubjectLabel } from '../incidents/IncidentTypes';
 import { WorkflowStepLibrary, WorkflowStepTemplate } from './WorkflowStepLibrary';
 import { StepTemplateManager } from './StepTemplateManager';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
@@ -43,6 +43,9 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
     description: w.description,
     category: 'Safety', // Default category
     severity: w.severityLevels?.[0] || 'Medium',
+    ownerRole: w.ownerRole,
+    ownerName: w.ownerName,
+    owner: resolveWorkflowOwner(w),
     incidentTypes: w.incidentTypes,
     steps: w.steps,
     active: w.isActive,
@@ -84,8 +87,8 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
   const severityLevels = ['Critical', 'High', 'Medium', 'Low'];
 
   // Group incident types by category for the selector
-  const studentIncidentTypes = INCIDENT_TYPES.filter(t => t.applicableTo === 'student' || t.applicableTo === 'both');
-  const driverIncidentTypes = INCIDENT_TYPES.filter(t => t.applicableTo === 'driver' || t.applicableTo === 'both');
+  const studentIncidentTypes = INCIDENT_TYPES.filter(t => t.applicableTo === 'student');
+  const nonStudentIncidentTypes = INCIDENT_TYPES.filter(t => t.applicableTo !== 'student');
 
   // Compute which incident type labels are already linked to an active workflow
   const linkedIncidentTypeLabels = new Set(
@@ -382,6 +385,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Workflow Name</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Category</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Status</th>
+                      <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Incident Owner</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Severity</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>Steps</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Last Modified</th>
@@ -422,6 +426,25 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                             <forge-badge theme={workflow.active ? 'success' : 'default'}>
                               {workflow.active ? 'Active' : 'Inactive'}
                             </forge-badge>
+                          </td>
+                          {/* Who an incident on this workflow is assigned to at
+                              creation. The role is what is configured; the name
+                              is who currently holds it. */}
+                          <td className="forge-table-cell">
+                            {workflow.owner ? (
+                              <>
+                                <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-base)' }}>
+                                  {workflow.owner}
+                                </div>
+                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', marginTop: '2px' }}>
+                                  {workflow.ownerName ? 'Named on this workflow' : workflow.ownerRole}
+                                </div>
+                              </>
+                            ) : (
+                              <span style={{ fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>
+                                Unassigned
+                              </span>
+                            )}
                           </td>
                           <td className="forge-table-cell">
                             <forge-badge
@@ -602,7 +625,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                       width: '100%',
                       marginTop: 'var(--forge-spacing-xsmall)',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       background: 'var(--input-background)',
@@ -626,7 +649,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                     style={{
                       width: '100%',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       fontFamily: 'var(--forge-font-family)',
@@ -675,7 +698,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                     style={{
                       width: '100%',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       fontFamily: 'var(--forge-font-family)',
@@ -693,8 +716,8 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                         );
                       })}
                     </optgroup>
-                    <optgroup label="Driver Incident Types">
-                      {driverIncidentTypes.map((t) => {
+                    <optgroup label="Non-Student Incident Types">
+                      {nonStudentIncidentTypes.map((t) => {
                         const isLinked = linkedIncidentTypeLabels.has(t.label) || linkedIncidentTypeLabels.has(t.id);
                         return (
                           <option key={t.id} value={t.id} disabled={isLinked} style={isLinked ? { color: 'var(--muted-foreground)' } : {}}>
@@ -711,12 +734,12 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                         marginTop: 'var(--forge-spacing-small)',
                         padding: 'var(--forge-spacing-small)',
                         background: 'var(--input-background)',
-                        borderRadius: 'var(--forge-radius-medium)',
+                        borderRadius: 'var(--forge-shape-medium)',
                         border: '1px solid var(--border)',
                       }}>
                         <div style={{ display: 'flex', gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-xxsmall)', flexWrap: 'wrap' }}>
-                          <forge-badge theme={selectedType.applicableTo === 'student' ? 'info-primary' : selectedType.applicableTo === 'driver' ? 'success' : 'default'}>
-                            {selectedType.applicableTo === 'student' ? 'Student' : selectedType.applicableTo === 'driver' ? 'Driver' : 'Both'}
+                          <forge-badge theme={selectedType.applicableTo === 'student' ? 'info-primary' : 'success'}>
+                            {getSubjectLabel(selectedType.applicableTo)}
                           </forge-badge>
                           <forge-badge theme="default">{selectedType.category}</forge-badge>
                           <forge-badge

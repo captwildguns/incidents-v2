@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ForgeCard, ForgeButton, ForgeMenu, ForgeIconButton } from '@tylertech/forge-react';
+import { ForgeCard, ForgeButton, ForgeMenu, ForgeIconButton, useForgeToast } from '@tylertech/forge-react';
 import { defineCardComponent, defineDialogComponent, defineBadgeComponent, defineMenuComponent, defineIconButtonComponent } from '@tylertech/forge';
 defineCardComponent();
 defineDialogComponent();
@@ -7,7 +7,9 @@ defineBadgeComponent();
 defineMenuComponent();
 defineIconButtonComponent();
 import { EditIncidentDialog } from '../incidents/EditIncidentDialog';
-import { mockIncidents } from '../incidents/IncidentsPage';
+import { NewIncidentFormUnified } from '../incidents/NewIncidentFormUnified';
+import { mockIncidents, getIncidentSubjectLabel, getIncidentSubjectSubLabel } from '../incidents/IncidentsPage';
+import { getSubjectLabel, INCIDENT_SUBJECTS } from '../incidents/IncidentTypes';
 import { defineButtonComponent } from '@tylertech/forge';
 defineButtonComponent();
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
@@ -20,34 +22,93 @@ const currentUser = {
   email: 'sarah.williams@district.edu'
 };
 
-const incidentTypeData = [
-  { name: 'Disruptive Behavior', value: 47, fill: '#4A6FA5' },
-  { name: 'Safety Violation', value: 22, fill: '#5B8BB8' },
-  { name: 'Physical Altercation', value: 18, fill: '#8B9264' },
-  { name: 'Property Damage', value: 8, fill: '#6B9BC5' },
-  { name: 'Weapon / Prohibited Items', value: 5, fill: '#7B8458' },
-];
+// Every number on this page used to be a hardcoded array or a literal in the
+// markup, which is why the vehicle chart read Bus 8 as 9 and Bus 14 as 4 while
+// the vehicles grid read 10 and 5: the seed data moved and these did not. All of
+// it is derived from mockIncidents now, so the dashboard cannot drift from the
+// grids again.
 
-const incidentsByVehicleData = [
-  { vehicle: 'Bus 15', incidents: 10 },
-  { vehicle: 'Bus 8', incidents: 9 },
-  { vehicle: 'Bus 12', incidents: 7 },
-  { vehicle: 'Bus 9', incidents: 7 },
-  { vehicle: 'Bus 14', incidents: 4 },
-  { vehicle: 'Bus 4', incidents: 3 },
-  { vehicle: 'Bus 6', incidents: 2 },
-  { vehicle: 'Bus 11', incidents: 2 },
-  { vehicle: 'Bus 10', incidents: 2 },
-  { vehicle: 'Bus 5', incidents: 1 },
-];
+const CHART_FILLS = ['#4A6FA5', '#5B8BB8', '#8B9264', '#6B9BC5', '#7B8458', '#9AA4B8', '#A8B47A'];
 
-const incidentsByDayData = [
-  { day: 'Mon', incidents: 8 },
-  { day: 'Tue', incidents: 12 },
-  { day: 'Wed', incidents: 6 },
-  { day: 'Thu', incidents: 10 },
-  { day: 'Fri', incidents: 15 },
-];
+// Incidents by type, largest first, capped at the seven the pie can label.
+const incidentTypeData = (() => {
+  const counts = new Map<string, number>();
+  for (const inc of mockIncidents as any[]) {
+    counts.set(inc.type, (counts.get(inc.type) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 7)
+    .map(([name, value], idx) => ({ name, value, fill: CHART_FILLS[idx % CHART_FILLS.length] }));
+})();
+
+// Incidents by subject. The reason this page exists in a district that now
+// tracks more than students, and the one chart that answers "how much of this is
+// not about a student".
+const incidentSubjectData = (() => {
+  const counts = new Map<string, number>();
+  for (const inc of mockIncidents as any[]) {
+    const label = getSubjectLabel(inc.subject ?? 'student');
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  return INCIDENT_SUBJECTS
+    .map((s, idx) => ({ name: s.label, value: counts.get(s.label) ?? 0, fill: CHART_FILLS[idx % CHART_FILLS.length] }))
+    .filter(d => d.value > 0);
+})();
+
+// Incidents by vehicle. Counted exactly the way the vehicles grid counts them:
+// the bus the incident happened on, plus assetRef on a vehicle-subject incident,
+// skipping the 'N/A' placeholder.
+const incidentsByVehicleData = (() => {
+  const counts = new Map<string, number>();
+  for (const inc of mockIncidents as any[]) {
+    const names = new Set(
+      [inc.bus, inc.subject === 'vehicle' ? inc.assetRef : null]
+        .filter((n: any) => typeof n === 'string' && n && n !== 'N/A')
+    );
+    for (const name of names) {
+      counts.set(name as string, (counts.get(name as string) ?? 0) + 1);
+    }
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([vehicle, incidents]) => ({ vehicle, incidents }));
+})();
+
+// Incidents by weekday, Monday to Friday. Seed dates are historical, so a real
+// calendar week would read zero across the board; this is the whole seed set
+// bucketed by the day of the week each incident happened on.
+const incidentsByDayData = (() => {
+  const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const counts = new Map<string, number>(order.map(d => [d, 0]));
+  for (const inc of mockIncidents as any[]) {
+    if (!inc.date) continue;
+    const [y, m, d] = inc.date.split('-').map(Number);
+    const label = order[new Date(Date.UTC(y, m - 1, d)).getUTCDay() - 1];
+    if (label) counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  return order.map(day => ({ day, incidents: counts.get(day) ?? 0 }));
+})();
+
+// KPI numbers, matched to how the incidents grid counts the same things so the
+// two pages never disagree.
+const kpiCritical = (mockIncidents as any[]).filter(i => i.severity === 'Critical').length;
+const kpiOpen = (mockIncidents as any[]).filter(i => i.status === 'Open').length;
+const kpiStudentsWithIncidents = new Set(
+  (mockIncidents as any[]).flatMap(i => (i.involvedStudents ?? []).map((s: any) => s.studentId).filter(Boolean))
+).size;
+// The seed set is historical, so "this week" is the seven days up to the most
+// recent incident rather than up to today, which would always read zero.
+const kpiRecent = (() => {
+  const dates = (mockIncidents as any[]).map(i => i.date).filter(Boolean).sort();
+  if (!dates.length) return 0;
+  const latest = dates[dates.length - 1];
+  const cutoff = new Date(latest);
+  cutoff.setDate(cutoff.getDate() - 6);
+  const from = cutoff.toISOString().slice(0, 10);
+  return (mockIncidents as any[]).filter(i => i.date >= from && i.date <= latest).length;
+})();
 
 // Custom SVG Pie Chart component to avoid recharts duplicate key bug
 function CustomPieChart({ data }: { data: { name: string; value: number; fill: string }[] }) {
@@ -226,7 +287,10 @@ const activeIncidents = (mockIncidents as any[])
   .slice()
   .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   .slice(0, 5)
-  .map(i => ({ ...i, time: (i.date || '').replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1') }));
+  // displayDate, not time. `time` now holds the incident's occurrence time, and
+  // overwriting it here leaked a date string into the detail page via the
+  // row-click handler below, which renders "Occurred: <date> at <date>".
+  .map(i => ({ ...i, displayDate: (i.date || '').replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$3-$1') }));
 
 const needsAttention = [
   {
@@ -234,8 +298,8 @@ const needsAttention = [
     student: 'Christopher Adams',
     type: 'Physical Altercation',
     bus: 'Bus 15',
-    reason: 'High severity - student caused minor injury to another student',
-    priority: 'critical',
+    reason: 'Student caused minor injury to another student',
+    priority: 'high',
     time: '5 mins ago',
     timeValue: 5,
     actionNeeded: 'Contact parents immediately and review with administration',
@@ -246,8 +310,8 @@ const needsAttention = [
     student: 'Tyler Stewart',
     type: 'Physical Altercation',
     bus: 'Bus 12',
-    reason: 'High severity - physical aggression requires immediate response',
-    priority: 'critical',
+    reason: 'Physical aggression requires immediate response',
+    priority: 'high',
     time: '8 hours ago',
     timeValue: 8 * 60,
     actionNeeded: 'Contact parents and schedule student meeting',
@@ -258,7 +322,7 @@ const needsAttention = [
     student: 'Natalie Collins',
     type: 'Disruptive Behavior',
     bus: 'Bus 8',
-    reason: 'High severity - profanity directed at driver',
+    reason: 'Profanity directed at driver',
     priority: 'high',
     time: '9 hours ago',
     timeValue: 9 * 60,
@@ -270,7 +334,7 @@ const needsAttention = [
     student: 'Kayla Bailey',
     type: 'Disruptive Behavior',
     bus: 'Bus 8',
-    reason: 'High severity - bullying behavior requires intervention',
+    reason: 'Bullying behavior requires intervention',
     priority: 'high',
     time: '2 days ago',
     timeValue: 48 * 60,
@@ -282,7 +346,7 @@ const needsAttention = [
     student: 'Grace Phillips',
     type: 'Disruptive Behavior',
     bus: 'Bus 9',
-    reason: 'High severity - ongoing bullying of younger student',
+    reason: 'Ongoing bullying of younger student',
     priority: 'high',
     time: '1 day ago',
     timeValue: 24 * 60,
@@ -306,7 +370,7 @@ const needsAttention = [
     student: 'Joshua Parker',
     type: 'Safety Violation',
     bus: 'Bus 14',
-    reason: 'Medium severity - sat in restricted driver area',
+    reason: 'Sat in restricted driver area',
     priority: 'medium',
     time: '4 days ago',
     timeValue: 4 * 24 * 60,
@@ -354,7 +418,7 @@ const needsAttention = [
     student: 'Brianna Cooper',
     type: 'Physical Altercation',
     bus: 'Bus 9',
-    reason: 'In Progress - high severity requires continued monitoring',
+    reason: 'In Progress - requires continued monitoring',
     priority: 'high',
     time: '15 days ago',
     timeValue: 15 * 24 * 60,
@@ -390,8 +454,8 @@ const needsAttention = [
     student: 'Tyler Washington',
     type: 'Weapon / Prohibited Items',
     bus: 'Bus 22',
-    reason: 'Critical incident - no action taken in 4 hours',
-    priority: 'critical',
+    reason: 'No action taken in 4 hours',
+    priority: 'medium',
     time: '4 hours ago',
     timeValue: 4 * 60,
     actionNeeded: 'Escalate to administration immediately',
@@ -414,8 +478,8 @@ const needsAttention = [
     student: 'Marcus Johnson',
     type: 'Safety Violation',
     bus: 'Bus 8',
-    reason: 'High severity - requires immediate parent contact',
-    priority: 'critical',
+    reason: 'Requires immediate parent contact',
+    priority: 'high',
     time: '32 mins ago',
     timeValue: 32,
     actionNeeded: 'Contact parents and administration',
@@ -480,6 +544,9 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
   const triageDialogRef = useRef<HTMLElement>(null);
   const editDialogRef = useRef<HTMLElement>(null);
   const reassignDialogRef = useRef<HTMLElement>(null);
+  const newIncidentDialogRef = useRef<HTMLElement>(null);
+  const toastHelper = useForgeToast();
+  const [isNewIncidentDialogOpen, setIsNewIncidentDialogOpen] = useState(false);
 
   // Sync triageDetailsOpen state with forge-dialog
   useEffect(() => { const el = triageDialogRef.current as any; if (!el) return; el.open = triageDetailsOpen; }, [triageDetailsOpen]);
@@ -488,6 +555,11 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
   // Sync editDialogOpen state with forge-dialog
   useEffect(() => { const el = editDialogRef.current as any; if (!el) return; el.open = editDialogOpen; }, [editDialogOpen]);
   useEffect(() => { const el = editDialogRef.current as any; if (!el) return; const handler = () => setEditDialogOpen(false); el.addEventListener('forge-dialog-close', handler); return () => el.removeEventListener('forge-dialog-close', handler); }, []);
+
+  // Sync the New Incident dialog. Filing starts in a modal here exactly as it
+  // does on the incidents page, rather than navigating away from the dashboard.
+  useEffect(() => { const el = newIncidentDialogRef.current as any; if (!el) return; el.open = isNewIncidentDialogOpen; }, [isNewIncidentDialogOpen]);
+  useEffect(() => { const el = newIncidentDialogRef.current as any; if (!el) return; const handler = () => setIsNewIncidentDialogOpen(false); el.addEventListener('forge-dialog-close', handler); return () => el.removeEventListener('forge-dialog-close', handler); }, []);
 
   // Sync reassignDialogOpen state with forge-dialog
   useEffect(() => { const el = reassignDialogRef.current as any; if (!el) return; el.open = reassignDialogOpen; }, [reassignDialogOpen]);
@@ -548,6 +620,17 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       default: return 'default';
     }
   };
+  // Mirrors statusTheme on the incidents page, so the same status reads the
+  // same colour in both grids.
+  const getStatusTheme = (status: string): string => {
+    switch (status) {
+      case 'Open': return 'info-primary';
+      case 'In Progress': return 'warning';
+      case 'Closed': return 'default';
+      default: return 'default';
+    }
+  };
+
   const getSeverityTheme = (severity: string): string => {
     switch (severity) {
       case 'Critical': return 'danger';
@@ -560,12 +643,35 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
 
   return (
     <div style={{ padding: 'var(--forge-spacing-xlarge)' }}>
-      {/* Page Header */}
-      <div style={{ marginBottom: 'var(--forge-spacing-large)' }}>
+      {/* Page Header. New Incident sits here, matching the incidents page, so
+          the action is in the same place wherever you start from. */}
+      <div className="flex items-start justify-between" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
+        <div>
         <h1 style={{ margin: 0, marginBottom: '8px' }}>Dashboard</h1>
         <p className="text-muted-foreground" style={{ margin: 0 }}>
-          Overview of student incident tracking and management
+          Overview of incident tracking and management
         </p>
+        </div>
+        {/* Same markup as the incidents page button, so the two read as one
+            control rather than two similar ones. */}
+        <button
+          onClick={() => setIsNewIncidentDialogOpen(true)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '8px 16px',
+            fontFamily: 'Roboto, sans-serif',
+            fontSize: '14px',
+            fontWeight: 500,
+            borderRadius: 'var(--forge-shape-medium)',
+            backgroundColor: 'var(--forge-theme-primary)',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          <forge-icon name="add" style={{ fontSize: '16px' }}></forge-icon>
+          New Incident
+        </button>
       </div>
 
       {/* My Incidents Section */}
@@ -634,7 +740,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
                         }}
                       >
                         <div className="font-semibold" style={{ fontSize: '1rem', lineHeight: 1.2 }}>
-                          {item.student}
+                          {getIncidentSubjectLabel(item)}
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -761,14 +867,16 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
+      {/* All four KPIs stay on one row. They previously dropped to a 2x2 block
+          at md, which is the width most people actually run this at. */}
+      <div className="grid grid-cols-4 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
         <ForgeCard
           style={{ boxShadow: 'var(--forge-elevation-1)', cursor: 'pointer' }}
           className="hover:shadow-lg transition-shadow"
           onClick={() => onNavigateToFilteredIncidents?.({ status: 'Open', severity: 'Critical' })}
         >
           <div style={{ padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-medium)', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#dc2626', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>1</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#dc2626', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{kpiCritical}</div>
             <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Critical Incidents</h3>
           </div>
         </ForgeCard>
@@ -779,7 +887,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
           onClick={() => onNavigateToFilteredIncidents?.({ status: 'Open' })}
         >
           <div style={{ padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-medium)', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--brand-blue-dark)', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>23</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--brand-blue-dark)', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{kpiOpen}</div>
             <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Open Incidents</h3>
           </div>
         </ForgeCard>
@@ -790,7 +898,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
           onClick={() => onNavigateToStudentsWithActiveIncidents?.()}
         >
           <div style={{ padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-medium)', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#9333ea', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>26</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#9333ea', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{kpiStudentsWithIncidents}</div>
             <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Students w/ Incidents</h3>
           </div>
         </ForgeCard>
@@ -806,7 +914,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
           }}
         >
           <div style={{ padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-medium)', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#16a34a', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>12</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#16a34a', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{kpiRecent}</div>
             <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Incidents This Week</h3>
           </div>
         </ForgeCard>
@@ -814,7 +922,19 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
+      {/* All four charts on one row, matching the KPI row above. */}
+      <div className="grid grid-cols-4 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
+        {/* Incidents by Subject. First, because it is the question a district
+            that has just started tracking more than students asks first. */}
+        <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
+          <div style={{ padding: 'var(--forge-spacing-medium)', paddingBottom: 'var(--forge-spacing-small)' }}>
+            <h3 className="forge-typography--heading4" style={{ fontSize: '1rem' }}>Incidents by Subject</h3>
+          </div>
+          <div style={{ paddingTop: 0 }}>
+            <CustomPieChart data={incidentSubjectData} />
+          </div>
+        </ForgeCard>
+
         {/* Incident Type Distribution */}
         <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
           <div style={{ padding: 'var(--forge-spacing-medium)', paddingBottom: 'var(--forge-spacing-small)' }}>
@@ -856,26 +976,33 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
         </div>
         <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
           <div className="overflow-x-auto">
-            <table className="forge-table">
+            {/* Same ten columns, in the same order, as the incidents page grid,
+                so moving between the two does not mean relearning the table. The
+                only difference is that this one is locked to newest first and is
+                not sortable, which the arrow on Date indicates. */}
+            <table className="forge-table" style={{ minWidth: '1400px', width: '100%' }}>
               <thead>
                 <tr>
-                  <th className="forge-table-cell forge-table-cell--header">Incident ID</th>
-                  <th className="forge-table-cell forge-table-cell--header">Student</th>
-                  <th className="forge-table-cell forge-table-cell--header">Type</th>
-                  <th className="forge-table-cell forge-table-cell--header">Severity</th>
-                  <th className="forge-table-cell forge-table-cell--header">Assigned To</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '130px' }}>Incident ID</th>
                   <th
                     className="forge-table-cell forge-table-cell--header"
                     aria-sort="descending"
                     title="Locked sort: newest first"
-                    style={{ cursor: 'default' }}
+                    style={{ cursor: 'default', minWidth: '110px' }}
                   >
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      Created On
+                      Date
                       <forge-icon name="arrow_downward" style={{ fontSize: '14px', opacity: 0.8 }}></forge-icon>
                     </span>
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header">Messages</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>Involved</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '120px' }}>Subject</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>Type</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '220px' }}>Vehicle/Run</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '110px' }}>Severity</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '130px' }}>Status</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '150px' }}>Assigned To</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '100px' }}>Messages</th>
                 </tr>
               </thead>
               <tbody>
@@ -899,19 +1026,59 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
                     <td className="forge-table-cell" style={{ fontWeight: 500, fontFamily: 'var(--forge-font-family)' }}>
                       {incident.id}
                     </td>
-                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>{incident.student}</td>
+                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                      {incident.displayDate}
+                    </td>
+                    {/* Involved, matching the incidents page: multi-student rows
+                        keep the "+N more" treatment, everything else falls back
+                        to the subject label so no row is blank. */}
+                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                      {incident.involvedStudents && incident.involvedStudents.length > 1 ? (
+                        <>
+                          <div title={incident.involvedStudents.map((s: any) => `${s.name} (${s.role})`).join(', ')}>
+                            {incident.involvedStudents[0].name}
+                            <span style={{ marginLeft: '4px', color: 'var(--forge-theme-text-low)' }}>
+                              +{incident.involvedStudents.length - 1} more
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 'calc(var(--forge-font-size-sm) - 2px)', color: 'var(--forge-theme-text-low)' }}>
+                            {incident.involvedStudents.length} students involved
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>{getIncidentSubjectLabel(incident)}</div>
+                          <div style={{ fontSize: 'calc(var(--forge-font-size-sm) - 2px)', color: 'var(--forge-theme-text-low)' }}>
+                            {getIncidentSubjectSubLabel(incident)}
+                          </div>
+                        </>
+                      )}
+                    </td>
+                    <td className="forge-table-cell">
+                      <forge-badge theme={(incident.subject ?? 'student') === 'student' ? 'default' : 'info-primary'}>
+                        {getSubjectLabel(incident.subject ?? 'student')}
+                      </forge-badge>
+                    </td>
                     <td className="forge-table-cell">
                       <forge-badge theme="default">{incident.type}</forge-badge>
+                    </td>
+                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                      <div>{incident.bus}</div>
+                      <div style={{ fontSize: 'calc(var(--forge-font-size-sm) - 2px)', color: 'var(--forge-theme-text-low)' }}>
+                        {incident.route}
+                      </div>
                     </td>
                     <td className="forge-table-cell">
                       <forge-badge theme={getSeverityTheme(incident.severity)} strong>
                         {incident.severity}
                       </forge-badge>
                     </td>
-                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>{incident.assignedTo}</td>
-                    <td className="forge-table-cell" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--forge-theme-text-low)' }}>
-                      {incident.time}
+                    <td className="forge-table-cell">
+                      <forge-badge theme={getStatusTheme(incident.status)}>
+                        {incident.status}
+                      </forge-badge>
                     </td>
+                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>{incident.assignedTo}</td>
                     <td className="forge-table-cell">
                       {incidentsWithCommunications.includes(incident.id) && (
                         <ForgeButton
@@ -945,7 +1112,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>Student</div>
-                  <div style={{ fontWeight: 500 }}>{selectedTriageItem.student}</div>
+                  <div style={{ fontWeight: 500 }}>{getIncidentSubjectLabel(selectedTriageItem)}</div>
                 </div>
                 <div>
                   <div className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>Priority</div>
@@ -1111,6 +1278,30 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
           )}
         </div>
       {/* @ts-ignore */}
+      </forge-dialog>
+
+      {/* New Incident. Same dialog as the incidents page, including the capped
+          width, so filing from either place is the same experience. */}
+      {/* @ts-ignore */}
+      <forge-dialog ref={newIncidentDialogRef} aria-label="Report New Incident">
+        <div style={{ width: 'min(1240px, 95vw)', maxWidth: '95vw', maxHeight: '95vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+          <div className="sticky top-0 bg-white z-10 border-b px-6 py-4">
+            <h2 style={{ margin: 0, fontFamily: 'var(--forge-font-family)', fontWeight: 'var(--forge-font-weight-medium)', fontSize: 'var(--forge-font-size-xl)' }}>
+              Report New Incident
+            </h2>
+            <p style={{ margin: 0, marginTop: 'var(--forge-spacing-xxsmall)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--muted-foreground)' }}>
+              Choose what the incident is about, then fill out the details
+            </p>
+          </div>
+          <div className="px-6 pb-6">
+            <NewIncidentFormUnified onNavigate={(page) => {
+              setIsNewIncidentDialogOpen(false);
+              if (page === 'incidents') {
+                toastHelper[0]({ message: 'Incident reported successfully!', theme: 'success', duration: 3000 } as any);
+              }
+            }} />
+          </div>
+        </div>
       </forge-dialog>
     </div>
   );

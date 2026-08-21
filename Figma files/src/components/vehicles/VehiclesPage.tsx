@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ForgeCard, ForgeButton, useForgeToast } from '@tylertech/forge-react';
 import {
   defineCardComponent,
@@ -19,8 +19,10 @@ defineIconComponent();
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
-import { 
-  BlueBirdVisionIcon, 
+import { EntitySearchField } from '../shared/EntitySearchField';
+import { mockIncidents } from '../incidents/IncidentsPage';
+import {
+  BlueBirdVisionIcon,
   ICBusCESeriesIcon, 
   ThomasSafTLinerC2Icon, 
   ThomasSafTLinerHDXIcon, 
@@ -343,7 +345,9 @@ export const mockVehicles = [
     licensePlate: 'SCH-1017',
     capacity: 84,
     status: 'Active',
-    driver: 'Angela Foster',
+    // Was Angela Foster, who mockDrivers assigns to Bus 6. Cleared rather than
+    // reassigned so no driver appears on two vehicles.
+    driver: 'Unassigned',
     primaryRoute: 'Riverside High AM - Maroon',
     secondaryRoute: 'Riverside High PM - Maroon',
     defaultGarage: 'South District Garage',
@@ -437,16 +441,130 @@ export const mockVehicles = [
     fuelType: 'Diesel',
     notes: 'New stop sign arm installed 2025-02-10'
   },
+
+  // ─── Vehicles back-filled from mockDrivers ─────────────────────────────────
+  // These four were assigned to drivers and referenced by incidents but had no
+  // vehicle record, so their incidents landed on no row at all. Driver, runs,
+  // and garage are copied from the matching mockDrivers entry, which is the
+  // authoritative driver-to-vehicle assignment.
+  {
+    id: 'VEH-004',
+    name: 'Bus 4',
+    make: 'Blue Bird',
+    model: 'Vision',
+    year: 2021,
+    vin: '1BABNBYA3MF334455',
+    licensePlate: 'SCH-1004',
+    capacity: 72,
+    status: 'Active',
+    driver: 'Marcus Washington',
+    primaryRoute: 'Eastside Middle AM - Teal',
+    secondaryRoute: 'Eastside Middle PM - Teal',
+    defaultGarage: 'East Service Center',
+    midDayGarage: 'Central Service Center',
+    gpsHardwareId: 'GPS-4B7N1P5',
+    hourmeter: 4120,
+    useTydAvl: true,
+    lastInspection: '2025-02-08',
+    nextInspection: '2025-05-08',
+    maintenanceStatus: 'Good',
+    incidentCount: 3,
+    mileage: 51870,
+    fuelType: 'Diesel',
+    notes: ''
+  },
+  {
+    id: 'VEH-006',
+    name: 'Bus 6',
+    make: 'IC Bus',
+    model: 'CE Series',
+    year: 2020,
+    vin: '4DRBUAAN5LB556677',
+    licensePlate: 'SCH-1006',
+    capacity: 66,
+    status: 'Active',
+    driver: 'Angela Foster',
+    primaryRoute: 'Oakwood Elementary AM - Bronze',
+    secondaryRoute: 'Oakwood Elementary PM - Bronze',
+    defaultGarage: 'Central Service Center',
+    midDayGarage: 'North District Garage',
+    gpsHardwareId: 'GPS-6C9Q2R7',
+    hourmeter: 5240,
+    useTydAvl: true,
+    lastInspection: '2025-01-30',
+    nextInspection: '2025-04-30',
+    maintenanceStatus: 'Good',
+    incidentCount: 2,
+    mileage: 63410,
+    fuelType: 'Diesel',
+    notes: ''
+  },
+  {
+    id: 'VEH-010',
+    name: 'Bus 10',
+    make: 'Thomas Built',
+    model: 'Saf-T-Liner C2',
+    year: 2023,
+    vin: '1T8HFEA15PF778899',
+    licensePlate: 'SCH-1010',
+    capacity: 84,
+    status: 'Active',
+    driver: 'Derek Coleman',
+    primaryRoute: 'Parkview Middle AM - Navy',
+    secondaryRoute: 'Parkview Middle PM - Navy',
+    defaultGarage: 'East Service Center',
+    midDayGarage: 'South District Garage',
+    gpsHardwareId: 'GPS-1D3S5T9',
+    hourmeter: 1980,
+    useTydAvl: true,
+    lastInspection: '2025-02-26',
+    nextInspection: '2025-05-26',
+    maintenanceStatus: 'Excellent',
+    incidentCount: 2,
+    mileage: 24650,
+    fuelType: 'Diesel',
+    notes: ''
+  },
+  {
+    id: 'VEH-011',
+    name: 'Bus 11',
+    make: 'Blue Bird',
+    model: 'All American',
+    year: 2019,
+    vin: '1BAAKCPA9KF990011',
+    licensePlate: 'SCH-1011',
+    capacity: 78,
+    status: 'Active',
+    driver: 'Thomas Nguyen',
+    primaryRoute: 'Hillcrest High AM - Crimson',
+    secondaryRoute: 'Hillcrest High PM - Crimson',
+    defaultGarage: 'South District Garage',
+    midDayGarage: 'East Service Center',
+    gpsHardwareId: 'GPS-8E5U7V1',
+    hourmeter: 6830,
+    useTydAvl: true,
+    lastInspection: '2025-01-24',
+    nextInspection: '2025-04-24',
+    maintenanceStatus: 'Needs Attention',
+    incidentCount: 2,
+    mileage: 78920,
+    fuelType: 'Diesel',
+    notes: 'Rear suspension inspection scheduled'
+  },
 ];
 
 interface VehiclesPageProps {
   onNavigate: (page: string) => void;
+  // Opens the incidents grid scoped to one vehicle. Optional so the page still
+  // renders if a caller has not wired it; the count degrades to plain text.
+  onNavigateToIncidentsMatching?: (term: string) => void;
 }
 
-export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
+export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: VehiclesPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [mileageRangeFilter, setMileageRangeFilter] = useState<string[]>([]);
+  const [garageFilter, setGarageFilter] = useState<string[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
@@ -480,31 +598,85 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
     }
   };
 
+  // Incident counts derived from mockIncidents rather than read from the seeded
+  // incidentCount field, so filing a vehicle incident actually moves the number
+  // on this grid. Keyed by vehicle name ('Bus 15'), which is the only vehicle
+  // identifier an incident carries.
+  //
+  // This must stay inside the component. VehiclesPage and IncidentsPage sit in
+  // an import cycle (IncidentsPage -> NewIncidentForm -> VehiclesPage), so at
+  // this module's top level mockIncidents is still in its temporal dead zone.
+  const incidentCountByVehicle = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const inc of mockIncidents as any[]) {
+      // A vehicle is linked either by the bus the incident happened on, or by
+      // assetRef on a vehicle-subject incident. 'N/A' is the seeded placeholder
+      // for incidents with no vehicle at all.
+      const names = new Set(
+        [inc.bus, inc.subject === 'vehicle' ? inc.assetRef : null]
+          .filter((n: any) => typeof n === 'string' && n && n !== 'N/A')
+      );
+      for (const name of names) {
+        counts.set(name as string, (counts.get(name as string) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, []);
+
+  const incidentsFor = (vehicle: any) => incidentCountByVehicle.get(vehicle.name) ?? 0;
+
+  // Garage options come from the fleet rather than mockLocations, so a garage
+  // no vehicle is based at does not appear as an option that filters to nothing.
+  const uniqueGarages = Array.from(
+    new Set(mockVehicles.map(v => v.defaultGarage).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
+
+  // Typeahead groups, limited to the fields the filter above actually matches.
+  // Vehicle IDs stay searchable but unsuggested; the bus name is what people use.
+  const searchSuggestionGroups = useMemo(() => [
+    { kind: 'Vehicle', values: mockVehicles.map(v => v.name) },
+    { kind: 'Driver', values: mockVehicles.map(v => v.driver) },
+    { kind: 'Run', values: mockVehicles.flatMap(v => [v.primaryRoute, v.secondaryRoute]) },
+    { kind: 'Garage', values: uniqueGarages },
+  ], []);
+
   // Calculate summary statistics
   const totalVehicles = mockVehicles.length;
   const activeVehicles = mockVehicles.filter(v => v.status === 'Active').length;
   const inMaintenance = mockVehicles.filter(v => v.status === 'Maintenance').length;
   const needsAttention = mockVehicles.filter(v => v.maintenanceStatus === 'Needs Attention' || v.maintenanceStatus === 'In Repair').length;
   const inactiveVehicles = mockVehicles.filter(v => v.status !== 'Active').length;
-  const avgIncidents = (mockVehicles.reduce((sum, v) => sum + v.incidentCount, 0) / totalVehicles).toFixed(1);
+  const avgIncidents = (mockVehicles.reduce((sum, v) => sum + incidentsFor(v), 0) / totalVehicles).toFixed(1);
   const avgMileage = Math.round(mockVehicles.reduce((sum, v) => sum + v.mileage, 0) / totalVehicles);
 
   // Filter vehicles
   const filteredVehicles = mockVehicles.filter((vehicle) => {
-    const matchesSearch =
-      vehicle.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.driver.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vehicle.primaryRoute.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    // The garage is matched because the placeholder promised it and because a
+    // location incident names a garage, which is the only way to get from that
+    // incident back to the vehicles based there. Secondary run included since an
+    // incident may cite either leg of the day.
+    const q = searchTerm.trim().toLowerCase();
+    const matchesSearch = q === '' || [
+      vehicle.id,
+      vehicle.name,
+      vehicle.driver,
+      vehicle.primaryRoute,
+      vehicle.secondaryRoute,
+      vehicle.defaultGarage,
+    ].some((field: any) => (field ?? '').toLowerCase().includes(q));
+
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(vehicle.status);
     const bucketForMileage = (m: number): string => {
       const bucket = Math.floor(m / 10000) * 10;
       return `${bucket}k-${bucket + 10}k`;
     };
     const matchesMaintenance = mileageRangeFilter.length === 0 || mileageRangeFilter.includes(bucketForMileage(vehicle.mileage));
+    // Home garage only, which is the value this grid displays. midDayGarage is
+    // deliberately excluded: filtering on a field the row does not show would
+    // return vehicles whose visible garage disagrees with the filter chip.
+    const matchesGarage = garageFilter.length === 0 || garageFilter.includes(vehicle.defaultGarage);
 
-    return matchesSearch && matchesStatus && matchesMaintenance;
+    return matchesSearch && matchesStatus && matchesMaintenance && matchesGarage;
   });
   
   // Function to handle column header clicks
@@ -546,7 +718,7 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
                        (maintenanceOrder[b.maintenanceStatus as keyof typeof maintenanceOrder] || 0);
         break;
       case 'incidents':
-        compareResult = a.incidentCount - b.incidentCount;
+        compareResult = incidentsFor(a) - incidentsFor(b);
         break;
       case 'mileage':
         compareResult = a.mileage - b.mileage;
@@ -638,7 +810,7 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
       const rows = filteredVehicles.map(v => [
         v.id, v.name, v.make, v.model, v.year, `"${v.driver}"`,
         `"${v.primaryRoute}"`, v.status, v.maintenanceStatus,
-        v.incidentCount, v.mileage, v.lastInspection
+        incidentsFor(v), v.mileage, v.lastInspection
       ].join(','));
 
       const csvContent = [headers.join(','), ...rows].join('\n');
@@ -707,18 +879,15 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
       {/* Filters Card */}
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-large)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)', paddingTop: 'var(--forge-spacing-large)' }}>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* Search */}
             <div className="md:col-span-2">
-              <forge-text-field>
-                <forge-icon slot="start" name="search"></forge-icon>
-                <input
-                  type="text"
-                  placeholder="Search vehicles, drivers, or default garage..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </forge-text-field>
+              <EntitySearchField
+                value={searchTerm}
+                onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
+                placeholder="Search vehicles, drivers, runs, or garage..."
+                groups={searchSuggestionGroups}
+              />
             </div>
 
             {/* Status Filter */}
@@ -756,6 +925,19 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
                 onChange={setMileageRangeFilter}
                 placeholder="Mileage Range"
                 allLabel="All Ranges"
+                width="220px"
+              />
+            </div>
+
+            {/* Garage Filter. A location incident names a garage, so this is how
+                you get from that incident to the vehicles based there. */}
+            <div className="shrink-0">
+              <ForgeMultiSelect
+                options={uniqueGarages.map(g => ({ value: g, label: g }))}
+                selected={garageFilter}
+                onChange={(val) => { setGarageFilter(val); setCurrentPage(1); }}
+                placeholder="Garage"
+                allLabel="All Garages"
                 width="220px"
               />
             </div>
@@ -881,9 +1063,32 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
                       </span>
                     </td>
                     <td className="forge-table-cell">
-                      <span style={{ fontWeight: vehicle.incidentCount > 8 ? 600 : 'normal' }}>
-                        {vehicle.incidentCount}
-                      </span>
+                      {/* stopPropagation so the count opens the incidents grid
+                          rather than the vehicle detail dialog behind it. Zero
+                          stays plain text; there is nothing to open. */}
+                      {incidentsFor(vehicle) > 0 && onNavigateToIncidentsMatching ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onNavigateToIncidentsMatching(vehicle.name); }}
+                          title={`View incidents involving ${vehicle.name}`}
+                          style={{
+                            fontFamily: 'var(--forge-font-family)',
+                            fontSize: 'inherit',
+                            fontWeight: incidentsFor(vehicle) > 8 ? 600 : 'normal',
+                            color: 'var(--forge-theme-primary)',
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                          }}
+                        >
+                          {incidentsFor(vehicle)}
+                        </button>
+                      ) : (
+                        <span style={{ fontWeight: incidentsFor(vehicle) > 8 ? 600 : 'normal' }}>
+                          {incidentsFor(vehicle)}
+                        </span>
+                      )}
                     </td>
                     <td className="forge-table-cell">
                       <forge-badge theme={vehicle.status === 'Active' ? 'success' : 'default'}>
@@ -897,7 +1102,7 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', marginTop: 'var(--forge-spacing-medium)' }}>
+          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', whiteSpace: 'nowrap' }}>
                 Showing {startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedVehicles.length)} of {sortedVehicles.length} vehicles
@@ -1003,7 +1208,7 @@ export function VehiclesPage({ onNavigate }: VehiclesPageProps) {
                   </div>
                   <div>
                     <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Vehicle Incident Count</div>
-                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.incidentCount} incidents this year</div>
+                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{incidentsFor(selectedVehicle)} incidents this year</div>
                   </div>
                 </div>
               </div>

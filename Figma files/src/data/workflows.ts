@@ -42,12 +42,52 @@ export interface Workflow {
   description: string;
   incidentTypes: string[];
   severityLevels: string[];
+  // Who owns an incident filed against this workflow, meaning who it is
+  // assigned to the moment it is created. Per GH #197 the incident needs one
+  // owner from creation, before any step is in progress; taking it from a step
+  // would make the owner shift as the workflow advances and an "assigned to me"
+  // view unstable.
+  //
+  // The role, not a person, so a workflow keeps working when staff change: all
+  // medical workflows go to whoever holds Nurse. One of the seven members of
+  // IncidentRoleType.
+  ownerRole?: string;
+  // A named person overriding the role, for the district that wants one
+  // specific individual on one workflow. Takes precedence when set.
+  ownerName?: string;
   steps: WorkflowStep[];
   isActive: boolean; // Template is active/enabled in system
   active?: boolean; // Instance is actively being worked on
   createdBy: string;
   createdDate: string;
   lastModified: string;
+}
+
+// Who currently holds each incident role.
+//
+// A stand-in for EmployeeIncidentRole, which is how the product attaches roles
+// to real Student Transportation employees. Mapped onto the three coordinators
+// the seeded incidents already assign to rather than inventing staff, so every
+// resolved owner is a name that appears elsewhere in the app. Replacing this
+// with a real lookup is the only change needed when roles are seeded for real.
+export const ROLE_HOLDERS: Record<string, string> = {
+  'Administrator': 'Sarah Williams',
+  'Safety Coordinator': 'Sarah Williams',
+  'School Principal': 'Jane Doe',
+  'Nurse': 'Jane Doe',
+  'Fleet Manager': 'Mike Chen',
+  'Mechanic': 'Mike Chen',
+  'Driver': 'Mike Chen',
+};
+
+// The person an incident on this workflow is assigned to at creation.
+// Returns null when the workflow names no owner, which per #197 means the
+// incident is created unassigned and lands in the triage queue.
+export function resolveWorkflowOwner(workflow: Pick<Workflow, 'ownerRole' | 'ownerName'> | null | undefined): string | null {
+  if (!workflow) return null;
+  if (workflow.ownerName) return workflow.ownerName;
+  if (workflow.ownerRole) return ROLE_HOLDERS[workflow.ownerRole] ?? null;
+  return null;
 }
 
 // Pre-configured workflows for different incident types
@@ -59,6 +99,7 @@ export const workflows: Workflow[] = [
   {
     id: 'WF-002',
     name: 'Physical Altercation Response',
+    ownerRole: 'School Principal',
     description: 'Workflow for handling physical altercations and threatening behavior between students requiring immediate intervention and parent notification',
     incidentTypes: ['Physical Altercation'],
     severityLevels: ['High'],
@@ -152,6 +193,7 @@ export const workflows: Workflow[] = [
   {
     id: 'WF-001',
     name: 'Disruptive Behavior Response',
+    ownerRole: 'School Principal',
     description: 'Workflow for all disruptive behavior incidents including offensive language, excessive noise, bullying, harassment, defiance toward the driver, and unauthorized device usage',
     incidentTypes: ['Disruptive Behavior'],
     severityLevels: ['Low'],
@@ -209,6 +251,7 @@ export const workflows: Workflow[] = [
   {
     id: 'WF-005',
     name: 'Safety Violation Response',
+    ownerRole: 'Safety Coordinator',
     description: 'Workflow for all student safety violations on the bus including seat/seatbelt refusal, unsafe movement, window misuse, emergency exit misuse, wrong stop exit, and eating/drinking',
     incidentTypes: ['Safety Violation'],
     severityLevels: ['Medium'],
@@ -300,6 +343,7 @@ export const workflows: Workflow[] = [
   {
     id: 'WF-004',
     name: 'Property Damage Investigation',
+    ownerRole: 'Administrator',
     description: 'Workflow for investigating and resolving vandalism and property damage incidents',
     incidentTypes: ['Property Damage'],
     severityLevels: ['Medium'],
@@ -419,6 +463,7 @@ export const workflows: Workflow[] = [
   {
     id: 'WF-003',
     name: 'Prohibited Items Response',
+    ownerRole: 'Administrator',
     description: 'Workflow for handling possession of prohibited items including tobacco, harmful items, illegal substances, and inappropriate materials',
     incidentTypes: ['Weapon / Prohibited Items'],
     severityLevels: ['Critical'],
@@ -509,6 +554,7 @@ export const workflows: Workflow[] = [
   {
     id: 'WF-006',
     name: 'Witness / Bystander Statement',
+    ownerRole: 'Safety Coordinator',
     description: 'Non-disciplinary workflow for capturing the account of a student who witnessed or tried to help during another incident. No disciplinary action is taken; the statement is recorded and linked to the related incident.',
     incidentTypes: ['Witness / Bystander Statement'],
     severityLevels: ['Low'],
@@ -526,6 +572,346 @@ export const workflows: Workflow[] = [
         required: false,
         order: 1,
         status: 'In Progress',
+        trigger: { type: 'manual' },
+      },
+    ],
+  },
+
+  // ─────────────────────────────────────────────
+  // EMPLOYEE — CONDUCT AND INJURY
+  // Routed to the administrator rather than a school principal,
+  // since there is no student and no parent to notify.
+  // ─────────────────────────────────────────────
+  {
+    id: 'WF-007',
+    name: 'Employee Conduct Review',
+    ownerRole: 'Administrator',
+    description: 'Workflow for incidents between employees, such as an altercation or a policy violation. Routed to the administrator rather than a school, with no parent notification and no student discipline.',
+    incidentTypes: ['Employee Altercation', 'Employee Misconduct', 'Employee Substance Violation'],
+    severityLevels: ['Critical', 'High', 'Medium'],
+    isActive: true,
+    createdBy: 'Sarah Williams',
+    createdDate: '2026-08-11',
+    lastModified: '2026-08-11',
+    steps: [
+      {
+        id: 'step-1',
+        name: 'Separate and Secure',
+        description: 'Supervisor separates the employees involved, removes them from duty if needed, and confirms nobody requires medical attention.',
+        assignedRole: 'Safety Coordinator',
+        estimatedDuration: '15 minutes',
+        required: true,
+        order: 1,
+        status: 'In Progress',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-2',
+        name: 'Statement Collection',
+        description: 'Collect a written account from each employee involved and from any witnesses. Statements are kept with the incident record.',
+        assignedRole: 'Administrator',
+        estimatedDuration: '45 minutes',
+        required: true,
+        order: 2,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-3',
+        name: 'Administrative Review',
+        description: 'The administrator reviews the statements, determines whether policy was violated, and decides on any corrective action.',
+        assignedRole: 'Administrator',
+        estimatedDuration: '3 business days',
+        required: true,
+        order: 3,
+        status: 'Not Started',
+        requiresApproval: true,
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-4',
+        name: 'Outcome and Return to Duty',
+        description: 'Record the outcome, communicate it to the employees involved, and confirm return-to-duty status.',
+        assignedRole: 'Administrator',
+        estimatedDuration: '1 business day',
+        required: true,
+        order: 4,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+    ],
+  },
+  {
+    id: 'WF-008',
+    name: 'Employee Injury Report',
+    ownerRole: 'Nurse',
+    description: 'Workflow for an employee injured on duty. Covers first aid, incident reporting, and the workers compensation hand-off.',
+    incidentTypes: ['Employee Injury'],
+    severityLevels: ['Critical', 'High', 'Medium'],
+    isActive: true,
+    createdBy: 'Sarah Williams',
+    createdDate: '2026-08-11',
+    lastModified: '2026-08-11',
+    steps: [
+      {
+        id: 'step-1',
+        name: 'First Aid and Medical Attention',
+        description: 'Provide first aid and arrange medical evaluation. Record whether the employee declined treatment.',
+        assignedRole: 'Nurse',
+        estimatedDuration: '30 minutes',
+        required: true,
+        order: 1,
+        status: 'In Progress',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-2',
+        name: 'Injury Report Filed',
+        description: 'Complete the injury report with the mechanism of injury, location, and any equipment involved.',
+        assignedRole: 'Safety Coordinator',
+        estimatedDuration: '45 minutes',
+        required: true,
+        order: 2,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-3',
+        name: 'Workers Compensation Hand-off',
+        description: 'The administrator opens the workers compensation claim and tracks any lost time.',
+        assignedRole: 'Administrator',
+        estimatedDuration: '1 business day',
+        required: true,
+        order: 3,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+    ],
+  },
+
+  // ─────────────────────────────────────────────
+  // LOCATION
+  // Routed to the administrator. Deliberately NOT reusing WF-004 Property Damage,
+  // whose later steps are parent restitution and principal discipline.
+  // ─────────────────────────────────────────────
+  {
+    id: 'WF-009',
+    name: 'Location Issue Response',
+    ownerRole: 'Administrator',
+    description: 'Workflow for a depot, garage, or yard problem such as a burst pipe, power loss, or damage. Routed to the administrator, with no student or parent involvement.',
+    incidentTypes: ['Location Damage', 'Utility Failure', 'Location Safety Hazard'],
+    severityLevels: ['Critical', 'High', 'Medium', 'Low'],
+    isActive: true,
+    createdBy: 'Mike Chen',
+    createdDate: '2026-08-11',
+    lastModified: '2026-08-11',
+    steps: [
+      {
+        id: 'step-1',
+        name: 'Make Area Safe',
+        description: 'Cone off or otherwise isolate the affected area and take any equipment out of service. Confirm nobody is at risk.',
+        assignedRole: 'Safety Coordinator',
+        estimatedDuration: '20 minutes',
+        required: true,
+        order: 1,
+        status: 'In Progress',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-2',
+        name: 'Site Assessment',
+        description: 'The administrator inspects the issue, records the extent, and determines whether an outside contractor is needed.',
+        assignedRole: 'Administrator',
+        estimatedDuration: '4 hours',
+        required: true,
+        order: 2,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-3',
+        name: 'Repair Scheduled',
+        description: 'Schedule the repair, either in house or with a contractor, and record the expected completion date.',
+        assignedRole: 'Administrator',
+        estimatedDuration: '1 business day',
+        required: true,
+        order: 3,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-4',
+        name: 'Verify and Return to Service',
+        description: 'Confirm the repair is complete and return the affected area or equipment to service.',
+        assignedRole: 'Administrator',
+        estimatedDuration: '30 minutes',
+        required: true,
+        order: 4,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+    ],
+  },
+
+  // ─────────────────────────────────────────────
+  // VEHICLE
+  // Routed to the fleet manager. Nobody aboard, so no statements to collect.
+  // ─────────────────────────────────────────────
+  {
+    id: 'WF-010',
+    name: 'Vehicle Damage and Mechanical Response',
+    ownerRole: 'Fleet Manager',
+    description: 'Workflow for vehicle damage or a mechanical fault with nobody aboard. Routed to the fleet manager, with the mechanic performing inspection and repair.',
+    incidentTypes: ['Vehicle Damage', 'Mechanical Failure', 'Single Vehicle Collision'],
+    severityLevels: ['Critical', 'High', 'Medium', 'Low'],
+    isActive: true,
+    createdBy: 'Mike Chen',
+    createdDate: '2026-08-11',
+    lastModified: '2026-08-11',
+    steps: [
+      {
+        id: 'step-1',
+        name: 'Take Out of Service and Document',
+        description: 'Remove the vehicle from service and photograph the damage or record the fault found during inspection.',
+        assignedRole: 'Fleet Manager',
+        estimatedDuration: '30 minutes',
+        required: true,
+        order: 1,
+        status: 'In Progress',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-2',
+        name: 'Maintenance Inspection and Estimate',
+        description: 'Inspect the vehicle, determine the cause where possible, and produce a repair estimate.',
+        assignedRole: 'Mechanic',
+        estimatedDuration: '1 business day',
+        required: true,
+        order: 2,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-3',
+        name: 'Cause Review',
+        description: 'Review yard camera footage or driver logs where the cause is unknown, to establish whether the damage is attributable.',
+        assignedRole: 'Fleet Manager',
+        estimatedDuration: '2 business days',
+        required: false,
+        order: 3,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-4',
+        name: 'Repair and Return to Service',
+        description: 'Complete the repair, pass inspection, and return the vehicle to service.',
+        assignedRole: 'Mechanic',
+        estimatedDuration: '3 business days',
+        required: true,
+        order: 4,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+    ],
+  },
+
+  // ─────────────────────────────────────────────
+  // THIRD PARTY
+  // Collision or conduct involving someone outside the district. Carries an
+  // insurance and claims path a student workflow has no need for.
+  // ─────────────────────────────────────────────
+  {
+    id: 'WF-011',
+    name: 'Third Party Incident Response',
+    ownerRole: 'Safety Coordinator',
+    description: 'Workflow for a collision, injury, or conduct incident involving someone outside the district. Covers scene safety, information exchange, and the insurance claim.',
+    incidentTypes: ['Third Party Collision', 'Third Party Injury', 'Third Party Conduct'],
+    severityLevels: ['Critical', 'High', 'Medium'],
+    isActive: true,
+    createdBy: 'Sarah Williams',
+    createdDate: '2026-08-11',
+    lastModified: '2026-08-11',
+    steps: [
+      {
+        id: 'step-1',
+        name: 'Scene Safety and Emergency Services',
+        description: 'Secure the scene, check for injuries, and contact police or emergency services if required.',
+        assignedRole: 'Driver',
+        estimatedDuration: '20 minutes',
+        required: true,
+        order: 1,
+        status: 'In Progress',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-2',
+        name: 'Information Exchange and Documentation',
+        description: 'Exchange insurance and contact information, photograph the scene, and record the police report reference.',
+        assignedRole: 'Driver',
+        estimatedDuration: '30 minutes',
+        required: true,
+        order: 2,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-3',
+        name: 'Safety Review',
+        description: 'The safety coordinator reviews the account and documentation and determines whether the driver is cleared to continue.',
+        assignedRole: 'Safety Coordinator',
+        estimatedDuration: '4 hours',
+        required: true,
+        order: 3,
+        status: 'Not Started',
+        requiresApproval: true,
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-4',
+        name: 'Insurance Claim Filed',
+        description: 'File the claim with the district insurer and track it to resolution.',
+        assignedRole: 'Safety Coordinator',
+        estimatedDuration: '2 business days',
+        required: true,
+        order: 4,
+        status: 'Not Started',
+        trigger: { type: 'manual' },
+      },
+    ],
+  },
+  {
+    id: 'WF-012',
+    name: 'Public Complaint Review',
+    ownerRole: 'Safety Coordinator',
+    description: 'Non-disciplinary workflow for logging and responding to a complaint from a parent, resident, or member of the public.',
+    incidentTypes: ['Public Complaint'],
+    severityLevels: ['Low', 'Medium'],
+    isActive: true,
+    createdBy: 'Sarah Williams',
+    createdDate: '2026-08-11',
+    lastModified: '2026-08-11',
+    steps: [
+      {
+        id: 'step-1',
+        name: 'Log Complaint',
+        description: 'Record the complaint, who raised it, and what they are asking for.',
+        assignedRole: 'Safety Coordinator',
+        estimatedDuration: '15 minutes',
+        required: true,
+        order: 1,
+        status: 'In Progress',
+        trigger: { type: 'manual' },
+      },
+      {
+        id: 'step-2',
+        name: 'Investigate and Respond',
+        description: 'Review the route, vehicle, or driver as relevant and respond to the complainant with the outcome.',
+        assignedRole: 'Safety Coordinator',
+        estimatedDuration: '2 business days',
+        required: true,
+        order: 2,
+        status: 'Not Started',
         trigger: { type: 'manual' },
       },
     ],

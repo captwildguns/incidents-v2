@@ -119,6 +119,10 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
   });
 
   const groups = [
+    // The seven members of IncidentRoleType, which is what a step can actually
+    // be assigned to. Nothing outside this list can be provisioned for a
+    // tenant, so do not add to it. Also duplicated in StepConfigDialog and
+    // StepTemplateManager; consolidating the three is a separate cleanup.
     'Driver',
     'Safety Coordinator',
     'Administrator',
@@ -312,7 +316,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                   onChange={(e) => setWorkflowCategory(e.target.value)}
                   style={{
                     width: '100%', marginTop: 'var(--forge-spacing-xsmall)',
-                    padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-radius-medium)',
+                    padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)',
                     border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)',
                   }}
                 >
@@ -329,7 +333,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                   onChange={(e) => setWorkflowSeverity(e.target.value)}
                   style={{
                     width: '100%', marginTop: 'var(--forge-spacing-xsmall)',
-                    padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-radius-medium)',
+                    padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)',
                     border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)',
                   }}
                 >
@@ -370,7 +374,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                     key={step.id}
                     style={{
                       border: '1px solid var(--border)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       padding: 'var(--forge-spacing-medium)',
                       background: 'transparent',
                     }}
@@ -535,7 +539,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
               marginBottom: 'var(--forge-spacing-medium)',
               background: 'var(--card)',
               color: 'var(--card-foreground)',
-              borderRadius: 'var(--forge-radius-medium)',
+              borderRadius: 'var(--forge-shape-medium)',
               border: '1px solid var(--border)',
               cursor: 'pointer',
               padding: 'var(--forge-spacing-large)',
@@ -560,7 +564,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                 alignItems: 'center',
                 gap: 'var(--forge-spacing-small)',
                 background: 'var(--muted)',
-                borderRadius: 'var(--forge-radius-medium)',
+                borderRadius: 'var(--forge-shape-medium)',
                 padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)',
                 marginTop: 'var(--forge-spacing-xsmall)',
               }}
@@ -655,7 +659,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                       width: '100%',
                       marginTop: 'var(--forge-spacing-xsmall)',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       background: 'var(--input-background)',

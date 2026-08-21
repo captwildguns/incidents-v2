@@ -17,9 +17,9 @@ const sectionCard: React.CSSProperties = {
 };
 
 const featureCard: React.CSSProperties = {
-  borderRadius: 'var(--forge-radius-large)',
+  borderRadius: 'var(--forge-shape-large)',
   padding: 'var(--forge-spacing-medium)',
-  border: '1px solid var(--forge-color-border-default)',
+  border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
 };
 
 const highlightCard: React.CSSProperties = {
@@ -251,7 +251,7 @@ export function HelpPage() {
                     <div>
                       <h4 className="mb-2">Charts</h4>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Incidents by Type:</strong> Pie chart showing distribution across the 5 incident types</li>
+                        <li><strong>Incidents by Type:</strong> Pie chart showing distribution across the student incident types</li>
                         <li><strong>Incidents by Vehicle:</strong> Horizontal bar chart of the top 6 buses by incident count</li>
                         <li><strong>Incidents by Day:</strong> Vertical bar chart showing incident volume by day of the week</li>
                       </ul>
@@ -307,7 +307,7 @@ export function HelpPage() {
                         <li><strong>Search:</strong> By student name, vehicle, or run</li>
                         <li><strong>Status:</strong> Open, In Progress, Closed, Cancelled</li>
                         <li><strong>Severity:</strong> Critical, High, Medium, Low</li>
-                        <li><strong>Type:</strong> Any of the 5 incident types</li>
+                        <li><strong>Type:</strong> Any incident type</li>
                         <li><strong>Assigned To:</strong> Filter by coordinator</li>
                         <li><strong>Pagination:</strong> Navigate through large result sets with page controls</li>
                       </ul>
@@ -686,7 +686,7 @@ export function HelpPage() {
                 </AccordionItem>
 
                 <AccordionItem value="faq-2">
-                  <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>What are the 5 incident types?</AccordionTrigger>
+                  <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>What are the incident types?</AccordionTrigger>
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <p className="mb-2">The system tracks 5 student behavioral incident types. Each type has a dedicated workflow automatically assigned on creation:</p>
                     <ul className="ml-5 space-y-2">
@@ -774,7 +774,7 @@ export function HelpPage() {
                     <p className="mb-2">Yes! Navigate to the Workflows page and click &ldquo;+ Create New Workflow&rdquo;:</p>
                     <ol className="ml-5 space-y-1">
                       <li>Enter name and description</li>
-                      <li>Select one of the 5 incident types</li>
+                      <li>Select an incident type for the chosen subject</li>
                       <li>Choose a severity level</li>
                       <li>Add steps from the step library (8 templates across 3 categories: Notification, Review &amp; Action, Close Out) or create custom steps</li>
                       <li>Configure email notifications per step (using the 3 Admin email templates)</li>

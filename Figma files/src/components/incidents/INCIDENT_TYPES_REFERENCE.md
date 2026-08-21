@@ -1,74 +1,71 @@
-# Vehicle Incident Types Reference
+# Incident Types Reference
 
-This document provides a comprehensive reference for all incident types used in the Vehicle Incident Tracker system.
+Canonical source: `IncidentTypes.ts`. This document describes what is in that
+file; if the two disagree, the code is correct.
 
-## Incident Categories
+## Subjects
 
-### 1. Behavioral (5 types)
-Issues related to student conduct and behavior toward other students.
+Every incident has exactly one **subject**, which is what the incident is
+fundamentally about. The subject drives which steps the New Incident wizard
+shows, which incident types are offered, and which workflow is assigned.
 
-- **Offensive Language** - Profane, obscene, or offensive language toward others *(Medium severity)*
-- **Student Harassment** - Abusive language/gestures targeting specific student *(Medium severity)*
-- **Taunting/Bullying** - Verbally or physically taunting other students *(Medium severity)*
-- **Unwanted Physical Contact** - Unwanted touching or contact with others *(Medium severity)*
-- **Inappropriate Affection** - Inappropriate public display of affection *(Low severity)*
-- **Repeated Misconduct** - Repeated Level 1 or 2 violations *(High severity)*
+- **Student** — one or more students involved
+- **Vehicle** — bus damage or a mechanical problem with nobody aboard
+- **Location** — a depot, garage, or yard problem such as a burst pipe or power loss
+- **Third Party** — another motorist, a pedestrian, a parent, or a member of the public
+- **Employee** — employees only, such as a dispute between drivers or an injured aide. Access is governed by the same resource grants as every other subject; there is no per-subject visibility rule.
 
-### 2. Safety Violation (5 types)
-Incidents that compromise the safety of students during transportation.
+## Incident types by subject
 
-- **Seat Refusal** - Refusal to remain in assigned seat *(Medium severity)*
-- **Seatbelt Refusal** - Refusal to wear seatbelt *(High severity)*
-- **Unsafe Movement** - Crawling over/under seats or unsafe behavior *(Medium severity)*
-- **Emergency Exit Misuse** - Exiting via emergency exit or unsafe exit *(High severity)*
-- **Wrong Stop Exit** - Exiting at incorrect stop causing safety concern *(Medium severity)*
+### Student (6)
+- **Disruptive Behavior** — offensive language, noise, harassment, bullying, refusal of driver directives *(Low)*
+- **Safety Violation** — seat or seatbelt refusal, unsafe movement, emergency exit misuse, wrong stop exit *(Medium)*
+- **Physical Altercation** — fighting, assault, throwing objects, threats *(High)*
+- **Property Damage** — vandalism or damage requiring restitution *(Medium)*
+- **Weapon / Prohibited Items** — weapon, tobacco, vaping, illegal substances, prohibited materials *(Critical)*
+- **Witness / Bystander Statement** — non-disciplinary record of a student who witnessed or helped. Use this instead of adding a bystander to a disciplinary incident, so their record is not flagged for behavior they were not part of *(Low)*
 
-### 3. Aggression/Violence (4 types)
-Physical or threatening behavior that poses immediate danger.
+### Vehicle (3)
+- **Vehicle Damage** — damage with nobody aboard, such as a clipped mirror or hail *(Medium)*
+- **Mechanical Failure** — breakdown or fault taking a vehicle out of service *(Medium)*
+- **Single Vehicle Collision** — strikes a fixed object with nobody aboard *(Medium)*
 
-- **Threatening Behavior** - Aggressive or threatening behavior toward another student *(High severity)*
-- **Physical Altercation** - Fighting between two or more students *(High severity)*
-- **Physical Assault** - Unacceptable physical contact causing harm *(High severity)*
-- **Throwing Objects** - Throwing objects causing injury or damage *(High severity)*
+### Location (3)
+- **Location Damage** — damage or vandalism to a depot, garage, or yard *(Medium)*
+- **Utility Failure** — burst pipe, power outage, heating failure *(Medium)*
+- **Location Safety Hazard** — fuel spill, icy walkway, blocked fire exit, exposed wiring *(High)*
 
-### 4. Driver Defiance (3 types)
-Incidents involving disrespect or non-compliance with the vehicle driver.
+### Third Party (4)
+- **Third Party Collision** — collision or near miss with another motorist or cyclist *(High)*
+- **Third Party Injury** — pedestrian, motorist, or member of the public injured *(High)*
+- **Third Party Conduct** — aggressive or abusive behavior by a parent, guardian, or member of the public *(High)*
+- **Public Complaint** — non-disciplinary record of a complaint about a vehicle, route, or driver *(Low)*
 
-- **Driver Defiance** - Refusing to comply with driver directives *(Medium severity)*
-- **Driver Harassment** - Threatening or abusive language toward driver *(High severity)*
-- **Driver Threat** - Aggressive or threatening behavior toward driver *(High severity)*
+### Employee (4)
+- **Employee Altercation** — physical or verbal altercation between employees *(High)*
+- **Employee Misconduct** — policy violation, insubordination, unprofessional conduct *(Medium)*
+- **Employee Injury** — employee injured on duty *(High)*
+- **Employee Substance Violation** — suspected under the influence, or possession on duty *(Critical)*
 
-### 5. Property Damage (1 type)
-Vandalism and intentional damage to vehicle property.
+## Totals
 
-- **Vandalism** - Property damage requiring monetary restitution *(Medium severity)*
+20 incident types across 5 subjects and 10 categories.
 
-### 6. Prohibited Items (4 types)
-Possession of items not allowed on school transportation.
+Categories: Behavioral, Safety, Aggression / Violence, Property, Prohibited,
+Informational, Employee Conduct, Location, Mechanical, Collision.
 
-- **Tobacco/Vaping** - Violating tobacco or smoking policy *(Medium severity)*
-- **Harmful Items** - Possession of harmful item or device *(High severity)*
-- **Illegal Substances** - Possessing illegal drugs *(High severity)*
-- **Inappropriate Material** - Possession of obscene or pornographic material *(Medium severity)*
+## Related fields
 
-### 7. Privacy Violation (1 type)
-Unauthorized recording or invasion of privacy.
+- `involvedStudents[]` — present on student incidents. Carries per-student role, severity override, type override, parent notification, and the `noWorkflow` bystander flag.
+- `involvedParties[]` — the non-student equivalent, deliberately the same shape. Present on employee and third party incidents.
+- `assetRef` — names the affected location or vehicle. Location and vehicle incidents may carry no people at all, so this is what identifies the record.
+- `date` and `time` — when the incident **occurred**, entered by the reporter.
+- `reportedDate` — when the report was **filed**, stamped by the system. Deliberately separate, because reports routinely arrive at the end of a run or the next morning.
 
-- **Unauthorized Recording** - Video or recording others without permission *(Medium severity)*
+## Workflows
 
----
-
-## Total: 24 Incident Types across 7 Categories
-
-### Severity Distribution
-- **High Severity**: 10 types
-- **Medium Severity**: 13 types  
-- **Low Severity**: 1 type
-
-### Original List Consolidation
-Your original 25+ incident items have been consolidated into 24 distinct, actionable incident types that:
-- Eliminate redundancy (combined similar items)
-- Provide clear, specific categories
-- Include helpful descriptions for consistent reporting
-- Suggest appropriate default severity levels
-- Are organized by logical categories for easier selection
+Every incident type maps to a workflow by **label** (not id) via
+`assignWorkflowToIncident` in `src/data/workflows.ts`. Non-student subjects have
+their own workflows (WF-007 through WF-012); WF-004 Property Damage is
+deliberately not reused for location or vehicle damage because its later steps
+are parent restitution and principal discipline.

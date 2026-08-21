@@ -61,7 +61,7 @@ export function DocumentsViewer({ documents, incidentId }: DocumentsViewerProps)
                 alignItems: 'center',
                 gap: 'var(--forge-spacing-medium)',
                 padding: 'var(--forge-spacing-medium)',
-                borderRadius: 'var(--forge-radius-medium)',
+                borderRadius: 'var(--forge-shape-medium)',
                 border: '1px solid var(--border)',
                 background: 'var(--card)',
                 transition: 'all 0.2s',
@@ -75,7 +75,7 @@ export function DocumentsViewer({ documents, incidentId }: DocumentsViewerProps)
                 style={{
                   width: '64px',
                   height: '64px',
-                  borderRadius: 'var(--forge-radius-small)',
+                  borderRadius: 'var(--forge-shape-small)',
                   background: 'var(--muted)',
                   display: 'flex',
                   alignItems: 'center',
@@ -148,7 +148,7 @@ export function DocumentsViewer({ documents, incidentId }: DocumentsViewerProps)
           style={{
             marginTop: 'var(--forge-spacing-large)',
             padding: 'var(--forge-spacing-large)',
-            borderRadius: 'var(--forge-radius-medium)',
+            borderRadius: 'var(--forge-shape-medium)',
             border: '2px dashed var(--border)',
             background: 'var(--muted)',
             textAlign: 'center',

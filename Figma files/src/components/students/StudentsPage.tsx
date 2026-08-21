@@ -22,9 +22,12 @@ defineAutocompleteComponent();
 defineIconComponent();
 defineIconButtonComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
+import { EntitySearchField } from '../shared/EntitySearchField';
+import { mockIncidents } from '../incidents/IncidentsPage';
+import { yearForDate } from '../incidents/IncidentTypes';
 
 // Photo URLs for students
 const femalePhotos = [
@@ -41,7 +44,25 @@ const malePhotos = [
   'https://images.unsplash.com/photo-1719861915316-449b8de4b0f2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxib3klMjBzdHVkZW50JTIwcG9ydHJhaXQlMjBzY2hvb2x8ZW58MXx8fHwxNzY5NTMwMTUzfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
 ];
 
+// The incidents array, incidentCount, and lastIncident fields on each record are
+// no longer read anywhere. This page derives all three from mockIncidents, which
+// is the single source of truth. They are left in place only because other seed
+// data in this repo is shaped around them; do not add to them and do not read
+// them, or the students grid will disagree with the incidents grid again.
 export const mockStudents = [
+  {
+    id: 'STU-3890',
+    name: 'Chris Park',
+    photoUrl: malePhotos[3],
+    grade: '5th Grade',
+    school: 'Lincoln Elementary',
+    bus: 'Bus 9',
+    route: 'Lincoln Elementary AM - Green',
+    // Legacy fields, no longer read. Both pages derive from mockIncidents.
+    incidentCount: 1,
+    lastIncident: '2025-03-01',
+    incidents: [],
+  },
   {
     id: 'STU-2891',
     name: 'Sarah Mitchell',
@@ -418,7 +439,7 @@ export const mockStudents = [
     lastIncident: '2025-02-12',
     incidents: [
       {
-        id: 'INC-2025-0026',
+        id: 'INC-2024-0026',
         date: '2025-02-12',
         type: 'Eating/Drinking Violation',
         severity: 'Medium',
@@ -439,7 +460,7 @@ export const mockStudents = [
     lastIncident: '2025-02-10',
     incidents: [
       {
-        id: 'INC-2025-0025',
+        id: 'INC-2024-0025',
         date: '2025-02-10',
         type: 'Seat Refusal',
         severity: 'Medium',
@@ -460,7 +481,7 @@ export const mockStudents = [
     lastIncident: '2025-02-07',
     incidents: [
       {
-        id: 'INC-2025-0024',
+        id: 'INC-2024-0024',
         date: '2025-02-07',
         type: 'Window Misuse',
         severity: 'High',
@@ -481,7 +502,7 @@ export const mockStudents = [
     lastIncident: '2025-02-05',
     incidents: [
       {
-        id: 'INC-2025-0023',
+        id: 'INC-2024-0023',
         date: '2025-02-05',
         type: 'Offensive Language',
         severity: 'High',
@@ -502,7 +523,7 @@ export const mockStudents = [
     lastIncident: '2025-02-03',
     incidents: [
       {
-        id: 'INC-2025-0022',
+        id: 'INC-2024-0022',
         date: '2025-02-03',
         type: 'Disruptive Behavior',
         severity: 'Medium',
@@ -523,7 +544,7 @@ export const mockStudents = [
     lastIncident: '2025-01-31',
     incidents: [
       {
-        id: 'INC-2025-0021',
+        id: 'INC-2024-0021',
         date: '2025-01-31',
         type: 'Property Damage',
         severity: 'Medium',
@@ -544,7 +565,7 @@ export const mockStudents = [
     lastIncident: '2025-01-28',
     incidents: [
       {
-        id: 'INC-2025-0020',
+        id: 'INC-2024-0020',
         date: '2025-01-28',
         type: 'Disruptive Volume',
         severity: 'Medium',
@@ -565,7 +586,7 @@ export const mockStudents = [
     lastIncident: '2025-01-24',
     incidents: [
       {
-        id: 'INC-2025-0019',
+        id: 'INC-2024-0019',
         date: '2025-01-24',
         type: 'Physical Altercation',
         severity: 'High',
@@ -586,7 +607,7 @@ export const mockStudents = [
     lastIncident: '2025-01-21',
     incidents: [
       {
-        id: 'INC-2025-0018',
+        id: 'INC-2024-0018',
         date: '2025-01-21',
         type: 'Eating/Drinking Violation',
         severity: 'Low',
@@ -607,7 +628,7 @@ export const mockStudents = [
     lastIncident: '2025-01-17',
     incidents: [
       {
-        id: 'INC-2025-0017',
+        id: 'INC-2024-0017',
         date: '2025-01-17',
         type: 'Seat Refusal',
         severity: 'Low',
@@ -1208,6 +1229,53 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Every student's incidents, derived from mockIncidents rather than from the
+  // per-student incidents array and the incidentCount and lastIncident scalars
+  // that sat beside it. Those were a parallel history: 13 of their 59 entries
+  // existed nowhere in mockIncidents and used retired type names such as "Seat
+  // Refusal", so twelve students showed a different count here than the
+  // incidents grid showed for the same person.
+  //
+  // A record is the real incident row plus the student's role on it, which only
+  // multi-student incidents carry. Severity and description stay at incident
+  // level so this page and the incidents grid always say the same thing.
+  //
+  // This must stay inside the component. StudentsPage and IncidentsPage sit in
+  // an import cycle (IncidentsPage -> NewIncidentForm -> StudentsPage), so at
+  // this module's top level mockIncidents is still in its temporal dead zone.
+  const incidentsByStudent = useMemo(() => {
+    const byStudent = new Map<string, any[]>();
+    for (const inc of mockIncidents as any[]) {
+      for (const involved of (inc.involvedStudents ?? [])) {
+        const id = involved?.studentId;
+        if (!id) continue;
+        const list = byStudent.get(id) ?? [];
+        list.push({ ...inc, role: involved.role });
+        byStudent.set(id, list);
+      }
+    }
+    // Newest first, matching how the removed arrays were ordered
+    for (const list of byStudent.values()) {
+      list.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+    }
+    return byStudent;
+  }, []);
+
+  const incidentsFor = (student: any): any[] => incidentsByStudent.get(student.id) ?? [];
+  const incidentCountFor = (student: any) => incidentsFor(student).length;
+  // The list is already newest first, so the first entry is the most recent.
+  const lastIncidentFor = (student: any) => incidentsFor(student)[0]?.date ?? '';
+
+  // Typeahead groups, limited to the fields the filter below actually matches.
+  // Student IDs are searchable but not suggested; a partial ID is not something
+  // anyone browses for, and listing 46 of them would bury the useful options.
+  const searchSuggestionGroups = useMemo(() => [
+    { kind: 'Student', values: mockStudents.map(s => s.name) },
+    { kind: 'School', values: mockStudents.map(s => s.school) },
+    { kind: 'Vehicle', values: mockStudents.map(s => s.bus) },
+    { kind: 'Run', values: mockStudents.map(s => s.route) },
+  ], []);
+
   // Get unique grades and schools for filters
   const uniqueGrades = Array.from(new Set(mockStudents.map(s => s.grade))).sort();
   const uniqueSchools = Array.from(new Set(mockStudents.map(s => s.school))).sort();
@@ -1232,11 +1300,18 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   }, []);
 
   const filteredStudents = mockStudents.filter((student) => {
-    // Search filter
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.school.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    // Search filter. Bus and run are matched so a student can be found the way
+    // the incidents grid finds one, from the vehicle or the run rather than only
+    // from their name.
+    const q = searchTerm.trim().toLowerCase();
+    const matchesSearch = q === '' || [
+      student.name,
+      student.id,
+      student.school,
+      student.bus,
+      student.route,
+    ].some((field: any) => (field ?? '').toLowerCase().includes(q));
+
     // Grade filter (empty array = all)
     const matchesGrade = gradeFilter.length === 0 || gradeFilter.includes(student.grade);
     
@@ -1244,7 +1319,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
     const matchesSchool = schoolFilter.length === 0 || schoolFilter.includes(student.school);
     
     // Active incidents filter
-    const hasActiveIncidents = student.incidents.some((incident: any) => incident.status !== 'Closed');
+    const hasActiveIncidents = incidentsFor(student).some((incident: any) => incident.status !== 'Closed');
     const matchesActiveFilter = !activeIncidentsFilter || hasActiveIncidents;
     
     return matchesSearch && matchesGrade && matchesSchool && matchesActiveFilter;
@@ -1284,10 +1359,12 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
         compareResult = a.school.localeCompare(b.school);
         break;
       case 'incidents':
-        compareResult = a.incidentCount - b.incidentCount;
+        compareResult = incidentCountFor(a) - incidentCountFor(b);
         break;
       case 'lastIncident':
-        compareResult = new Date(a.lastIncident).getTime() - new Date(b.lastIncident).getTime();
+        // String compare on YYYY-MM-DD rather than Date parsing, so a student
+        // with no incidents sorts as empty instead of Invalid Date.
+        compareResult = lastIncidentFor(a).localeCompare(lastIncidentFor(b));
         break;
     }
     
@@ -1338,10 +1415,13 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   };
 
   // KPI calculations
-  const totalStudents = mockStudents.length;
-  const studentsWithActiveIncidents = mockStudents.filter(s => s.incidents.some((i: any) => i.status !== 'Closed')).length;
-  const totalStudentIncidents = mockStudents.reduce((sum, s) => sum + s.incidentCount, 0);
-  const repeatOffenders = mockStudents.filter(s => s.incidentCount >= 3).length;
+  // Derived rather than the roster length, so the number keeps matching the
+  // label. Every student on the roster happens to have an incident today, so the
+  // two agree, but a student added without one would make a roster count wrong.
+  const studentsWithIncidents = mockStudents.filter(s => incidentCountFor(s) > 0).length;
+  const studentsWithActiveIncidents = mockStudents.filter(s => incidentsFor(s).some((i: any) => i.status !== 'Closed')).length;
+  const totalStudentIncidents = mockStudents.reduce((sum, s) => sum + incidentCountFor(s), 0);
+  const repeatOffenders = mockStudents.filter(s => incidentCountFor(s) >= 3).length;
 
   return (
     <div style={{ padding: 'var(--forge-spacing-xlarge)' }}>
@@ -1359,8 +1439,8 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
         <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
           <div style={{ padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-medium)', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--brand-blue-dark)', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{totalStudents}</div>
-            <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Total Students</h3>
+            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--brand-blue-dark)', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{studentsWithIncidents}</div>
+            <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Students With Incidents</h3>
           </div>
         </ForgeCard>
 
@@ -1392,15 +1472,12 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
             {/* Search */}
             <div className="flex-1 min-w-[300px]">
-              <forge-text-field>
-                <forge-icon slot="start" name="search"></forge-icon>
-                <input
-                  type="text"
-                  placeholder="Search by student name, ID, or school..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </forge-text-field>
+              <EntitySearchField
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Search by student name, ID, school, bus, or run..."
+                groups={searchSuggestionGroups}
+              />
             </div>
 
             {/* Filters Section */}
@@ -1457,7 +1534,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
 
       {/* Active Filter Banner */}
       {activeIncidentsFilter && (
-        <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #f5f3ff)', border: '1px solid var(--forge-color-border-info, #c4b5fd)', borderRadius: 'var(--forge-radius-medium)', fontFamily: 'var(--forge-font-family)' }}>
+        <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #f5f3ff)', border: '1px solid var(--forge-color-border-info, #c4b5fd)', borderRadius: 'var(--forge-shape-medium)', fontFamily: 'var(--forge-font-family)' }}>
           <forge-icon name="error" style={{ fontSize: '16px', flexShrink: 0, color: 'var(--forge-color-text-info, #7c3aed)' }}></forge-icon>
           <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-color-text-info, #5b21b6)', fontFamily: 'var(--forge-font-family)' }}>
             Filtered view: Showing only students with active (non-closed) incidents
@@ -1547,7 +1624,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
               </thead>
               <tbody>
                 {paginatedStudents.map((student) => {
-                  const activeIncidents = student.incidents.filter((incident: any) => incident.status !== 'Closed');
+                  const activeIncidents = incidentsFor(student).filter((incident: any) => incident.status !== 'Closed');
                   const hasActiveIncidents = activeIncidents.length > 0;
                   const highestActiveSeverity = hasActiveIncidents
                     ? (activeIncidents.some((i: any) => i.severity === 'High') ? 'High'
@@ -1596,15 +1673,15 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                               3 incidents: orange
                               4+ incidents: red */}
                           <forge-badge
-                            theme={student.incidentCount >= 4 ? 'error' : student.incidentCount === 3 ? 'warning' : 'default'}
+                            theme={incidentCountFor(student) >= 4 ? 'error' : incidentCountFor(student) === 3 ? 'warning' : 'default'}
                           >
-                            {student.incidentCount} {student.incidentCount === 1 ? 'incident' : 'incidents'}
+                            {incidentCountFor(student)} {incidentCountFor(student) === 1 ? 'incident' : 'incidents'}
                           </forge-badge>
                         </td>
                         <td className="forge-table-cell">
                           <div className="flex items-center gap-2">
                             <forge-icon name="calendar_today" style={{ fontSize: '16px', color: 'var(--forge-theme-text-medium)' }}></forge-icon>
-                            <span>{fmtDate(student.lastIncident)}</span>
+                            <span>{lastIncidentFor(student) ? fmtDate(lastIncidentFor(student)) : '—'}</span>
                           </div>
                         </td>
                         </tr>
@@ -1615,7 +1692,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', marginTop: 'var(--forge-spacing-medium)' }}>
+          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', whiteSpace: 'nowrap' }}>
                 Showing {startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedStudents.length)} of {sortedStudents.length} students
@@ -1703,7 +1780,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                 <div className="flex-shrink-0 text-right" style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--muted-foreground)' }}>
                   <div className="flex items-center justify-end" style={{ gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-xxsmall)' }}>
                     <forge-icon name="calendar_today" style={{ fontSize: '14px' }}></forge-icon>
-                    <span>Last Incident: {fmtDate(selectedStudent.lastIncident)}</span>
+                    <span>Last Incident: {lastIncidentFor(selectedStudent) ? fmtDate(lastIncidentFor(selectedStudent)) : 'None'}</span>
                   </div>
                   <div>{selectedStudent.id}</div>
                 </div>
@@ -1722,8 +1799,8 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                     style={{
                       fontFamily: 'var(--forge-font-family)',
                       fontSize: 'var(--forge-font-size-xs)',
-                      borderColor: 'var(--forge-color-border-default)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))',
+                      borderRadius: 'var(--forge-shape-medium)',
                     }}
                   />
                   {incidentSearchTerm && (
@@ -1738,7 +1815,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
 
                 {/* Incidents List */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-small)' }}>
-                  {selectedStudent.incidents
+                  {incidentsFor(selectedStudent)
                     .filter((incident: any) => {
                       if (!incidentSearchTerm.trim()) return true;
                       const term = incidentSearchTerm.toLowerCase();
@@ -1751,34 +1828,47 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                         matchesDate(incident.date, incidentSearchTerm)
                       );
                     })
-                    .map((incident: any) => {
+                    .map((incident: any, idx: number, list: any[]) => {
                       const borderColor = incident.severity === 'Critical' ? '#dc2626'
                         : incident.severity === 'High' ? '#ea580c'
                         : incident.severity === 'Medium' ? '#f59e0b'
                         : '#94a3b8';
+                      // Year divider, same rule as the incidents grid: the list
+                      // is newest first, so a heading appears each time the year
+                      // changes. This is where a district actually reads a
+                      // student's history, so prior-year incidents need to be
+                      // visibly separated from the current year's.
+                      const showYearDivider =
+                        yearForDate(incident.date) !== yearForDate(list[idx - 1]?.date);
                       return (
+                      <React.Fragment key={incident.id}>
+                      {showYearDivider && (
+                        <div
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 'var(--forge-spacing-xsmall)',
+                            marginTop: idx === 0 ? 0 : 'var(--forge-spacing-xsmall)',
+                            fontFamily: 'Roboto, sans-serif',
+                            fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.5px',
+                            color: 'var(--forge-theme-text-medium)',
+                          }}
+                        >
+                          <span>{yearForDate(incident.date)}</span>
+                          <span style={{ flex: 1, height: 1, background: 'var(--forge-theme-outline, rgba(0,0,0,0.12))' }} />
+                        </div>
+                      )}
                       <ForgeCard
-                        key={incident.id}
                         className="hover:shadow-md transition-all cursor-pointer"
                         style={{
-                          border: '1px solid var(--forge-color-border-subtle)',
+                          border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
                           borderLeft: `4px solid ${borderColor}`,
                           boxShadow: 'var(--forge-elevation-1)',
                         }}
                         onClick={() => {
-                          if (onNavigateToIncidentDetail && selectedStudent) {
-                            const fullIncident = {
-                              ...incident,
-                              student: selectedStudent.name,
-                              studentId: selectedStudent.id,
-                              bus: selectedStudent.bus,
-                              route: selectedStudent.route,
-                              driver: 'Assigned Driver',
-                              assignedTo: 'Jane Doe',
-                              createdBy: 'System',
-                            };
-                            onNavigateToIncidentDetail(fullIncident);
-                          }
+                          // The record is a real mockIncidents row, so it already
+                          // carries the bus, run, driver, and assignee. This used
+                          // to fabricate "Assigned Driver" and "Jane Doe" because
+                          // the per-student array had none of that.
+                          if (onNavigateToIncidentDetail) onNavigateToIncidentDetail(incident);
                         }}
                       >
                         <div style={{ padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)' }}>
@@ -1817,7 +1907,9 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                           {/* Row 3: Bus + Status */}
                           <div className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.8125rem', marginTop: 'var(--forge-spacing-xsmall)' }}>
                             <forge-icon name="access_time" style={{ fontSize: '12px' }}></forge-icon>
-                            <span>{selectedStudent.bus} • {incident.status}</span>
+                            {/* The incident's own bus, not the student's current
+                                assignment; a student may have been on another. */}
+                            <span>{incident.bus ?? selectedStudent.bus} • {incident.status}</span>
                           </div>
 
                           {/* Row 4: Description */}
@@ -1827,9 +1919,10 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                           </div>
                         </div>
                       </ForgeCard>
+                      </React.Fragment>
                       );
                     })}
-                  {incidentSearchTerm.trim() && selectedStudent.incidents.filter((inc: any) => {
+                  {incidentSearchTerm.trim() && incidentsFor(selectedStudent).filter((inc: any) => {
                     const t = incidentSearchTerm.toLowerCase();
                     return inc.id?.toLowerCase().includes(t) || inc.type?.toLowerCase().includes(t) || inc.status?.toLowerCase().includes(t) || inc.severity?.toLowerCase().includes(t) || inc.description?.toLowerCase().includes(t) || matchesDate(inc.date, incidentSearchTerm);
                   }).length === 0 && (
