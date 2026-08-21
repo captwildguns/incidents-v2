@@ -52,7 +52,7 @@ const sectionHeaderStyle: React.CSSProperties = {
 const cardStyle: React.CSSProperties = {
   background: 'var(--card)',
   border: '1px solid var(--border)',
-  borderRadius: 'var(--forge-radius-large)',
+  borderRadius: 'var(--forge-shape-large)',
   padding: 'var(--forge-spacing-large)',
   boxShadow: 'var(--forge-elevation-1)',
 };
@@ -79,7 +79,7 @@ const inputWrapperStyle: React.CSSProperties = {
 const selectStyle: React.CSSProperties = {
   width: '100%',
   padding: 'var(--forge-spacing-small)',
-  borderRadius: 'var(--forge-radius-medium)',
+  borderRadius: 'var(--forge-shape-medium)',
   border: '1px solid var(--border)',
   fontSize: 'var(--text-base)',
   fontFamily: 'var(--forge-font-family)',
@@ -101,7 +101,7 @@ const tableCellStyle: React.CSSProperties = {
   fontSize: 'var(--text-base)',
   fontFamily: 'var(--forge-font-family)',
   color: 'var(--foreground)',
-  borderBottom: '1px solid var(--forge-color-border-subtle)',
+  borderBottom: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
   verticalAlign: 'middle',
 };
 
@@ -910,7 +910,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div style={{ marginTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', paddingTop: 'var(--forge-spacing-medium)' }}>
+                    <div style={{ marginTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', paddingTop: 'var(--forge-spacing-medium)' }}>
                       {/* Variables */}
                       <div style={{ marginBottom: 'var(--forge-spacing-medium)' }}>
                         <div style={{ ...labelStyle, marginBottom: 'var(--forge-spacing-xsmall)' }}>Template Variables</div>
@@ -930,8 +930,8 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                         <pre
                           style={{
                             background: 'var(--input-background)',
-                            border: '1px solid var(--forge-color-border-subtle)',
-                            borderRadius: 'var(--forge-radius-medium)',
+                            border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
+                            borderRadius: 'var(--forge-shape-medium)',
                             padding: 'var(--forge-spacing-medium)',
                             fontSize: 'var(--text-sm)',
                             fontFamily: 'var(--forge-font-family)',
@@ -1214,7 +1214,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
               <div
                 style={{
                   border: '1px solid var(--border)',
-                  borderRadius: 'var(--forge-radius-large)',
+                  borderRadius: 'var(--forge-shape-large)',
                   overflow: 'hidden',
                 }}
               >
@@ -1431,7 +1431,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 </tbody>
               </table>
             </div>
-            <div style={{ padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>
+            <div style={{ padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>
               Showing {filteredIncidentTypes.length} of {incidentTypes.length} incident types
             </div>
           </div>
@@ -1529,7 +1529,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                     style={{
                       flex: 1,
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: itForm.defaultSeverity === sev ? '2px solid var(--primary)' : '1px solid var(--border)',
                       background: itForm.defaultSeverity === sev
                         ? (sev === 'Critical' ? 'rgba(176, 0, 32, 0.16)' : sev === 'High' ? 'rgba(176, 0, 32, 0.08)' : sev === 'Medium' ? 'rgba(255, 193, 7, 0.12)' : 'rgba(159, 168, 112, 0.15)')
@@ -1551,7 +1551,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
             </div>
 
             {/* ─── Linked Workflow ─── */}
-            <div style={{ borderTop: '1px solid var(--forge-color-border-subtle)', paddingTop: 'var(--forge-spacing-medium)' }}>
+            <div style={{ borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', paddingTop: 'var(--forge-spacing-medium)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-small)' }}>
                 <GitBranch size={16} style={{ color: 'var(--primary)' }} />
                 <span style={{ ...labelStyle, margin: 0 }}>Linked Workflow <span style={{ color: 'var(--destructive)' }}>*</span></span>
@@ -1574,7 +1574,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                     style={{
                       flex: 1,
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: itWorkflowOption === opt ? '2px solid var(--primary)' : '1px solid var(--border)',
                       background: itWorkflowOption === opt ? 'rgba(63, 81, 181, 0.08)' : 'var(--input-background)',
                       color: itWorkflowOption === opt ? 'var(--primary)' : 'var(--foreground)',
@@ -1628,8 +1628,8 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                           marginTop: 'var(--forge-spacing-small)',
                           padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)',
                           background: 'var(--input-background)',
-                          borderRadius: 'var(--forge-radius-medium)',
-                          border: '1px solid var(--forge-color-border-subtle)',
+                          borderRadius: 'var(--forge-shape-medium)',
+                          border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
                         }}
                       >
                         <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--foreground)', marginBottom: '2px' }}>
@@ -1655,8 +1655,8 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                   style={{
                     padding: 'var(--forge-spacing-medium)',
                     background: 'var(--input-background)',
-                    borderRadius: 'var(--forge-radius-medium)',
-                    border: '1px solid var(--forge-color-border-subtle)',
+                    borderRadius: 'var(--forge-shape-medium)',
+                    border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 'var(--forge-spacing-small)',

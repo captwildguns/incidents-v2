@@ -18,7 +18,7 @@ import { CurrentStepActionCard } from './CurrentStepActionCard';
 import { DocumentsViewer } from './DocumentsViewer';
 import { PhotosViewer } from './PhotosViewer';
 import { buildMapUrl } from './IncidentLocationMap';
-import { getSubjectLabel, getSubjectMeta, normalizeContacts } from './IncidentTypes';
+import { getSubjectLabel, getSubjectMeta, normalizeContacts, termForDate } from './IncidentTypes';
 
 interface IncidentDetailPageProps {
   incident: any;
@@ -449,7 +449,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
         )}
       </div>
 
-      {/* Student banner — shown whenever the incident has involved students */}
+      {/* Student banner, shown whenever the incident has involved students */}
       {incident.involvedStudents && incident.involvedStudents.length >= 1 && (() => {
         const students = incident.involvedStudents;
         const isMulti = students.length > 1;
@@ -485,7 +485,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
             style={{
               display: 'block',
               marginBottom: 'var(--forge-spacing-medium)',
-              // Highlight keyed to the selected student's role color — all via Forge card props
+              // Highlight keyed to the selected student's role color, all via Forge card props
               '--forge-card-padding': '14px 18px',
               '--forge-card-background': tint,
               '--forge-card-outline-color': avatarColor,
@@ -493,7 +493,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
             } as React.CSSProperties}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              {/* Avatar — Forge component, colored to the student's role */}
+              {/* Avatar, a Forge component, colored to the student's role */}
               {/* @ts-ignore */}
               <forge-avatar
                 text={current.name}
@@ -535,7 +535,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                 </div>
               </div>
 
-              {/* Switcher — only when more than one student is involved */}
+              {/* Switcher, only when more than one student is involved */}
               {isMulti && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'flex-start', minWidth: 300 }}>
                 <label style={{ fontSize: 'var(--text-sm)', fontFamily: 'Roboto, sans-serif', color: 'var(--brand-blue-dark)', fontWeight: 500 }}>
@@ -564,7 +564,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                   >
                     {students.map((s: any) => (
                       <option key={s.studentId} value={s.studentId}>
-                        {s.name} — {s.role}{computeWorkflow(s.studentId) === null ? ' (No workflow)' : ''}
+                        {s.name} ({s.role}){computeWorkflow(s.studentId) === null ? ' (No workflow)' : ''}
                       </option>
                     ))}
                   </select>
@@ -776,6 +776,18 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         {formatOccurredAt(incident)}
                       </div>
                     </div>
+                    {/* Term. Asked for in the Aug 19 review: opening a record
+                        should tell you which term the incident occurred in
+                        without doing date arithmetic. Sits beside Occurred
+                        because it is derived from that date. */}
+                    <div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Term
+                      </div>
+                      <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>
+                        {termForDate(incident.date) || '-'}
+                      </div>
+                    </div>
                     <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Location
@@ -786,11 +798,11 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                             {getLocationLabel(incident.location)}
                             {incident.locationAddress && (
                               <span style={{ marginLeft: 8, color: 'var(--muted-foreground)', fontSize: 'var(--text-sm)' }}>
-                                — {incident.locationAddress}
+                                ({incident.locationAddress})
                               </span>
                             )}
                           </>
-                        ) : '—'}
+                        ) : '-'}
                       </div>
                     </div>
                     {incident.bus && incident.bus !== 'N/A' && (
@@ -831,7 +843,21 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         {incident.severity ? (
                           /* @ts-ignore */
                           <forge-badge theme={incident.severity === 'Critical' ? 'danger' : incident.severity === 'High' ? 'error' : incident.severity === 'Medium' ? 'warning' : 'info'} strong>{incident.severity}</forge-badge>
-                        ) : '—'}
+                        ) : '-'}
+                      </div>
+                    </div>
+                    {/* Status. Both grids show it and the record page did not,
+                        so the one screen that is meant to be the full record was
+                        the only place you could not see whether it was open. */}
+                    <div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Status
+                      </div>
+                      <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>
+                        {incident.status ? (
+                          /* @ts-ignore */
+                          <forge-badge theme={incident.status === 'Open' ? 'info-primary' : incident.status === 'In Progress' ? 'warning' : 'default'}>{incident.status}</forge-badge>
+                        ) : '-'}
                       </div>
                     </div>
                     <div>
@@ -917,7 +943,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                     </div>
                   )}
 
-                  {/* Location Pin — only when a coordinate was pinned at creation */}
+                  {/* Location Pin, only when a coordinate was pinned at creation */}
                   {incident.locationCoordinates && (
                     <div style={{ marginTop: 'var(--forge-spacing-large)', paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '8px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -1029,7 +1055,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                 );
               })()}
 
-              {/* Involved Parties — the non-student equivalent of the Student
+              {/* Involved Parties, the non-student equivalent of the Student
                   Details card above. Deliberately the same shape, because
                   involvedParties mirrors involvedStudents field for field. */}
               {incident.involvedParties?.length > 0 && (() => {
@@ -1122,7 +1148,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                 );
               })()}
 
-              {/* Affected asset — location and vehicle incidents may carry no
+              {/* Affected asset. Location and vehicle incidents may carry no
                   people at all, so the asset is what identifies the record. */}
               {incident.assetRef && !incident.involvedStudents?.length && !incident.involvedParties?.length && (
                 <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
@@ -1213,7 +1239,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                       <div style={{
                         padding: 'var(--forge-spacing-medium)',
                         background: 'rgba(159, 168, 112, 0.15)',
-                        borderRadius: 'var(--forge-radius-small)',
+                        borderRadius: 'var(--forge-shape-small)',
                         marginBottom: 'var(--forge-spacing-medium)',
                         textAlign: 'center',
                       }}>
@@ -1244,7 +1270,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
           </div>
         )}
 
-        {/* Workflow Tab — empty state when no workflow resolved */}
+        {/* Workflow Tab, empty state when no workflow resolved */}
         {activeTab === 'workflow' && !resolvedWorkflow && (
           <div style={{ textAlign: 'center', padding: 'var(--forge-spacing-xxlarge)', color: 'var(--muted-foreground)' }}>
             <GitBranch className="h-12 w-12 mx-auto mb-4 opacity-40" />
@@ -1400,7 +1426,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                             fontWeight: 'var(--font-weight-semibold)',
                             background: 'rgba(91, 139, 184, 0.1)',
                             padding: '2px var(--forge-spacing-small)',
-                            borderRadius: 'var(--forge-radius-small)',
+                            borderRadius: 'var(--forge-shape-small)',
                           }}
                         >
                           Step {currentStepIndex + 1} of {totalSteps}
@@ -1432,7 +1458,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         style={{
                           padding: 'var(--forge-spacing-medium)',
                           background: 'white',
-                          borderRadius: 'var(--forge-radius-medium)',
+                          borderRadius: 'var(--forge-shape-medium)',
                           border: '1px solid var(--border)',
                           marginBottom: 'var(--forge-spacing-medium)',
                         }}
@@ -1838,7 +1864,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                                 marginTop: 'var(--forge-spacing-medium)',
                                 padding: 'var(--forge-spacing-small)',
                                 background: 'rgba(123, 132, 88, 0.05)',
-                                borderRadius: 'var(--forge-radius-small)',
+                                borderRadius: 'var(--forge-shape-small)',
                                 border: '1px solid var(--brand-olive-light)',
                               }}
                               onClick={(e) => e.stopPropagation()}
@@ -1960,7 +1986,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                                     marginTop: 'var(--forge-spacing-small)',
                                     padding: 'var(--forge-spacing-small)',
                                     background: 'rgba(91, 139, 184, 0.05)',
-                                    borderRadius: 'var(--forge-radius-small)',
+                                    borderRadius: 'var(--forge-shape-small)',
                                   }}
                                 >
                                   <div style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--forge-font-weight-medium)', marginBottom: '4px' }}>
@@ -1980,7 +2006,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                                     marginTop: 'var(--forge-spacing-small)',
                                     padding: 'var(--forge-spacing-small)',
                                     background: 'rgba(123, 132, 88, 0.05)',
-                                    borderRadius: 'var(--forge-radius-small)',
+                                    borderRadius: 'var(--forge-shape-small)',
                                     border: '1px solid var(--brand-olive-light)',
                                   }}
                                 >
@@ -2138,7 +2164,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                       style={{
                         padding: 'var(--forge-spacing-small)',
                         background: 'white',
-                        borderRadius: 'var(--forge-radius-small)',
+                        borderRadius: 'var(--forge-shape-small)',
                         border: '1px solid var(--border)',
                         boxShadow: 'var(--forge-elevation-1)',
                       }}
@@ -2179,7 +2205,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         style={{
                           padding: 'var(--forge-spacing-small)',
                           background: 'white',
-                          borderRadius: 'var(--forge-radius-small)',
+                          borderRadius: 'var(--forge-shape-small)',
                           border: '1px solid var(--border)',
                           boxShadow: 'var(--forge-elevation-1)',
                         }}
@@ -2227,7 +2253,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                           style={{
                             padding: 'var(--forge-spacing-small)',
                             background: 'white',
-                            borderRadius: 'var(--forge-radius-small)',
+                            borderRadius: 'var(--forge-shape-small)',
                             border: '1px solid var(--border)',
                             boxShadow: 'var(--forge-elevation-1)',
                           }}
@@ -2252,7 +2278,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                                 marginTop: 'var(--forge-spacing-xsmall)',
                                 padding: 'var(--forge-spacing-xsmall)',
                                 background: 'var(--muted)',
-                                borderRadius: 'var(--forge-radius-small)',
+                                borderRadius: 'var(--forge-shape-small)',
                                 fontSize: 'var(--text-sm)',
                               }}
                             >
@@ -2282,7 +2308,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                       style={{
                         padding: 'var(--forge-spacing-small)',
                         background: 'rgba(91, 139, 184, 0.1)',
-                        borderRadius: 'var(--forge-radius-small)',
+                        borderRadius: 'var(--forge-shape-small)',
                         border: '1px solid var(--brand-blue-light)',
                       }}
                     >
@@ -2388,7 +2414,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                           border: message.senderRole === 'coordinator'
                             ? '1px solid var(--brand-blue-light)'
                             : '1px solid var(--brand-olive-light)',
-                          borderRadius: 'var(--forge-radius-medium)',
+                          borderRadius: 'var(--forge-shape-medium)',
                           padding: 'var(--forge-spacing-medium)',
                         }}
                       >
@@ -2568,7 +2594,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                 style={{
                   padding: 'var(--forge-spacing-medium)',
                   background: 'var(--input-background)',
-                  borderRadius: 'var(--forge-radius-medium)',
+                  borderRadius: 'var(--forge-shape-medium)',
                   border: '1px solid var(--border)',
                 }}
               >
@@ -2647,7 +2673,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
               style={{
                 padding: 'var(--forge-spacing-medium)',
                 background: 'rgba(255, 193, 7, 0.1)',
-                borderRadius: 'var(--forge-radius-medium)',
+                borderRadius: 'var(--forge-shape-medium)',
                 border: '1px solid rgba(255, 193, 7, 0.3)',
               }}
             >

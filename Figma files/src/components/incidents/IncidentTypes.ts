@@ -306,3 +306,25 @@ export const normalizeContacts = (value: any): PersonContact[] => {
     }))
     .filter((c: PersonContact) => c.name.trim().length > 0);
 };
+
+// ─── Terms ───────────────────────────────────────────────────────────────────
+
+// The school year an incident falls in, which is what Student Transportation
+// calls a term. Boundary is August 1, so a January incident belongs to the
+// school year that began the previous August rather than to its own calendar
+// year. Derived from the date so an incident can never disagree with its term.
+//
+// Raised repeatedly in the Aug 19 review: whether counts are term-specific,
+// whether old incidents from past terms can be looked up, and whether the
+// record should show the term it occurred in. This answers the third.
+export const termForDate = (date?: string): string => {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return '';
+  const [year, month] = date.split('-').map(Number);
+  const start = month >= 8 ? year : year - 1;
+  return start + '-' + (start + 1);
+};
+
+// The calendar year, used to group the incidents list. Separate from the term
+// on purpose: the list divides on calendar year because that is what a reader
+// scanning dates sees, while the record names the term.
+export const yearForDate = (date?: string): string => (date ?? '').slice(0, 4);

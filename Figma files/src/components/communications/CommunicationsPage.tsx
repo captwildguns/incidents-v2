@@ -842,7 +842,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0026',
+    incidentId: 'INC-2024-0026',
     incidentDate: '2025-02-12',
     student: 'Harper Clark',
     studentId: 'STU-8905',
@@ -883,7 +883,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0025',
+    incidentId: 'INC-2024-0025',
     incidentDate: '2025-02-10',
     student: 'Benjamin Lewis',
     studentId: 'STU-9016',
@@ -916,7 +916,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0024',
+    incidentId: 'INC-2024-0024',
     incidentDate: '2025-02-07',
     student: 'Amelia Robinson',
     studentId: 'STU-1127',
@@ -957,7 +957,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0023',
+    incidentId: 'INC-2024-0023',
     incidentDate: '2025-02-05',
     student: 'Henry Walker',
     studentId: 'STU-2238',
@@ -998,7 +998,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0022',
+    incidentId: 'INC-2024-0022',
     incidentDate: '2025-02-03',
     student: 'Evelyn Hall',
     studentId: 'STU-3349',
@@ -1039,7 +1039,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0021',
+    incidentId: 'INC-2024-0021',
     incidentDate: '2025-01-31',
     student: 'Alexander Young',
     studentId: 'STU-4450',
@@ -1080,7 +1080,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0020',
+    incidentId: 'INC-2024-0020',
     incidentDate: '2025-01-28',
     student: 'Abigail King',
     studentId: 'STU-5561',
@@ -1121,7 +1121,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0019',
+    incidentId: 'INC-2024-0019',
     incidentDate: '2025-01-24',
     student: 'Daniel Wright',
     studentId: 'STU-6672',
@@ -1162,7 +1162,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0018',
+    incidentId: 'INC-2024-0018',
     incidentDate: '2025-01-21',
     student: 'Emily Scott',
     studentId: 'STU-7783',
@@ -1195,7 +1195,7 @@ const mockCommunications: IncidentCommunication[] = [
     ],
   },
   {
-    incidentId: 'INC-2025-0017',
+    incidentId: 'INC-2024-0017',
     incidentDate: '2025-01-17',
     student: 'Matthew Green',
     studentId: 'STU-8894',
@@ -1659,7 +1659,7 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
               </div>
 
               {/* Message Input - pinned at bottom */}
-              <ForgeCard className="flex-shrink-0" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: '1px solid var(--forge-color-border-default)' }}>
+              <ForgeCard className="flex-shrink-0" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))' }}>
                 <div style={{ padding: 'var(--forge-spacing-small)' }}>
                   {showSuccess && (
                     <Alert className="mb-3 bg-green-50 border-green-200">

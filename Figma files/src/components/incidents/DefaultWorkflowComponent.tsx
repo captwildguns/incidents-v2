@@ -114,7 +114,7 @@ export function DefaultWorkflowComponent({ workflow, incidentId, onUpdateStep }:
                 key={step.id}
                 style={{
                   border: '1px solid var(--border)',
-                  borderRadius: 'var(--forge-radius-medium)',
+                  borderRadius: 'var(--forge-shape-medium)',
                   padding: 'var(--forge-spacing-medium)',
                   background: isCurrentStep ? 'var(--accent)' : 'transparent',
                   borderLeft: isCurrentStep ? '4px solid var(--brand-blue-medium)' : '4px solid transparent',
@@ -162,7 +162,7 @@ export function DefaultWorkflowComponent({ workflow, incidentId, onUpdateStep }:
                         marginTop: 'var(--forge-spacing-small)',
                         padding: 'var(--forge-spacing-small)',
                         background: 'var(--muted)',
-                        borderRadius: 'var(--forge-radius-small)',
+                        borderRadius: 'var(--forge-shape-small)',
                         fontSize: 'var(--text-xs)'
                       }}>
                         <div style={{ fontFamily: 'Roboto, sans-serif', color: 'var(--foreground)' }}>
@@ -303,7 +303,7 @@ export function DefaultWorkflowComponent({ workflow, incidentId, onUpdateStep }:
           marginTop: 'var(--forge-spacing-large)',
           padding: 'var(--forge-spacing-medium)',
           background: 'var(--muted)',
-          borderRadius: 'var(--forge-radius-medium)'
+          borderRadius: 'var(--forge-shape-medium)'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'Roboto, sans-serif', fontWeight: 'var(--font-weight-medium)' }}>
@@ -317,7 +317,7 @@ export function DefaultWorkflowComponent({ workflow, incidentId, onUpdateStep }:
             marginTop: 'var(--forge-spacing-small)',
             height: '8px',
             background: 'var(--background)',
-            borderRadius: 'var(--forge-radius-full)',
+            borderRadius: 'var(--forge-shape-full)',
             overflow: 'hidden'
           }}>
             <div style={{

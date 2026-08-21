@@ -130,7 +130,7 @@ export function CurrentStepActionCard({ step, stepNumber, totalSteps, onComplete
                     fontWeight: 'var(--font-weight-semibold)',
                     background: 'rgba(91, 139, 184, 0.1)',
                     padding: '2px var(--forge-spacing-small)',
-                    borderRadius: 'var(--forge-radius-small)',
+                    borderRadius: 'var(--forge-shape-small)',
                   }}
                 >
                   Step {stepNumber} of {totalSteps}
@@ -219,7 +219,7 @@ export function CurrentStepActionCard({ step, stepNumber, totalSteps, onComplete
         <div 
           style={{ 
             background: 'var(--muted)',
-            borderRadius: 'var(--forge-radius-small)',
+            borderRadius: 'var(--forge-shape-small)',
             padding: 'var(--forge-spacing-medium)',
             marginBottom: 'var(--forge-spacing-medium)',
           }}

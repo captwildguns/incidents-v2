@@ -93,8 +93,8 @@ export function ForgeMultiSelect({
         style={{
           height: '36px',
           padding: '0 var(--forge-spacing-xsmall)',
-          border: '1px solid var(--forge-color-border-default)',
-          borderRadius: 'var(--forge-radius-medium)',
+          border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+          borderRadius: 'var(--forge-shape-medium)',
           backgroundColor: 'var(--input-background, #f7f8fc)',
           fontSize: 'var(--forge-font-size-sm)',
           fontFamily: 'var(--forge-font-family, Roboto, sans-serif)',
@@ -109,7 +109,7 @@ export function ForgeMultiSelect({
         }}
         onBlur={(e) => {
           if (!open) {
-            e.currentTarget.style.borderColor = 'var(--forge-color-border-default)';
+            e.currentTarget.style.borderColor = 'var(--forge-theme-outline, rgba(0,0,0,0.12))';
             e.currentTarget.style.boxShadow = 'none';
           }
         }}
@@ -147,7 +147,7 @@ export function ForgeMultiSelect({
                 style={{
                   padding: '1px var(--forge-spacing-xxsmall)',
                   paddingRight: '2px',
-                  borderRadius: 'var(--forge-radius-small)',
+                  borderRadius: 'var(--forge-shape-small)',
                   backgroundColor: 'var(--primary)',
                   color: 'var(--primary-foreground)',
                   fontSize: 'var(--forge-font-size-xs)',
@@ -190,15 +190,15 @@ export function ForgeMultiSelect({
             marginTop: '4px',
             zIndex: 50,
             backgroundColor: 'var(--popover)',
-            border: '1px solid var(--forge-color-border-default)',
-            borderRadius: 'var(--forge-radius-medium)',
+            border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+            borderRadius: 'var(--forge-shape-medium)',
             boxShadow: 'var(--forge-elevation-4)',
             overflow: 'hidden',
             minWidth: width,
           }}
         >
           {/* Search input */}
-          <div style={{ padding: 'var(--forge-spacing-xsmall)', borderBottom: '1px solid var(--forge-color-border-subtle)' }}>
+          <div style={{ padding: 'var(--forge-spacing-xsmall)', borderBottom: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))' }}>
             <div className="relative">
               <Search
                 className="absolute"
@@ -222,8 +222,8 @@ export function ForgeMultiSelect({
                   height: '30px',
                   paddingLeft: '28px',
                   paddingRight: 'var(--forge-spacing-xsmall)',
-                  border: '1px solid var(--forge-color-border-subtle)',
-                  borderRadius: 'var(--forge-radius-small)',
+                  border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
+                  borderRadius: 'var(--forge-shape-small)',
                   backgroundColor: 'var(--input-background, #f7f8fc)',
                   fontSize: 'var(--forge-font-size-sm)',
                   fontFamily: 'var(--forge-font-family, Roboto, sans-serif)',
@@ -234,7 +234,7 @@ export function ForgeMultiSelect({
                   e.currentTarget.style.borderColor = 'var(--ring)';
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--forge-color-border-subtle)';
+                  e.currentTarget.style.borderColor = 'var(--forge-theme-outline-low, rgba(0,0,0,0.06))';
                 }}
               />
             </div>
@@ -271,8 +271,8 @@ export function ForgeMultiSelect({
                     width: '18px',
                     height: '18px',
                     marginRight: 'var(--forge-spacing-xsmall)',
-                    borderRadius: 'var(--forge-radius-small)',
-                    border: isAllSelected ? '2px solid var(--primary)' : '2px solid var(--forge-color-border-default)',
+                    borderRadius: 'var(--forge-shape-small)',
+                    border: isAllSelected ? '2px solid var(--primary)' : '2px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
                     backgroundColor: isAllSelected ? 'var(--primary)' : 'transparent',
                     transition: 'all 0.1s ease',
                   }}
@@ -328,8 +328,8 @@ export function ForgeMultiSelect({
                       width: '18px',
                       height: '18px',
                       marginRight: 'var(--forge-spacing-xsmall)',
-                      borderRadius: 'var(--forge-radius-small)',
-                      border: isChecked ? '2px solid var(--primary)' : '2px solid var(--forge-color-border-default)',
+                      borderRadius: 'var(--forge-shape-small)',
+                      border: isChecked ? '2px solid var(--primary)' : '2px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
                       backgroundColor: isChecked ? 'var(--primary)' : 'transparent',
                       transition: 'all 0.1s ease',
                     }}
@@ -347,7 +347,7 @@ export function ForgeMultiSelect({
             <div
               style={{
                 padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-small)',
-                borderTop: '1px solid var(--forge-color-border-subtle)',
+                borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -368,7 +368,7 @@ export function ForgeMultiSelect({
                   fontFamily: 'var(--forge-font-family, Roboto, sans-serif)',
                   fontWeight: 'var(--forge-font-weight-medium, 500)',
                   padding: '2px var(--forge-spacing-xxsmall)',
-                  borderRadius: 'var(--forge-radius-small)',
+                  borderRadius: 'var(--forge-shape-small)',
                   transition: 'background-color 0.1s ease',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(63, 81, 181, 0.08)'; }}

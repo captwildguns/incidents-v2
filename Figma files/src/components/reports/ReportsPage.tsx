@@ -571,7 +571,7 @@ export function ReportsPage({ onNavigate }: ReportsPageProps) {
                 // Standard Table View
                 <>
               {/* Report table */}
-              <div className="flex-1 overflow-y-auto" style={{ border: '1px solid var(--forge-color-border-default)', borderRadius: 'var(--forge-radius-medium)' }}>
+              <div className="flex-1 overflow-y-auto" style={{ border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', borderRadius: 'var(--forge-shape-medium)' }}>
                 <table className="forge-table" style={{ fontSize: 'var(--forge-font-size-sm)', whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr>

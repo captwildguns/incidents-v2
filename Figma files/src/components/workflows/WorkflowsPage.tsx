@@ -625,7 +625,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                       width: '100%',
                       marginTop: 'var(--forge-spacing-xsmall)',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       background: 'var(--input-background)',
@@ -649,7 +649,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                     style={{
                       width: '100%',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       fontFamily: 'var(--forge-font-family)',
@@ -698,7 +698,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                     style={{
                       width: '100%',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       fontFamily: 'var(--forge-font-family)',
@@ -734,7 +734,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                         marginTop: 'var(--forge-spacing-small)',
                         padding: 'var(--forge-spacing-small)',
                         background: 'var(--input-background)',
-                        borderRadius: 'var(--forge-radius-medium)',
+                        borderRadius: 'var(--forge-shape-medium)',
                         border: '1px solid var(--border)',
                       }}>
                         <div style={{ display: 'flex', gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-xxsmall)', flexWrap: 'wrap' }}>

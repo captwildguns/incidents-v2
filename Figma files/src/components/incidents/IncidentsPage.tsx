@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ForgeCard, ForgeButton, ForgeIconButton, useForgeToast } from '@tylertech/forge-react';
 import {
   defineCardComponent,
@@ -32,6 +32,7 @@ import {
   INCIDENT_SUBJECTS,
   getSubjectLabel,
   getSubjectMeta,
+  yearForDate,
   type IncidentSubject,
 } from './IncidentTypes';
 
@@ -920,8 +921,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0026',
-    date: '2025-02-12',
+    id: 'INC-2024-0026',
+    date: '2024-02-12',
     student: 'Harper Clark',
     studentId: 'STU-8905',
     type: 'Safety Violation',
@@ -935,8 +936,8 @@ const rawIncidents = [
     assignedTo: 'Sarah Williams',
   },
   {
-    id: 'INC-2025-0025',
-    date: '2025-02-10',
+    id: 'INC-2024-0025',
+    date: '2024-02-10',
     student: 'Benjamin Lewis',
     studentId: 'STU-9016',
     type: 'Safety Violation',
@@ -950,8 +951,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0024',
-    date: '2025-02-07',
+    id: 'INC-2024-0024',
+    date: '2024-02-07',
     student: 'Amelia Robinson',
     studentId: 'STU-1127',
     type: 'Safety Violation',
@@ -965,8 +966,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0023',
-    date: '2025-02-05',
+    id: 'INC-2024-0023',
+    date: '2024-02-05',
     student: 'Henry Walker',
     studentId: 'STU-2238',
     type: 'Disruptive Behavior',
@@ -980,8 +981,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0022',
-    date: '2025-02-03',
+    id: 'INC-2024-0022',
+    date: '2024-02-03',
     student: 'Evelyn Hall',
     studentId: 'STU-3349',
     type: 'Disruptive Behavior',
@@ -995,8 +996,8 @@ const rawIncidents = [
     assignedTo: 'Sarah Williams',
   },
   {
-    id: 'INC-2025-0021',
-    date: '2025-01-31',
+    id: 'INC-2024-0021',
+    date: '2024-01-31',
     student: 'Alexander Young',
     studentId: 'STU-4450',
     type: 'Property Damage',
@@ -1010,8 +1011,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0020',
-    date: '2025-01-28',
+    id: 'INC-2024-0020',
+    date: '2024-01-28',
     student: 'Abigail King',
     studentId: 'STU-5561',
     type: 'Disruptive Behavior',
@@ -1025,8 +1026,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0019',
-    date: '2025-01-24',
+    id: 'INC-2024-0019',
+    date: '2024-01-24',
     student: 'Daniel Wright',
     studentId: 'STU-6672',
     type: 'Physical Altercation',
@@ -1040,8 +1041,8 @@ const rawIncidents = [
     assignedTo: 'Jane Doe',
   },
   {
-    id: 'INC-2025-0018',
-    date: '2025-01-21',
+    id: 'INC-2024-0018',
+    date: '2024-01-21',
     student: 'Emily Scott',
     studentId: 'STU-7783',
     type: 'Safety Violation',
@@ -1054,9 +1055,43 @@ const rawIncidents = [
     createdBy: 'David Park',
     assignedTo: 'Sarah Williams',
   },
+  // Prior-term history. Marcus Johnson and Ethan Lee both have 2025 incidents,
+  // so these give the incidents list and the student profile an actual year
+  // boundary to divide on. Without them every incident sat in one calendar year
+  // and the divider had nothing to separate.
   {
-    id: 'INC-2025-0017',
-    date: '2025-01-17',
+    id: 'INC-2024-0015',
+    date: '2024-02-26',
+    student: 'Marcus Johnson',
+    studentId: 'STU-3421',
+    type: 'Disruptive Behavior',
+    description: 'Repeatedly shouted over the driver during the afternoon run and refused to lower his voice when asked.',
+    bus: 'Bus 8',
+    route: 'Washington High PM - Wolf Rd',
+    driver: 'Lisa Anderson',
+    severity: 'Low',
+    status: 'Closed',
+    createdBy: 'Lisa Anderson',
+    assignedTo: 'Jane Doe',
+  },
+  {
+    id: 'INC-2024-0016',
+    date: '2024-01-30',
+    student: 'Ethan Lee',
+    studentId: 'STU-1045',
+    type: 'Safety Violation',
+    description: 'Stood in the aisle while the bus was moving and did not sit down until the second request.',
+    bus: 'Bus 8',
+    route: 'Washington High PM - Wolf Rd',
+    driver: 'Lisa Anderson',
+    severity: 'Low',
+    status: 'Closed',
+    createdBy: 'Lisa Anderson',
+    assignedTo: 'Jane Doe',
+  },
+  {
+    id: 'INC-2024-0017',
+    date: '2024-01-17',
     student: 'Matthew Green',
     studentId: 'STU-8894',
     type: 'Safety Violation',
@@ -1692,7 +1727,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       </div>
 
       {/* Filters Card */}
-      <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-large)', borderRadius: 'var(--forge-radius-large)', borderColor: 'var(--forge-color-border-default)' }}>
+      <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-large)', borderRadius: 'var(--forge-shape-large)', borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }}>
           <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
             {/* Search */}
@@ -1786,8 +1821,8 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                 fontFamily: 'Roboto, sans-serif',
                 fontSize: 'var(--forge-font-size-base)',
                 fontWeight: 'var(--forge-font-weight-medium)',
-                borderRadius: 'var(--forge-radius-medium)',
-                borderColor: 'var(--forge-color-border-default)',
+                borderRadius: 'var(--forge-shape-medium)',
+                borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))',
               }}
             >
               <forge-icon slot="start" name="search"></forge-icon>
@@ -1799,7 +1834,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
 
       {/* Active Filter Banner */}
       {(severityFilter.length > 0 || statusFilter.length > 0 || subjectFilter.length > 0 || dateAfterFilter || searchTerm.trim()) && (
-        <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #eff6ff)', border: '1px solid var(--forge-color-border-info, #bfdbfe)', borderRadius: 'var(--forge-radius-medium)', fontFamily: 'var(--forge-font-family)' }}>
+        <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #eff6ff)', border: '1px solid var(--forge-color-border-info, #bfdbfe)', borderRadius: 'var(--forge-shape-medium)', fontFamily: 'var(--forge-font-family)' }}>
           <forge-icon name="error" style={{ fontSize: '16px', flexShrink: 0, color: 'var(--forge-color-text-info, #2563eb)' }}></forge-icon>
           <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-color-text-info, #1e40af)' }}>
             {/* Joined rather than each line prefixing its own separator, which
@@ -1939,9 +1974,38 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                 </tr>
               </thead>
               <tbody>
-                {displayedIncidents.map((incident) => (
+                {displayedIncidents.map((incident, rowIndex) => {
+                  // Year divider. Asked for in the Aug 19 review so older
+                  // incidents read as their own block instead of blending into
+                  // the current year. Only while sorted by date, because in any
+                  // other sort order the years interleave and a divider would
+                  // be meaningless rather than helpful.
+                  const showYearDivider =
+                    sortField === 'date' &&
+                    yearForDate(incident.date) !== yearForDate(displayedIncidents[rowIndex - 1]?.date);
+                  return (
+                  <React.Fragment key={incident.id}>
+                  {showYearDivider && (
+                    <tr className="forge-table-row" aria-hidden="true">
+                      <td
+                        colSpan={10}
+                        className="forge-table-cell"
+                        style={{
+                          background: 'var(--forge-theme-surface-container-minimum, #f5f7f9)',
+                          borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+                          fontFamily: 'Roboto, sans-serif',
+                          fontSize: 'var(--forge-font-size-sm, 0.875rem)',
+                          fontWeight: 500,
+                          letterSpacing: '0.5px',
+                          color: 'var(--forge-theme-text-medium)',
+                          padding: '6px 12px',
+                        }}
+                      >
+                        {yearForDate(incident.date)}
+                      </td>
+                    </tr>
+                  )}
                   <tr
-                    key={incident.id}
                     className="forge-table-row cursor-pointer"
                     onClick={() => onNavigateToIncidentDetail(incident)}
                     style={{ transition: 'background-color 0.15s' }}
@@ -2023,12 +2087,14 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                         )}
                       </td>
                     </tr>
-                ))}
+                  </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
           {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', marginTop: 'var(--forge-spacing-medium)' }}>
+          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', whiteSpace: 'nowrap' }}>
                 Showing {sortedIncidents.length === 0 ? 0 : startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedIncidents.length)} of {sortedIncidents.length} incidents

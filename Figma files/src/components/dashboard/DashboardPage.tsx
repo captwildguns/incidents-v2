@@ -8,7 +8,7 @@ defineMenuComponent();
 defineIconButtonComponent();
 import { EditIncidentDialog } from '../incidents/EditIncidentDialog';
 import { NewIncidentFormUnified } from '../incidents/NewIncidentFormUnified';
-import { mockIncidents, getIncidentSubjectLabel } from '../incidents/IncidentsPage';
+import { mockIncidents, getIncidentSubjectLabel, getIncidentSubjectSubLabel } from '../incidents/IncidentsPage';
 import { getSubjectLabel, INCIDENT_SUBJECTS } from '../incidents/IncidentTypes';
 import { defineButtonComponent } from '@tylertech/forge';
 defineButtonComponent();
@@ -298,8 +298,8 @@ const needsAttention = [
     student: 'Christopher Adams',
     type: 'Physical Altercation',
     bus: 'Bus 15',
-    reason: 'High severity - student caused minor injury to another student',
-    priority: 'critical',
+    reason: 'Student caused minor injury to another student',
+    priority: 'high',
     time: '5 mins ago',
     timeValue: 5,
     actionNeeded: 'Contact parents immediately and review with administration',
@@ -310,8 +310,8 @@ const needsAttention = [
     student: 'Tyler Stewart',
     type: 'Physical Altercation',
     bus: 'Bus 12',
-    reason: 'High severity - physical aggression requires immediate response',
-    priority: 'critical',
+    reason: 'Physical aggression requires immediate response',
+    priority: 'high',
     time: '8 hours ago',
     timeValue: 8 * 60,
     actionNeeded: 'Contact parents and schedule student meeting',
@@ -322,7 +322,7 @@ const needsAttention = [
     student: 'Natalie Collins',
     type: 'Disruptive Behavior',
     bus: 'Bus 8',
-    reason: 'High severity - profanity directed at driver',
+    reason: 'Profanity directed at driver',
     priority: 'high',
     time: '9 hours ago',
     timeValue: 9 * 60,
@@ -334,7 +334,7 @@ const needsAttention = [
     student: 'Kayla Bailey',
     type: 'Disruptive Behavior',
     bus: 'Bus 8',
-    reason: 'High severity - bullying behavior requires intervention',
+    reason: 'Bullying behavior requires intervention',
     priority: 'high',
     time: '2 days ago',
     timeValue: 48 * 60,
@@ -346,7 +346,7 @@ const needsAttention = [
     student: 'Grace Phillips',
     type: 'Disruptive Behavior',
     bus: 'Bus 9',
-    reason: 'High severity - ongoing bullying of younger student',
+    reason: 'Ongoing bullying of younger student',
     priority: 'high',
     time: '1 day ago',
     timeValue: 24 * 60,
@@ -370,7 +370,7 @@ const needsAttention = [
     student: 'Joshua Parker',
     type: 'Safety Violation',
     bus: 'Bus 14',
-    reason: 'Medium severity - sat in restricted driver area',
+    reason: 'Sat in restricted driver area',
     priority: 'medium',
     time: '4 days ago',
     timeValue: 4 * 24 * 60,
@@ -418,7 +418,7 @@ const needsAttention = [
     student: 'Brianna Cooper',
     type: 'Physical Altercation',
     bus: 'Bus 9',
-    reason: 'In Progress - high severity requires continued monitoring',
+    reason: 'In Progress - requires continued monitoring',
     priority: 'high',
     time: '15 days ago',
     timeValue: 15 * 24 * 60,
@@ -454,8 +454,8 @@ const needsAttention = [
     student: 'Tyler Washington',
     type: 'Weapon / Prohibited Items',
     bus: 'Bus 22',
-    reason: 'Critical incident - no action taken in 4 hours',
-    priority: 'critical',
+    reason: 'No action taken in 4 hours',
+    priority: 'medium',
     time: '4 hours ago',
     timeValue: 4 * 60,
     actionNeeded: 'Escalate to administration immediately',
@@ -478,8 +478,8 @@ const needsAttention = [
     student: 'Marcus Johnson',
     type: 'Safety Violation',
     bus: 'Bus 8',
-    reason: 'High severity - requires immediate parent contact',
-    priority: 'critical',
+    reason: 'Requires immediate parent contact',
+    priority: 'high',
     time: '32 mins ago',
     timeValue: 32,
     actionNeeded: 'Contact parents and administration',
@@ -620,6 +620,17 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       default: return 'default';
     }
   };
+  // Mirrors statusTheme on the incidents page, so the same status reads the
+  // same colour in both grids.
+  const getStatusTheme = (status: string): string => {
+    switch (status) {
+      case 'Open': return 'info-primary';
+      case 'In Progress': return 'warning';
+      case 'Closed': return 'default';
+      default: return 'default';
+    }
+  };
+
   const getSeverityTheme = (severity: string): string => {
     switch (severity) {
       case 'Critical': return 'danger';
@@ -856,7 +867,9 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
+      {/* All four KPIs stay on one row. They previously dropped to a 2x2 block
+          at md, which is the width most people actually run this at. */}
+      <div className="grid grid-cols-4 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
         <ForgeCard
           style={{ boxShadow: 'var(--forge-elevation-1)', cursor: 'pointer' }}
           className="hover:shadow-lg transition-shadow"
@@ -909,7 +922,8 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
+      {/* All four charts on one row, matching the KPI row above. */}
+      <div className="grid grid-cols-4 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
         {/* Incidents by Subject. First, because it is the question a district
             that has just started tracking more than students asks first. */}
         <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
@@ -962,26 +976,33 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
         </div>
         <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
           <div className="overflow-x-auto">
-            <table className="forge-table">
+            {/* Same ten columns, in the same order, as the incidents page grid,
+                so moving between the two does not mean relearning the table. The
+                only difference is that this one is locked to newest first and is
+                not sortable, which the arrow on Date indicates. */}
+            <table className="forge-table" style={{ minWidth: '1400px', width: '100%' }}>
               <thead>
                 <tr>
-                  <th className="forge-table-cell forge-table-cell--header">Incident ID</th>
-                  <th className="forge-table-cell forge-table-cell--header">Involved</th>
-                  <th className="forge-table-cell forge-table-cell--header">Type</th>
-                  <th className="forge-table-cell forge-table-cell--header">Severity</th>
-                  <th className="forge-table-cell forge-table-cell--header">Assigned To</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '130px' }}>Incident ID</th>
                   <th
                     className="forge-table-cell forge-table-cell--header"
                     aria-sort="descending"
                     title="Locked sort: newest first"
-                    style={{ cursor: 'default' }}
+                    style={{ cursor: 'default', minWidth: '110px' }}
                   >
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      Created On
+                      Date
                       <forge-icon name="arrow_downward" style={{ fontSize: '14px', opacity: 0.8 }}></forge-icon>
                     </span>
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header">Messages</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>Involved</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '120px' }}>Subject</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>Type</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '220px' }}>Vehicle/Run</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '110px' }}>Severity</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '130px' }}>Status</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '150px' }}>Assigned To</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '100px' }}>Messages</th>
                 </tr>
               </thead>
               <tbody>
@@ -1005,19 +1026,59 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
                     <td className="forge-table-cell" style={{ fontWeight: 500, fontFamily: 'var(--forge-font-family)' }}>
                       {incident.id}
                     </td>
-                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>{getIncidentSubjectLabel(incident)}</td>
+                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                      {incident.displayDate}
+                    </td>
+                    {/* Involved, matching the incidents page: multi-student rows
+                        keep the "+N more" treatment, everything else falls back
+                        to the subject label so no row is blank. */}
+                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                      {incident.involvedStudents && incident.involvedStudents.length > 1 ? (
+                        <>
+                          <div title={incident.involvedStudents.map((s: any) => `${s.name} (${s.role})`).join(', ')}>
+                            {incident.involvedStudents[0].name}
+                            <span style={{ marginLeft: '4px', color: 'var(--forge-theme-text-low)' }}>
+                              +{incident.involvedStudents.length - 1} more
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 'calc(var(--forge-font-size-sm) - 2px)', color: 'var(--forge-theme-text-low)' }}>
+                            {incident.involvedStudents.length} students involved
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>{getIncidentSubjectLabel(incident)}</div>
+                          <div style={{ fontSize: 'calc(var(--forge-font-size-sm) - 2px)', color: 'var(--forge-theme-text-low)' }}>
+                            {getIncidentSubjectSubLabel(incident)}
+                          </div>
+                        </>
+                      )}
+                    </td>
+                    <td className="forge-table-cell">
+                      <forge-badge theme={(incident.subject ?? 'student') === 'student' ? 'default' : 'info-primary'}>
+                        {getSubjectLabel(incident.subject ?? 'student')}
+                      </forge-badge>
+                    </td>
                     <td className="forge-table-cell">
                       <forge-badge theme="default">{incident.type}</forge-badge>
+                    </td>
+                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                      <div>{incident.bus}</div>
+                      <div style={{ fontSize: 'calc(var(--forge-font-size-sm) - 2px)', color: 'var(--forge-theme-text-low)' }}>
+                        {incident.route}
+                      </div>
                     </td>
                     <td className="forge-table-cell">
                       <forge-badge theme={getSeverityTheme(incident.severity)} strong>
                         {incident.severity}
                       </forge-badge>
                     </td>
-                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>{incident.assignedTo}</td>
-                    <td className="forge-table-cell" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--forge-theme-text-low)' }}>
-                      {incident.displayDate}
+                    <td className="forge-table-cell">
+                      <forge-badge theme={getStatusTheme(incident.status)}>
+                        {incident.status}
+                      </forge-badge>
                     </td>
+                    <td className="forge-table-cell" style={{ fontFamily: 'var(--forge-font-family)' }}>{incident.assignedTo}</td>
                     <td className="forge-table-cell">
                       {incidentsWithCommunications.includes(incident.id) && (
                         <ForgeButton

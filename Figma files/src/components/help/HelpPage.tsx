@@ -17,9 +17,9 @@ const sectionCard: React.CSSProperties = {
 };
 
 const featureCard: React.CSSProperties = {
-  borderRadius: 'var(--forge-radius-large)',
+  borderRadius: 'var(--forge-shape-large)',
   padding: 'var(--forge-spacing-medium)',
-  border: '1px solid var(--forge-color-border-default)',
+  border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
 };
 
 const highlightCard: React.CSSProperties = {

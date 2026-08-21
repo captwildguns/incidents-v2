@@ -170,7 +170,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
             style={{
               padding: 'var(--forge-spacing-medium)',
               border: '1px solid var(--border)',
-              borderRadius: 'var(--forge-radius-medium)',
+              borderRadius: 'var(--forge-shape-medium)',
               background: 'var(--input-background)',
             }}
           >
@@ -204,7 +204,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                   marginTop: 'var(--forge-spacing-small)',
                   padding: 'var(--forge-spacing-small)',
                   background: 'rgba(255, 193, 7, 0.1)',
-                  borderRadius: 'var(--forge-radius-small)',
+                  borderRadius: 'var(--forge-shape-small)',
                   border: '1px solid rgba(255, 193, 7, 0.3)',
                 }}
               >
@@ -223,7 +223,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
             style={{
               padding: 'var(--forge-spacing-medium)',
               border: '1px solid var(--border)',
-              borderRadius: 'var(--forge-radius-medium)',
+              borderRadius: 'var(--forge-shape-medium)',
               background: 'var(--input-background)',
             }}
           >
@@ -259,7 +259,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                   gap: 'var(--forge-spacing-small)',
                   padding: 'var(--forge-spacing-medium)',
                   background: 'white',
-                  borderRadius: 'var(--forge-radius-medium)',
+                  borderRadius: 'var(--forge-shape-medium)',
                   border: '1px solid var(--border)',
                 }}
               >
@@ -292,7 +292,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                       width: '100%',
                       marginTop: 'var(--forge-spacing-xsmall)',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       background: 'var(--input-background)',
@@ -309,7 +309,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                     style={{
                       padding: 'var(--forge-spacing-small)',
                       background: 'rgba(74, 111, 165, 0.1)',
-                      borderRadius: 'var(--forge-radius-small)',
+                      borderRadius: 'var(--forge-shape-small)',
                       border: '1px solid rgba(74, 111, 165, 0.2)',
                     }}
                   >
@@ -334,7 +334,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
             style={{
               padding: 'var(--forge-spacing-medium)',
               border: '1px solid var(--border)',
-              borderRadius: 'var(--forge-radius-medium)',
+              borderRadius: 'var(--forge-shape-medium)',
               background: 'var(--input-background)',
             }}
           >
@@ -367,7 +367,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                 style={{
                   padding: 'var(--forge-spacing-medium)',
                   background: 'white',
-                  borderRadius: 'var(--forge-radius-medium)',
+                  borderRadius: 'var(--forge-shape-medium)',
                   border: '1px solid var(--border)',
                   display: 'flex',
                   flexDirection: 'column',
@@ -379,7 +379,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                     style={{
                       padding: 'var(--forge-spacing-medium)',
                       background: 'rgba(255, 193, 7, 0.1)',
-                      borderRadius: 'var(--forge-radius-small)',
+                      borderRadius: 'var(--forge-shape-small)',
                       border: '1px solid rgba(255, 193, 7, 0.3)',
                       textAlign: 'center',
                     }}
@@ -403,7 +403,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                           width: '100%',
                           marginTop: 'var(--forge-spacing-xsmall)',
                           padding: 'var(--forge-spacing-small)',
-                          borderRadius: 'var(--forge-radius-medium)',
+                          borderRadius: 'var(--forge-shape-medium)',
                           border: '1px solid var(--border)',
                           fontSize: 'var(--text-base)',
                           background: 'var(--input-background)',
@@ -430,7 +430,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                           width: '100%',
                           marginTop: 'var(--forge-spacing-xsmall)',
                           padding: 'var(--forge-spacing-small)',
-                          borderRadius: 'var(--forge-radius-medium)',
+                          borderRadius: 'var(--forge-shape-medium)',
                           border: '1px solid var(--border)',
                           fontSize: 'var(--text-base)',
                           background: 'var(--input-background)',
@@ -455,7 +455,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                           width: '100%',
                           marginTop: 'var(--forge-spacing-xsmall)',
                           padding: 'var(--forge-spacing-small)',
-                          borderRadius: 'var(--forge-radius-medium)',
+                          borderRadius: 'var(--forge-shape-medium)',
                           border: '1px solid var(--border)',
                           fontSize: 'var(--text-base)',
                           background: 'var(--input-background)',
@@ -472,7 +472,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                         style={{
                           padding: 'var(--forge-spacing-small)',
                           background: 'rgba(74, 111, 165, 0.1)',
-                          borderRadius: 'var(--forge-radius-small)',
+                          borderRadius: 'var(--forge-shape-small)',
                           border: '1px solid rgba(74, 111, 165, 0.2)',
                         }}
                       >
@@ -505,7 +505,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
             style={{
               padding: 'var(--forge-spacing-medium)',
               border: '1px solid var(--border)',
-              borderRadius: 'var(--forge-radius-medium)',
+              borderRadius: 'var(--forge-shape-medium)',
               background: 'var(--input-background)',
             }}
           >
@@ -525,7 +525,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                 style={{
                   padding: 'var(--forge-spacing-medium)',
                   background: 'rgba(74, 111, 165, 0.1)',
-                  borderRadius: 'var(--forge-radius-small)',
+                  borderRadius: 'var(--forge-shape-small)',
                   border: '1px solid rgba(74, 111, 165, 0.2)',
                   textAlign: 'center',
                 }}
@@ -540,7 +540,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                 style={{
                   padding: 'var(--forge-spacing-medium)',
                   background: 'white',
-                  borderRadius: 'var(--forge-radius-medium)',
+                  borderRadius: 'var(--forge-shape-medium)',
                   border: '1px solid var(--border)',
                   display: 'flex',
                   flexDirection: 'column',
@@ -555,7 +555,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                       alignItems: 'center',
                       gap: 'var(--forge-spacing-small)',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-small)',
+                      borderRadius: 'var(--forge-shape-small)',
                       cursor: 'pointer',
                       background: config.triggers?.dependencies?.includes(s.id)
                         ? 'rgba(74, 111, 165, 0.1)'
@@ -592,7 +592,7 @@ export function StepTriggerConfig({ isOpen, onClose, step, onSave, allSteps }: S
                       marginTop: 'var(--forge-spacing-small)',
                       padding: 'var(--forge-spacing-small)',
                       background: 'rgba(74, 111, 165, 0.1)',
-                      borderRadius: 'var(--forge-radius-small)',
+                      borderRadius: 'var(--forge-shape-small)',
                       border: '1px solid rgba(74, 111, 165, 0.2)',
                     }}
                   >

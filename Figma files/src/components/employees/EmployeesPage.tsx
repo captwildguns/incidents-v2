@@ -580,7 +580,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', marginTop: 'var(--forge-spacing-medium)' }}>
+          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', whiteSpace: 'nowrap' }}>
                 Showing {startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedDrivers.length)} of {sortedDrivers.length} employees
@@ -668,7 +668,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-large)' }}>
 
               {/* Personal Information */}
-              <div style={{ borderTop: '1px solid var(--forge-color-border-default)', paddingTop: 'var(--forge-spacing-medium)' }}>
+              <div style={{ borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', paddingTop: 'var(--forge-spacing-medium)' }}>
                 <h3 style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-lg)', fontWeight: 'var(--forge-font-weight-medium)', marginBottom: 'var(--forge-spacing-small)' }}>
                   Personal Information
                 </h3>
@@ -709,7 +709,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
                   mechanic holds none of them, so the section is absent rather
                   than rendering empty rows. */}
               {selectedDriver.jobRole === 'Driver' && (
-              <div style={{ borderTop: '1px solid var(--forge-color-border-default)', paddingTop: 'var(--forge-spacing-medium)' }}>
+              <div style={{ borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', paddingTop: 'var(--forge-spacing-medium)' }}>
                 <h3 style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-lg)', fontWeight: 'var(--forge-font-weight-medium)', marginBottom: 'var(--forge-spacing-small)' }}>
                   License & Certifications
                 </h3>
@@ -735,7 +735,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
               )}
 
               {/* Current Assignment */}
-              <div style={{ borderTop: '1px solid var(--forge-color-border-default)', paddingTop: 'var(--forge-spacing-medium)' }}>
+              <div style={{ borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', paddingTop: 'var(--forge-spacing-medium)' }}>
                 <h3 style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-lg)', fontWeight: 'var(--forge-font-weight-medium)', marginBottom: 'var(--forge-spacing-small)' }}>
                   Current Assignment
                 </h3>

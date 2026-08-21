@@ -384,7 +384,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
             </table>
           </div>
 
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', marginTop: 'var(--forge-spacing-medium)' }}>
+          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', whiteSpace: 'nowrap' }}>
               Showing {sortedLocations.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + rowsPerPage, sortedLocations.length)} of {sortedLocations.length} locations
             </span>
@@ -431,7 +431,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
                 </forge-badge>
               </div>
 
-              <div className="grid grid-cols-2" style={{ gap: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-default)', paddingTop: 'var(--forge-spacing-medium)' }}>
+              <div className="grid grid-cols-2" style={{ gap: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', paddingTop: 'var(--forge-spacing-medium)' }}>
                 <div>
                   <div className="text-muted-foreground" style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)' }}>Address</div>
                   <div style={{ fontFamily: 'var(--forge-font-family)' }}>
@@ -457,7 +457,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
                 </div>
               </div>
 
-              <div style={{ borderTop: '1px solid var(--forge-color-border-default)', paddingTop: 'var(--forge-spacing-medium)' }}>
+              <div style={{ borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', paddingTop: 'var(--forge-spacing-medium)' }}>
                 <h3 style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-lg)', fontWeight: 'var(--forge-font-weight-medium)', marginBottom: 'var(--forge-spacing-small)' }}>
                   Based here
                 </h3>
@@ -481,13 +481,13 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
               </div>
 
               {selectedLocation.notes && (
-                <div style={{ borderTop: '1px solid var(--forge-color-border-default)', paddingTop: 'var(--forge-spacing-medium)' }}>
+                <div style={{ borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', paddingTop: 'var(--forge-spacing-medium)' }}>
                   <div className="text-muted-foreground" style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)' }}>Notes</div>
                   <div style={{ fontFamily: 'var(--forge-font-family)' }}>{selectedLocation.notes}</div>
                 </div>
               )}
 
-              <div className="flex justify-end" style={{ gap: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-color-border-default)', paddingTop: 'var(--forge-spacing-medium)' }}>
+              <div className="flex justify-end" style={{ gap: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', paddingTop: 'var(--forge-spacing-medium)' }}>
                 {incidentsFor(selectedLocation) > 0 && onNavigateToIncidentsMatching && (
                   <ForgeButton
                     variant="outlined"

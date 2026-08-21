@@ -22,11 +22,12 @@ defineAutocompleteComponent();
 defineIconComponent();
 defineIconButtonComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
 import { EntitySearchField } from '../shared/EntitySearchField';
 import { mockIncidents } from '../incidents/IncidentsPage';
+import { yearForDate } from '../incidents/IncidentTypes';
 
 // Photo URLs for students
 const femalePhotos = [
@@ -438,7 +439,7 @@ export const mockStudents = [
     lastIncident: '2025-02-12',
     incidents: [
       {
-        id: 'INC-2025-0026',
+        id: 'INC-2024-0026',
         date: '2025-02-12',
         type: 'Eating/Drinking Violation',
         severity: 'Medium',
@@ -459,7 +460,7 @@ export const mockStudents = [
     lastIncident: '2025-02-10',
     incidents: [
       {
-        id: 'INC-2025-0025',
+        id: 'INC-2024-0025',
         date: '2025-02-10',
         type: 'Seat Refusal',
         severity: 'Medium',
@@ -480,7 +481,7 @@ export const mockStudents = [
     lastIncident: '2025-02-07',
     incidents: [
       {
-        id: 'INC-2025-0024',
+        id: 'INC-2024-0024',
         date: '2025-02-07',
         type: 'Window Misuse',
         severity: 'High',
@@ -501,7 +502,7 @@ export const mockStudents = [
     lastIncident: '2025-02-05',
     incidents: [
       {
-        id: 'INC-2025-0023',
+        id: 'INC-2024-0023',
         date: '2025-02-05',
         type: 'Offensive Language',
         severity: 'High',
@@ -522,7 +523,7 @@ export const mockStudents = [
     lastIncident: '2025-02-03',
     incidents: [
       {
-        id: 'INC-2025-0022',
+        id: 'INC-2024-0022',
         date: '2025-02-03',
         type: 'Disruptive Behavior',
         severity: 'Medium',
@@ -543,7 +544,7 @@ export const mockStudents = [
     lastIncident: '2025-01-31',
     incidents: [
       {
-        id: 'INC-2025-0021',
+        id: 'INC-2024-0021',
         date: '2025-01-31',
         type: 'Property Damage',
         severity: 'Medium',
@@ -564,7 +565,7 @@ export const mockStudents = [
     lastIncident: '2025-01-28',
     incidents: [
       {
-        id: 'INC-2025-0020',
+        id: 'INC-2024-0020',
         date: '2025-01-28',
         type: 'Disruptive Volume',
         severity: 'Medium',
@@ -585,7 +586,7 @@ export const mockStudents = [
     lastIncident: '2025-01-24',
     incidents: [
       {
-        id: 'INC-2025-0019',
+        id: 'INC-2024-0019',
         date: '2025-01-24',
         type: 'Physical Altercation',
         severity: 'High',
@@ -606,7 +607,7 @@ export const mockStudents = [
     lastIncident: '2025-01-21',
     incidents: [
       {
-        id: 'INC-2025-0018',
+        id: 'INC-2024-0018',
         date: '2025-01-21',
         type: 'Eating/Drinking Violation',
         severity: 'Low',
@@ -627,7 +628,7 @@ export const mockStudents = [
     lastIncident: '2025-01-17',
     incidents: [
       {
-        id: 'INC-2025-0017',
+        id: 'INC-2024-0017',
         date: '2025-01-17',
         type: 'Seat Refusal',
         severity: 'Low',
@@ -1414,7 +1415,10 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   };
 
   // KPI calculations
-  const totalStudents = mockStudents.length;
+  // Derived rather than the roster length, so the number keeps matching the
+  // label. Every student on the roster happens to have an incident today, so the
+  // two agree, but a student added without one would make a roster count wrong.
+  const studentsWithIncidents = mockStudents.filter(s => incidentCountFor(s) > 0).length;
   const studentsWithActiveIncidents = mockStudents.filter(s => incidentsFor(s).some((i: any) => i.status !== 'Closed')).length;
   const totalStudentIncidents = mockStudents.reduce((sum, s) => sum + incidentCountFor(s), 0);
   const repeatOffenders = mockStudents.filter(s => incidentCountFor(s) >= 3).length;
@@ -1435,8 +1439,8 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
         <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
           <div style={{ padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-medium)', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--brand-blue-dark)', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{totalStudents}</div>
-            <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Total Students</h3>
+            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--brand-blue-dark)', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{studentsWithIncidents}</div>
+            <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Students With Incidents</h3>
           </div>
         </ForgeCard>
 
@@ -1530,7 +1534,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
 
       {/* Active Filter Banner */}
       {activeIncidentsFilter && (
-        <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #f5f3ff)', border: '1px solid var(--forge-color-border-info, #c4b5fd)', borderRadius: 'var(--forge-radius-medium)', fontFamily: 'var(--forge-font-family)' }}>
+        <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #f5f3ff)', border: '1px solid var(--forge-color-border-info, #c4b5fd)', borderRadius: 'var(--forge-shape-medium)', fontFamily: 'var(--forge-font-family)' }}>
           <forge-icon name="error" style={{ fontSize: '16px', flexShrink: 0, color: 'var(--forge-color-text-info, #7c3aed)' }}></forge-icon>
           <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-color-text-info, #5b21b6)', fontFamily: 'var(--forge-font-family)' }}>
             Filtered view: Showing only students with active (non-closed) incidents
@@ -1688,7 +1692,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)', marginTop: 'var(--forge-spacing-medium)' }}>
+          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', whiteSpace: 'nowrap' }}>
                 Showing {startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedStudents.length)} of {sortedStudents.length} students
@@ -1795,8 +1799,8 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                     style={{
                       fontFamily: 'var(--forge-font-family)',
                       fontSize: 'var(--forge-font-size-xs)',
-                      borderColor: 'var(--forge-color-border-default)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))',
+                      borderRadius: 'var(--forge-shape-medium)',
                     }}
                   />
                   {incidentSearchTerm && (
@@ -1824,17 +1828,38 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                         matchesDate(incident.date, incidentSearchTerm)
                       );
                     })
-                    .map((incident: any) => {
+                    .map((incident: any, idx: number, list: any[]) => {
                       const borderColor = incident.severity === 'Critical' ? '#dc2626'
                         : incident.severity === 'High' ? '#ea580c'
                         : incident.severity === 'Medium' ? '#f59e0b'
                         : '#94a3b8';
+                      // Year divider, same rule as the incidents grid: the list
+                      // is newest first, so a heading appears each time the year
+                      // changes. This is where a district actually reads a
+                      // student's history, so prior-year incidents need to be
+                      // visibly separated from the current year's.
+                      const showYearDivider =
+                        yearForDate(incident.date) !== yearForDate(list[idx - 1]?.date);
                       return (
+                      <React.Fragment key={incident.id}>
+                      {showYearDivider && (
+                        <div
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 'var(--forge-spacing-xsmall)',
+                            marginTop: idx === 0 ? 0 : 'var(--forge-spacing-xsmall)',
+                            fontFamily: 'Roboto, sans-serif',
+                            fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.5px',
+                            color: 'var(--forge-theme-text-medium)',
+                          }}
+                        >
+                          <span>{yearForDate(incident.date)}</span>
+                          <span style={{ flex: 1, height: 1, background: 'var(--forge-theme-outline, rgba(0,0,0,0.12))' }} />
+                        </div>
+                      )}
                       <ForgeCard
-                        key={incident.id}
                         className="hover:shadow-md transition-all cursor-pointer"
                         style={{
-                          border: '1px solid var(--forge-color-border-subtle)',
+                          border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
                           borderLeft: `4px solid ${borderColor}`,
                           boxShadow: 'var(--forge-elevation-1)',
                         }}
@@ -1894,6 +1919,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                           </div>
                         </div>
                       </ForgeCard>
+                      </React.Fragment>
                       );
                     })}
                   {incidentSearchTerm.trim() && incidentsFor(selectedStudent).filter((inc: any) => {

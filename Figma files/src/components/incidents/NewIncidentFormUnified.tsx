@@ -77,7 +77,7 @@ interface Person {
   sourceId?: string;
   name: string;
   role: string;
-  severityOverride: string;
+  severity: string;
   description: string;
   actionTaken: string;
   notes: string;
@@ -159,7 +159,7 @@ function ContactFields({
   return (
     <div
       className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
-      style={{ padding: 'var(--forge-spacing-small)', border: '1px solid var(--forge-color-border-subtle)', borderRadius: 'var(--forge-radius-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
+      style={{ padding: 'var(--forge-spacing-small)', border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
     >
       <div>
         <label style={labelStyle}>Name</label>
@@ -291,7 +291,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     if (!trimmed) return;
     const id = `${sourceId ?? 'p'}-${people.length}-${trimmed.length}`;
     setPeople(p => [...p, {
-      id, sourceId, name: trimmed, role: '', severityOverride: '',
+      id, sourceId, name: trimmed, role: '', severity: '',
       description: '', actionTaken: '', notes: '', parentNotified: false,
     }]);
     setExpanded(e => new Set([...e, id]));
@@ -398,7 +398,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             style={{
               gap: 'var(--forge-spacing-small)', marginTop: 'var(--forge-spacing-medium)',
               padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)',
-              borderRadius: 'var(--forge-radius-medium)',
+              borderRadius: 'var(--forge-shape-medium)',
               background: 'var(--forge-color-surface-warning, #fffbeb)',
               border: '1px solid var(--forge-color-border-warning, #fde68a)',
             }}
@@ -417,23 +417,46 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           </div>
         )}
 
-        <div className="flex flex-wrap" style={{ gap: 'var(--forge-spacing-small)', marginTop: 'var(--forge-spacing-medium)' }}>
+        {/* One equal column per subject, filling the dialog rather than a row of
+            fixed-width cards that left most of a 1240px dialog empty. Each card
+            is its own column flex so the icon and label line up across all five
+            regardless of how many lines the description runs to; a native button
+            centres its content vertically, which was pushing Vehicle out of line
+            with the rest. */}
+        <div
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+          style={{ gap: 'var(--forge-spacing-small)', marginTop: 'var(--forge-spacing-small)' }}
+        >
           {INCIDENT_SUBJECTS.map(s => (
             <button
               key={s.value}
               onClick={() => chooseSubject(s.value)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--brand-blue-dark)';
+                e.currentTarget.style.background = 'var(--forge-theme-primary-container-minimum)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--forge-theme-outline, rgba(0,0,0,0.12))';
+                e.currentTarget.style.background = 'var(--forge-theme-surface)';
+              }}
               style={{
-                width: '136px', padding: 'var(--forge-spacing-medium)',
-                border: '1px solid var(--forge-color-border-default)',
-                borderRadius: 'var(--forge-radius-medium)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'flex-start',
+                padding: 'var(--forge-spacing-medium) var(--forge-spacing-small)',
+                // --forge-color-border-default is not defined anywhere, so the
+                // border silently resolved to "0px none" and these read as plain
+                // text rather than as the choices they are.
+                border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+                borderRadius: 'var(--forge-shape-medium)',
                 background: 'var(--forge-theme-surface)', cursor: 'pointer', textAlign: 'center',
                 fontFamily: 'var(--forge-font-family)',
+                transition: 'background-color 0.15s, border-color 0.15s',
               }}
             >
               <div style={{
-                width: '40px', height: '40px', margin: '0 auto var(--forge-spacing-xsmall)',
+                width: '40px', height: '40px', marginBottom: 'var(--forge-spacing-xsmall)',
                 borderRadius: '50%', background: 'var(--forge-theme-primary-container-minimum)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>
                 <forge-icon name={SUBJECT_ICONS[s.value]} style={{ fontSize: '20px', color: 'var(--brand-blue-dark)' }}></forge-icon>
               </div>
@@ -473,7 +496,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               fontSize: '0.75rem', fontWeight: 600,
               background: step === s.n ? 'var(--forge-theme-primary)' : 'transparent',
               color: step === s.n ? '#fff' : 'var(--forge-theme-text-medium)',
-              border: step === s.n ? 'none' : '1px solid var(--forge-color-border-default)',
+              border: step === s.n ? 'none' : '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
             }}>
               {s.n}
             </span>
@@ -555,7 +578,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         {people.map(person => (
           <div
             key={person.id}
-            style={{ border: '1px solid var(--forge-color-border-subtle)', borderRadius: 'var(--forge-radius-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
+            style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
           >
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)', padding: 'var(--forge-spacing-small)' }}>
               <button
@@ -565,7 +588,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 <forge-icon name={expanded.has(person.id) ? 'expand_less' : 'expand_more'} style={{ fontSize: '18px' }}></forge-icon>
                 <span style={{ fontWeight: 500 }}>{person.name}</span>
                 {person.role && <forge-badge theme="default">{person.role}</forge-badge>}
-                {person.severityOverride && <forge-badge theme="info">{person.severityOverride}</forge-badge>}
+                {person.severity && <forge-badge theme="info">{person.severity}</forge-badge>}
               </button>
               {/* @ts-ignore */}
               <forge-button variant="flat" onClick={() => removePerson(person.id)}>Remove</forge-button>
@@ -574,7 +597,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             {/* Per-person detail, inline. This is what lets all five subjects
                 run the same two steps instead of three needing a third. */}
             {expanded.has(person.id) && (
-              <div style={{ padding: '0 var(--forge-spacing-small) var(--forge-spacing-small)', borderTop: '1px solid var(--forge-color-border-subtle)', paddingTop: 'var(--forge-spacing-small)' }}>
+              <div style={{ padding: '0 var(--forge-spacing-small) var(--forge-spacing-small)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', paddingTop: 'var(--forge-spacing-small)' }}>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label style={labelStyle}>Role</label>
@@ -590,7 +613,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                     <label style={labelStyle}>Severity for this person</label>
                     {/* @ts-ignore */}
                     <forge-text-field>
-                      <select value={person.severityOverride} onChange={(e) => updatePerson(person.id, { severityOverride: e.target.value })} style={selectStyle}>
+                      <select value={person.severity} onChange={(e) => updatePerson(person.id, { severity: e.target.value })} style={selectStyle}>
                         <option value="">Same as incident{severity ? ` (${severity})` : ''}</option>
                         {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
@@ -618,6 +641,16 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                     {/* @ts-ignore */}
                     <forge-text-field>
                       <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+                    </forge-text-field>
+                  </div>
+                  {/* The detail page renders Additional Notes per person, and
+                      seeded incidents use it for coordinator context. Without an
+                      input here it could only ever appear on seeded data. */}
+                  <div className="sm:col-span-2">
+                    <label style={labelStyle}>Additional notes</label>
+                    {/* @ts-ignore */}
+                    <forge-text-field>
+                      <textarea rows={2} value={person.notes} onChange={(e) => updatePerson(person.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
                     </forge-text-field>
                   </div>
                 </div>
@@ -724,8 +757,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                       style={{
                         gap: '6px',
                         padding: '7px 12px',
-                        border: `1px solid ${severity === s ? 'var(--forge-theme-primary)' : 'var(--forge-color-border-default)'}`,
-                        borderRadius: 'var(--forge-radius-medium)',
+                        border: `1px solid ${severity === s ? 'var(--forge-theme-primary)' : 'var(--forge-theme-outline, rgba(0,0,0,0.12))'}`,
+                        borderRadius: 'var(--forge-shape-medium)',
                         background: severity === s ? 'var(--forge-theme-primary-container-minimum)' : 'transparent',
                         cursor: 'pointer',
                         fontFamily: 'var(--forge-font-family)',
@@ -1010,7 +1043,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 {uploadedPhotos.map(photo => (
                   <div
                     key={photo.id}
-                    style={{ border: '1px solid var(--forge-color-border-default)', borderRadius: 'var(--forge-radius-medium)', overflow: 'hidden' }}
+                    style={{ border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', borderRadius: 'var(--forge-shape-medium)', overflow: 'hidden' }}
                   >
                     <img src={photo.url} alt={photo.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
                     <div className="flex items-center" style={{ gap: '4px', padding: '4px' }}>
@@ -1049,7 +1082,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   <div
                     key={doc.id}
                     className="flex items-center"
-                    style={{ gap: '6px', padding: '6px 10px', border: '1px solid var(--forge-color-border-default)', borderRadius: 'var(--forge-radius-medium)' }}
+                    style={{ gap: '6px', padding: '6px 10px', border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))', borderRadius: 'var(--forge-shape-medium)' }}
                   >
                     <forge-icon name="description" style={{ fontSize: '16px', color: 'var(--forge-theme-text-medium)' }}></forge-icon>
                     <span style={{ fontSize: '0.75rem' }} title={`${doc.name} (${doc.size})`}>{doc.name}</span>
@@ -1108,7 +1141,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       <SectionHeading hint="Check the details before submitting.">
         Review &amp; Submit
       </SectionHeading>
-      <div style={{ border: '1px solid var(--forge-color-border-subtle)', borderRadius: 'var(--forge-radius-medium)', padding: 'var(--forge-spacing-medium)' }}>
+      <div style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-medium)' }}>
         {reviewRows.map(([label, value]) => (
           <div
             key={label}
@@ -1119,7 +1152,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             <span style={{ fontWeight: 500 }}>{value}</span>
           </div>
         ))}
-        <div style={{ marginTop: 'var(--forge-spacing-small)', paddingTop: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-color-border-subtle)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)' }}>
+        <div style={{ marginTop: 'var(--forge-spacing-small)', paddingTop: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)' }}>
           <div style={{ color: 'var(--forge-theme-text-medium)', marginBottom: '2px' }}>Description</div>
           <div>{description || '-'}</div>
         </div>
@@ -1132,7 +1165,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       {header}
       {step === 1 ? detailsStep : reviewStep}
 
-      <div className="flex items-center justify-between" style={{ marginTop: 'var(--forge-spacing-large)', paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-color-border-subtle)' }}>
+      <div className="flex items-center justify-between" style={{ marginTop: 'var(--forge-spacing-large)', paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))' }}>
         {/* @ts-ignore */}
         <forge-button variant="outlined" onClick={() => (step === 1 ? onNavigate('incidents') : setStep(1))}>
           {step === 1 ? 'Cancel' : 'Back'}

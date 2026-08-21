@@ -435,7 +435,7 @@ export function StepTemplateManager({
                       width: '100%',
                       marginTop: 'var(--forge-spacing-xsmall)',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       background: 'var(--input-background)',
@@ -461,7 +461,7 @@ export function StepTemplateManager({
                       width: '100%',
                       marginTop: 'var(--forge-spacing-xsmall)',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       background: 'var(--input-background)',
@@ -490,7 +490,7 @@ export function StepTemplateManager({
                       width: '100%',
                       marginTop: 'var(--forge-spacing-xsmall)',
                       padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-radius-medium)',
+                      borderRadius: 'var(--forge-shape-medium)',
                       border: '1px solid var(--border)',
                       fontSize: 'var(--text-base)',
                       background: 'var(--input-background)',
@@ -689,7 +689,7 @@ export function StepTemplateManager({
                             emailNotifications: { ...newTemplate.emailNotifications, emailTemplate: e.target.value },
                           })
                         }
-                        style={{ width: '100%', marginTop: '4px', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-radius-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}
+                        style={{ width: '100%', marginTop: '4px', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}
                       >
                         {INITIAL_EMAIL_TEMPLATES.map((t) => (
                           <option key={t.id} value={t.name}>{t.name} ({t.category})</option>
@@ -706,7 +706,7 @@ export function StepTemplateManager({
                             emailNotifications: { ...newTemplate.emailNotifications, notifyGroups: e.target.value ? [e.target.value] : [] },
                           })
                         }
-                        style={{ width: '100%', marginTop: '4px', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-radius-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}
+                        style={{ width: '100%', marginTop: '4px', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}
                       >
                         <option value="">None</option>
                         {roleOptions.map((r) => (
@@ -784,13 +784,13 @@ export function StepTemplateManager({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--forge-spacing-medium)' }}>
                 <div>
                   <Label style={{ fontSize: 'var(--text-sm)' }}>Category</Label>
-                  <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value as WorkflowStepTemplate['category'] })} style={{ width: '100%', marginTop: 'var(--forge-spacing-xsmall)', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-radius-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}>
+                  <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value as WorkflowStepTemplate['category'] })} style={{ width: '100%', marginTop: 'var(--forge-spacing-xsmall)', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}>
                     {categoryOptions.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
                 <div>
                   <Label style={{ fontSize: 'var(--text-sm)' }}>Icon</Label>
-                  <select value={editForm.icon} onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })} style={{ width: '100%', marginTop: 'var(--forge-spacing-xsmall)', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-radius-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}>
+                  <select value={editForm.icon} onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })} style={{ width: '100%', marginTop: 'var(--forge-spacing-xsmall)', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}>
                     {iconOptions.map(i => <option key={i.name} value={i.name}>{i.name}</option>)}
                   </select>
                 </div>
@@ -799,7 +799,7 @@ export function StepTemplateManager({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--forge-spacing-medium)' }}>
                 <div>
                   <Label style={{ fontSize: 'var(--text-sm)' }}>Default Assigned Role</Label>
-                  <select value={editForm.defaultRole} onChange={(e) => setEditForm({ ...editForm, defaultRole: e.target.value })} style={{ width: '100%', marginTop: 'var(--forge-spacing-xsmall)', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-radius-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}>
+                  <select value={editForm.defaultRole} onChange={(e) => setEditForm({ ...editForm, defaultRole: e.target.value })} style={{ width: '100%', marginTop: 'var(--forge-spacing-xsmall)', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}>
                     {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
@@ -931,7 +931,7 @@ export function StepTemplateManager({
                       <select
                         value={editForm.emailNotifications.emailTemplate}
                         onChange={(e) => setEditForm({ ...editForm, emailNotifications: { ...editForm.emailNotifications, emailTemplate: e.target.value } })}
-                        style={{ width: '100%', marginTop: '4px', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-radius-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}
+                        style={{ width: '100%', marginTop: '4px', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}
                       >
                         {INITIAL_EMAIL_TEMPLATES.map((t) => (
                           <option key={t.id} value={t.name}>{t.name} ({t.category})</option>
@@ -943,7 +943,7 @@ export function StepTemplateManager({
                       <select
                         value={editForm.emailNotifications.notifyGroups[0] || ''}
                         onChange={(e) => setEditForm({ ...editForm, emailNotifications: { ...editForm.emailNotifications, notifyGroups: e.target.value ? [e.target.value] : [] } })}
-                        style={{ width: '100%', marginTop: '4px', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-radius-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}
+                        style={{ width: '100%', marginTop: '4px', padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)', border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)' }}
                       >
                         <option value="">None</option>
                         {roleOptions.map((r) => (

@@ -475,7 +475,7 @@ export function EditIncidentDialog({ incident, onClose, onSave }: EditIncidentDi
           {uploadedPhotos.length > 0 ? (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
               {uploadedPhotos.map((p) => (
-                <div key={p.id} className="relative group border rounded-lg overflow-hidden" style={{ borderColor: 'var(--forge-color-border-default)' }}>
+                <div key={p.id} className="relative group border rounded-lg overflow-hidden" style={{ borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))' }}>
                   <div className="aspect-square"><img src={p.url} alt={p.name} className="w-full h-full object-cover" /></div>
                   <button type="button" onClick={() => setUploadedPhotos(photos => photos.filter(x => x.id !== p.id))}
                     className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -486,7 +486,7 @@ export function EditIncidentDialog({ incident, onClose, onSave }: EditIncidentDi
               ))}
             </div>
           ) : (
-            <div className="border-2 border-dashed rounded-lg p-8 text-center" style={{ borderColor: 'var(--forge-color-border-subtle)' }}>
+            <div className="border-2 border-dashed rounded-lg p-8 text-center" style={{ borderColor: 'var(--forge-theme-outline-low, rgba(0,0,0,0.06))' }}>
               <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
               <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)' }}>No photos uploaded yet</p>
             </div>
@@ -507,7 +507,7 @@ export function EditIncidentDialog({ incident, onClose, onSave }: EditIncidentDi
           {uploadedDocuments.length > 0 ? (
             <div className="flex flex-wrap gap-2 mt-3">
               {uploadedDocuments.map((d) => (
-                <div key={d.id} className="flex items-center gap-2 px-3 py-2 border rounded-md" style={{ borderColor: 'var(--forge-color-border-default)' }}>
+                <div key={d.id} className="flex items-center gap-2 px-3 py-2 border rounded-md" style={{ borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))' }}>
                   <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)' }}>{d.name}</span>
                   <button type="button" onClick={() => setUploadedDocuments(docs => docs.filter(x => x.id !== d.id))}>
@@ -517,7 +517,7 @@ export function EditIncidentDialog({ incident, onClose, onSave }: EditIncidentDi
               ))}
             </div>
           ) : (
-            <div className="border-2 border-dashed rounded-lg p-8 text-center" style={{ borderColor: 'var(--forge-color-border-subtle)' }}>
+            <div className="border-2 border-dashed rounded-lg p-8 text-center" style={{ borderColor: 'var(--forge-theme-outline-low, rgba(0,0,0,0.06))' }}>
               <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
               <p style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)' }}>No documents uploaded yet</p>
             </div>

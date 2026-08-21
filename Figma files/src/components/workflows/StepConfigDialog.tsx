@@ -285,7 +285,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                     width: '100%',
                     marginTop: 'var(--forge-spacing-xsmall)',
                     padding: 'var(--forge-spacing-small)',
-                    borderRadius: 'var(--forge-radius-medium)',
+                    borderRadius: 'var(--forge-shape-medium)',
                     border: '1px solid var(--border)',
                     fontSize: 'var(--text-base)',
                     background: 'var(--input-background)',
@@ -337,7 +337,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
               style={{
                 padding: 'var(--forge-spacing-medium)',
                 background: 'var(--input-background)',
-                borderRadius: 'var(--forge-radius-medium)',
+                borderRadius: 'var(--forge-shape-medium)',
                 border: '1px solid var(--border)',
               }}
             >
@@ -440,7 +440,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                   width: '100%',
                   marginTop: 'var(--forge-spacing-xsmall)',
                   padding: 'var(--forge-spacing-small)',
-                  borderRadius: 'var(--forge-radius-medium)',
+                  borderRadius: 'var(--forge-shape-medium)',
                   border: '1px solid var(--border)',
                   fontSize: 'var(--text-base)',
                   fontFamily: 'var(--forge-font-family)',
@@ -545,7 +545,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
               style={{
                 padding: 'var(--forge-spacing-medium)',
                 background: 'var(--input-background)',
-                borderRadius: 'var(--forge-radius-medium)',
+                borderRadius: 'var(--forge-shape-medium)',
                 border: '1px solid var(--border)',
               }}
             >
@@ -577,7 +577,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                       style={{
                         flex: 1,
                         padding: 'var(--forge-spacing-small)',
-                        borderRadius: 'var(--forge-radius-medium)',
+                        borderRadius: 'var(--forge-shape-medium)',
                         border: '1px solid var(--border)',
                         fontSize: 'var(--text-base)',
                         background: 'var(--input-background)',
@@ -623,7 +623,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                   style={{
                     padding: 'var(--forge-spacing-medium)',
                     background: 'rgba(255, 193, 7, 0.1)',
-                    borderRadius: 'var(--forge-radius-medium)',
+                    borderRadius: 'var(--forge-shape-medium)',
                     border: '1px solid rgba(255, 193, 7, 0.3)',
                   }}
                 >

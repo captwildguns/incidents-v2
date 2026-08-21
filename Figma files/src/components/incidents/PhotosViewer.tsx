@@ -93,7 +93,7 @@ export function PhotosViewer({ photos, incidentId, driverName }: PhotosViewerPro
               <div
                 key={photo.id}
                 style={{
-                  borderRadius: 'var(--forge-radius-medium)',
+                  borderRadius: 'var(--forge-shape-medium)',
                   overflow: 'hidden',
                   border: '1px solid var(--border)',
                   boxShadow: 'var(--forge-elevation-1)',
@@ -150,7 +150,7 @@ export function PhotosViewer({ photos, incidentId, driverName }: PhotosViewerPro
             style={{
               marginTop: 'var(--forge-spacing-large)',
               padding: 'var(--forge-spacing-large)',
-              borderRadius: 'var(--forge-radius-medium)',
+              borderRadius: 'var(--forge-shape-medium)',
               border: '2px dashed var(--border)',
               background: 'var(--muted)',
               textAlign: 'center',
