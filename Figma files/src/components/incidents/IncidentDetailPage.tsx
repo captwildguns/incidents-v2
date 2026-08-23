@@ -899,7 +899,15 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)' }}>
                                 <Users className="h-3.5 w-3.5" style={{ color: 'var(--brand-blue-medium)', flexShrink: 0, marginTop: 3 }} />
                                 <div>
-                                  <div>{c.name}</div>
+                                  {/* An unnamed witness shows their description
+                                      as the primary line, so the row is never
+                                      blank. */}
+                                  <div>{c.name || c.description || 'Unnamed'}</div>
+                                  {c.name && c.description && (
+                                    <div style={{ color: 'var(--muted-foreground)', fontSize: 'var(--text-sm)' }}>
+                                      {c.description}
+                                    </div>
+                                  )}
                                   {(c.phone || c.email) && (
                                     <div style={{ color: 'var(--muted-foreground)', fontSize: 'var(--text-xs)' }}>
                                       {[c.phone, c.email].filter(Boolean).join('  ·  ')}

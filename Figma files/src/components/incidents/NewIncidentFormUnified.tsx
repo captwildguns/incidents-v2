@@ -159,7 +159,7 @@ function ContactFields({
 }: { contact: PersonContact; onChange: (c: PersonContact) => void; onRemove: () => void; noun: string }) {
   return (
     <div
-      className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
+      className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end"
       style={{ padding: 'var(--forge-spacing-small)', border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
     >
       <div>
@@ -181,6 +181,18 @@ function ContactFields({
         {/* @ts-ignore */}
         <forge-text-field>
           <input value={contact.email} onChange={(e) => onChange({ ...contact, email: e.target.value })} placeholder="Optional" />
+        </forge-text-field>
+      </div>
+      <div>
+        {/* For the person who cannot or will not give a name. */}
+        <label style={labelStyle}>Description</label>
+        {/* @ts-ignore */}
+        <forge-text-field>
+          <input
+            value={contact.description}
+            onChange={(e) => onChange({ ...contact, description: e.target.value })}
+            placeholder="If unnamed, describe them"
+          />
         </forge-text-field>
       </div>
       <div>
@@ -1123,8 +1135,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     ['Driver', driver || '-'],
     ['Run', run || '-'],
     ...(roster ? [[roster.label, people.length ? people.map(p => p.name).join(', ') : '-'] as [string, string]] : []),
-    ['Witnesses', witnesses.filter(w => w.name.trim()).map(w => w.name).join(', ') || '-'],
-    ['Third parties', thirdParties.filter(t => t.name.trim()).map(t => t.name).join(', ') || '-'],
+    ['Witnesses', witnesses.filter(w => w.name.trim() || w.description.trim()).map(w => w.name.trim() || w.description.trim()).join(', ') || '-'],
+    ['Third parties', thirdParties.filter(t => t.name.trim() || t.description.trim()).map(t => t.name.trim() || t.description.trim()).join(', ') || '-'],
     ['Tags', tags.join(', ') || '-'],
     ['Workflow', routed ? routed.workflow : 'None matches this type and severity'],
     // Unassigned is a real outcome per #197: a workflow with no owner creates

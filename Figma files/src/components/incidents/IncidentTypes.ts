@@ -284,13 +284,19 @@ export const subjectRequiresParties = (subject: IncidentSubject) =>
 // ─── Witness and third party contacts ────────────────────────────────────────
 
 // One person who was present but is not the subject of the incident.
+//
+// description exists so a person nobody can name is still filable: "man in a
+// grey van who stopped to help", "parent at the stop, would not give a name".
+// Without it a witness with no name could not be recorded at all, which is
+// GH #191 item 2.
 export interface PersonContact {
   name: string;
   phone: string;
   email: string;
+  description: string;
 }
 
-export const emptyContact = (): PersonContact => ({ name: '', phone: '', email: '' });
+export const emptyContact = (): PersonContact => ({ name: '', phone: '', email: '', description: '' });
 
 // Accepts either the legacy string[] shape used by seeded incidents or the
 // structured shape the form now produces, so both render the same way. Lives
@@ -299,12 +305,15 @@ export const emptyContact = (): PersonContact => ({ name: '', phone: '', email: 
 export const normalizeContacts = (value: any): PersonContact[] => {
   if (!Array.isArray(value)) return [];
   return value
-    .map((v: any) => (typeof v === 'string' ? { name: v, phone: '', email: '' } : {
+    .map((v: any) => (typeof v === 'string' ? { name: v, phone: '', email: '', description: '' } : {
       name: v?.name ?? '',
       phone: v?.phone ?? '',
       email: v?.email ?? '',
+      description: v?.description ?? '',
     }))
-    .filter((c: PersonContact) => c.name.trim().length > 0);
+    // A contact counts as recorded if it carries either a name or a
+    // description, so an unnameable witness is not silently dropped.
+    .filter((c: PersonContact) => c.name.trim().length > 0 || c.description.trim().length > 0);
 };
 
 // ─── Terms ───────────────────────────────────────────────────────────────────
