@@ -246,7 +246,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
     };
 
     toastHelper[0]({
-      message: `Export started — preparing ${formatLabels[format]} for employees data.`,
+      message: `Export started, preparing ${formatLabels[format]} for employees data.`,
       theme: 'success',
       duration: 3000,
     } as any);
@@ -274,7 +274,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
       window.URL.revokeObjectURL(url);
 
       toastHelper[0]({
-        message: `Export complete — your ${formatLabels[format]} has been downloaded.`,
+        message: `Export complete, your ${formatLabels[format]} has been downloaded.`,
         theme: 'success',
         duration: 3000,
       } as any);
@@ -360,10 +360,10 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
             <div className="shrink-0">
               <ForgeMultiSelect
                 options={[
-                  { value: '1-5', label: '1–5 Years' },
-                  { value: '6-10', label: '6–10 Years' },
-                  { value: '11-15', label: '11–15 Years' },
-                  { value: '16-20', label: '16–20 Years' },
+                  { value: '1-5', label: '1-5 Years' },
+                  { value: '6-10', label: '6-10 Years' },
+                  { value: '11-15', label: '11-15 Years' },
+                  { value: '16-20', label: '16-20 Years' },
                   { value: '20+', label: '20+ Years' },
                 ]}
                 selected={yearsOfServiceFilter}
@@ -583,7 +583,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
           <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', whiteSpace: 'nowrap' }}>
-                Showing {startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedDrivers.length)} of {sortedDrivers.length} employees
+                Showing {startIndex + 1}-{Math.min(startIndex + rowsPerPage, sortedDrivers.length)} of {sortedDrivers.length} employees
               </span>
               {rowsPerPage === 5 && sortedDrivers.length > 5 && (
                 <ForgeButton

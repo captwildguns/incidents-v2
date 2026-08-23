@@ -131,7 +131,7 @@ const statusTheme = (status: string): string => {
 
 const rawIncidents = [
   {
-    // Filed from the driver tablet (Tyler Drive) after the PM run — used for the
+    // Filed from the driver tablet (Tyler Drive) after the PM run, used for the
     // tablet → desktop hand-off demo. Each student's own account is captured in
     // their per-student `description` (the driver-captured student statement).
     id: 'INC-2025-0064',
@@ -153,7 +153,7 @@ const rawIncidents = [
     tags: ['filed-from-tablet', 'after-route', 'parent-notified'],
     involvedStudents: [
       { studentId: 'STU-3421', name: 'Marcus Johnson', role: 'Instigator', severity: 'High', parentNotified: true, description: '"He took my seat and wouldn\'t move when I asked, so I pushed him. I know I shouldn\'t have put my hands on him, but he grabbed my backpack first."', actionTaken: 'Separated and held at school pending pickup. Parent contacted same day by driver.', notes: 'Student account captured on the tablet at the scene. No prior altercations on record.' },
-      { studentId: 'STU-1045', name: 'Ethan Lee', role: 'Victim', severity: 'Medium', parentNotified: true, description: '"Marcus shoved me into the seat when I sat down. I didn\'t do anything to him. My shoulder is fine, I don\'t need the nurse."', actionTaken: 'Checked for injury — none reported. Offered seat reassignment for return route. Parent notified.', notes: 'Student account captured on the tablet at the scene. Declined nurse evaluation.' },
+      { studentId: 'STU-1045', name: 'Ethan Lee', role: 'Victim', severity: 'Medium', parentNotified: true, description: '"Marcus shoved me into the seat when I sat down. I didn\'t do anything to him. My shoulder is fine, I don\'t need the nurse."', actionTaken: 'Checked for injury, none reported. Offered seat reassignment for return route. Parent notified.', notes: 'Student account captured on the tablet at the scene. Declined nurse evaluation.' },
     ],
   },
   {
@@ -1412,7 +1412,7 @@ type SortField = 'id' | 'date' | 'student' | 'subject' | 'type' | 'severity' | '
 type SortDirection = 'asc' | 'desc' | null;
 
 export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigateToIncidentDetail, initialAssignedToFilter = null, initialStatusFilter = null, initialSeverityFilter = null, initialDateAfterFilter = null, initialSearchTerm = null, onSortedFilteredIncidentsChange }: IncidentsPageProps) {
-  // Active (committed) filter values — used to actually filter the table
+  // Active (committed) filter values, used to actually filter the table
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm || '');
   const [statusFilter, setStatusFilter] = useState<string[]>(initialStatusFilter ? [initialStatusFilter] : []);
   // Filters on the subject label ("Student", "Location", ...) rather than the
@@ -1423,7 +1423,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   const [severityFilter, setSeverityFilter] = useState<string[]>(initialSeverityFilter ? [initialSeverityFilter] : []);
   const [dateAfterFilter, setDateAfterFilter] = useState(initialDateAfterFilter || '');
 
-  // Pending (uncommitted) filter values — updated by inputs, applied on Search click
+  // Pending (uncommitted) filter values, updated by inputs, applied on Search click
 
   const [isNewIncidentDialogOpen, setIsNewIncidentDialogOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField>('date');
@@ -1594,7 +1594,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
     };
 
     toastHelper[0]({
-      message: `Export started — your ${formatLabels[format]} is being prepared and will download shortly.`,
+      message: `Export started, your ${formatLabels[format]} is being prepared and will download shortly.`,
       theme: 'success',
       duration: 3000,
     } as any);
@@ -1637,7 +1637,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       window.URL.revokeObjectURL(url);
 
       toastHelper[0]({
-        message: `Export complete — your ${formatLabels[format]} has been downloaded.`,
+        message: `Export complete, your ${formatLabels[format]} has been downloaded.`,
         theme: 'success',
         duration: 3000,
       } as any);

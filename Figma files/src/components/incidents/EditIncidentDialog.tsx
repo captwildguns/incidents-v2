@@ -239,7 +239,7 @@ export function EditIncidentDialog({ incident, onClose, onSave }: EditIncidentDi
 
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* ── Classification (set at creation — not editable here) ── */}
+        {/* ── Classification (set at creation, not editable here) ── */}
         <div className="space-y-2">
           <h3 style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 500, marginBottom: 12 }}>Classification</h3>
           <div className="grid grid-cols-2 gap-4 p-4 rounded-md" style={{ background: '#F4F7FB', border: '1px solid #D4DFF0' }}>

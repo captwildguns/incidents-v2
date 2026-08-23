@@ -10,6 +10,9 @@ import {
   defineAutocompleteComponent,
   defineIconComponent,
   defineIconButtonComponent,
+  definePaginatorComponent,
+  defineSelectComponent,
+  defineOptionComponent,
 } from '@tylertech/forge';
 defineButtonComponent();
 defineCardComponent();
@@ -20,6 +23,9 @@ defineAvatarComponent();
 defineCheckboxComponent();
 defineAutocompleteComponent();
 defineIconComponent();
+definePaginatorComponent();
+defineSelectComponent();
+defineOptionComponent();
 defineIconButtonComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -1210,6 +1216,60 @@ function matchesDate(dateStr: string | undefined, term: string): boolean {
   return variants.some(v => v.includes(lower));
 }
 
+// Styling for the per-column text filters, matching the incidents grid.
+const colFilterStyle: any = {
+  width: '100%',
+  boxSizing: 'border-box',
+  font: 'inherit',
+  fontSize: 'var(--forge-font-size-sm, 0.875rem)',
+  fontWeight: 400,
+  padding: '4px 8px',
+  border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+  borderRadius: 'var(--forge-shape-medium)',
+  background: 'var(--forge-theme-surface, #fff)',
+  color: 'var(--forge-theme-text-high)',
+};
+
+// Single-select column filter, as the Forge build uses. Options and value are
+// set as properties and the change listener attached through a ref, because
+// reactify-wc only forwards custom events for hyphenated props.
+function ColumnSelect({
+  placeholder, options, selected, onChange,
+}: {
+  placeholder: string;
+  options: Array<string | { value: string; label: string }>;
+  selected: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const ref = useRef<any>(null);
+  const handler = useRef(onChange);
+  handler.current = onChange;
+  const normalized = options.map(o => (typeof o === 'string' ? { value: o, label: o } : o));
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onNativeChange = (evt: any) => {
+      const v = evt?.detail ?? el.value;
+      handler.current(v ? [String(v)] : []);
+    };
+    el.addEventListener('change', onNativeChange);
+    return () => el.removeEventListener('change', onNativeChange);
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.options = normalized;
+    el.value = selected[0] ?? '';
+  }, [JSON.stringify(normalized), selected[0]]);
+
+  return (
+    /* @ts-ignore */
+    <forge-select ref={ref} placeholder={placeholder} density="extra-small" style={{ width: '100%' }}></forge-select>
+  );
+}
+
 export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false, onNavigateToIncidentDetail }: StudentsPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -1217,6 +1277,8 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   const dialogRef = useRef<HTMLElement>(null);
   const toastHelper = useForgeToast();
   const [dialogOpen, setDialogOpen] = useState(false);
+  // Per-column filters, matching the Forge build.
+  const [idFilter, setIdFilter] = useState('');
   const [gradeFilter, setGradeFilter] = useState<string[]>([]);
   const [schoolFilter, setSchoolFilter] = useState<string[]>([]);
   const [activeIncidentsFilter, setActiveIncidentsFilter] = useState<boolean>(initialActiveIncidentsFilter);
@@ -1226,7 +1288,8 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Pagination state
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const paginatorRef = useRef<HTMLElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Every student's incidents, derived from mockIncidents rather than from the
@@ -1313,6 +1376,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
     ].some((field: any) => (field ?? '').toLowerCase().includes(q));
 
     // Grade filter (empty array = all)
+    const matchesId = !idFilter.trim() || String(student.id).toLowerCase().includes(idFilter.trim().toLowerCase());
     const matchesGrade = gradeFilter.length === 0 || gradeFilter.includes(student.grade);
     
     // School filter (empty array = all)
@@ -1322,7 +1386,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
     const hasActiveIncidents = incidentsFor(student).some((incident: any) => incident.status !== 'Closed');
     const matchesActiveFilter = !activeIncidentsFilter || hasActiveIncidents;
     
-    return matchesSearch && matchesGrade && matchesSchool && matchesActiveFilter;
+    return matchesId && matchesSearch && matchesGrade && matchesSchool && matchesActiveFilter;
   });
   
   // Function to handle column header clicks
@@ -1371,6 +1435,20 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
     return sortDirection === 'asc' ? compareResult : -compareResult;
   });
 
+  // Paginator changes, wired through a ref because reactify-wc only forwards
+  // custom events for hyphenated props and fails silently otherwise.
+  useEffect(() => {
+    const el = paginatorRef.current;
+    if (!el) return;
+    const onChange = (evt: any) => {
+      const d = evt.detail ?? {};
+      if (typeof d.pageSize === 'number') setRowsPerPage(d.pageSize);
+      if (typeof d.pageIndex === 'number') setCurrentPage(d.pageIndex + 1);
+    };
+    el.addEventListener('forge-paginator-change', onChange);
+    return () => el.removeEventListener('forge-paginator-change', onChange);
+  }, []);
+
   // Pagination calculations
   const totalPages = Math.ceil(sortedStudents.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -1379,7 +1457,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, gradeFilter, schoolFilter, activeIncidentsFilter, rowsPerPage]);
+  }, [searchTerm, idFilter, gradeFilter, schoolFilter, activeIncidentsFilter, rowsPerPage]);
   
   // Render sort icon for column header
   const SortIcon = ({ column }: { column: typeof sortColumn }) => {
@@ -1392,12 +1470,14 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
   };
 
   const activeFilterCount = [
+    !!idFilter.trim(),
     gradeFilter.length > 0,
     schoolFilter.length > 0,
     activeIncidentsFilter
   ].filter(Boolean).length;
 
   const clearFilters = () => {
+    setIdFilter('');
     setGradeFilter([]);
     setSchoolFilter([]);
     setActiveIncidentsFilter(false);
@@ -1408,7 +1488,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
       excel: 'Excel Spreadsheet', csv: 'CSV',
     };
     toastHelper[0]({
-      message: `Export started — preparing ${formatLabels[format]} for students data.`,
+      message: `Export started, preparing ${formatLabels[format]} for students data.`,
       theme: 'success',
       duration: 3000,
     } as any);
@@ -1466,73 +1546,6 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
         </ForgeCard>
       </div>
 
-      {/* Search and Filters */}
-      <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-large)' }}>
-        <div style={{ padding: 'var(--forge-spacing-medium)', paddingTop: 'var(--forge-spacing-large)' }}>
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
-            {/* Search */}
-            <div className="flex-1 min-w-[300px]">
-              <EntitySearchField
-                value={searchTerm}
-                onChange={setSearchTerm}
-                placeholder="Search by student name, ID, school, bus, or run..."
-                groups={searchSuggestionGroups}
-              />
-            </div>
-
-            {/* Filters Section */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2">
-                <forge-icon name="filter_list" style={{ fontSize: '16px', color: 'var(--forge-theme-text-medium)' }}></forge-icon>
-                <span className="text-sm text-muted-foreground">Filters:</span>
-              </div>
-
-              {/* Grade Filter - Forge MultiSelect */}
-              <ForgeMultiSelect
-                options={uniqueGrades.map(g => ({ value: g, label: g }))}
-                selected={gradeFilter}
-                onChange={setGradeFilter}
-                placeholder="Grade"
-                allLabel="All Grades"
-                width="180px"
-              />
-
-              {/* School Filter - Forge MultiSelect */}
-              <ForgeMultiSelect
-                options={uniqueSchools.map(s => ({ value: s, label: s }))}
-                selected={schoolFilter}
-                onChange={setSchoolFilter}
-                placeholder="School"
-                allLabel="All Schools"
-                width="220px"
-              />
-
-              {/* Active Incidents Filter */}
-              <forge-checkbox
-                ref={(el: any) => {
-                  if (!el) return;
-                  el.checked = activeIncidentsFilter;
-                  const handler = (e: any) => setActiveIncidentsFilter(!!e.target.checked);
-                  el.removeEventListener('change', handler);
-                  el.addEventListener('change', handler);
-                }}
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                Active Incidents Only
-              </forge-checkbox>
-
-              {/* Clear Filters Button */}
-              {activeFilterCount > 0 && (
-                <ForgeButton variant="outlined" size="sm" onClick={clearFilters}>
-                  Clear Filters
-                </ForgeButton>
-              )}
-            </div>
-          </div>
-        </div>
-      </ForgeCard>
-
-      {/* Active Filter Banner */}
       {activeIncidentsFilter && (
         <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #f5f3ff)', border: '1px solid var(--forge-color-border-info, #c4b5fd)', borderRadius: 'var(--forge-shape-medium)', fontFamily: 'var(--forge-font-family)' }}>
           <forge-icon name="error" style={{ fontSize: '16px', flexShrink: 0, color: 'var(--forge-color-text-info, #7c3aed)' }}></forge-icon>
@@ -1621,6 +1634,47 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                     </button>
                   </th>
                 </tr>
+                {/* Filter row, matching the Forge build: text on Student ID and
+                    Name, selects on Grade and School, nothing on the two
+                    derived columns. */}
+                <tr>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input
+                      value={idFilter}
+                      onChange={(e) => setIdFilter(e.target.value)}
+                      placeholder="Filter Student ID:..."
+                      aria-label="Filter by student ID"
+                      style={colFilterStyle}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Filter Name..."
+                      aria-label="Filter by name, school, bus or run"
+                      style={colFilterStyle}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect
+                      placeholder="Filter Grade..."
+                      options={uniqueGrades}
+                      selected={gradeFilter}
+                      onChange={setGradeFilter}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect
+                      placeholder="Filter School..."
+                      options={uniqueSchools}
+                      selected={schoolFilter}
+                      onChange={setSchoolFilter}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                </tr>
               </thead>
               <tbody>
                 {paginatedStudents.map((student) => {
@@ -1681,7 +1735,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                         <td className="forge-table-cell">
                           <div className="flex items-center gap-2">
                             <forge-icon name="calendar_today" style={{ fontSize: '16px', color: 'var(--forge-theme-text-medium)' }}></forge-icon>
-                            <span>{lastIncidentFor(student) ? fmtDate(lastIncidentFor(student)) : '—'}</span>
+                            <span>{lastIncidentFor(student) ? fmtDate(lastIncidentFor(student)) : '-'}</span>
                           </div>
                         </td>
                         </tr>
@@ -1691,71 +1745,18 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
             </table>
           </div>
 
-          {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
-            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', whiteSpace: 'nowrap' }}>
-                Showing {startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedStudents.length)} of {sortedStudents.length} students
-              </span>
-              {rowsPerPage === 5 && sortedStudents.length > 5 && (
-                <ForgeButton
-                  variant="outlined"
-                  dense
-                  onClick={() => { setRowsPerPage(25); setCurrentPage(1); }}
-                  style={{ fontSize: '0.75rem' }}
-                >
-                  Show 25
-                </ForgeButton>
-              )}
-              {rowsPerPage === 25 && (
-                <ForgeButton
-                  variant="outlined"
-                  dense
-                  onClick={() => { setRowsPerPage(5); setCurrentPage(1); }}
-                  style={{ fontSize: '0.75rem' }}
-                >
-                  Show 5
-                </ForgeButton>
-              )}
-            </div>
-
-            {totalPages > 1 && (
-              <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)' }}>
-                <ForgeButton
-                  variant="outlined"
-                  size="sm"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  style={{ padding: 'var(--forge-spacing-xxsmall) var(--forge-spacing-xsmall)' }}
-                >
-                  <forge-icon name="chevron_left" style={{ fontSize: '18px' }}></forge-icon>
-                </ForgeButton>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <ForgeButton
-                    key={page}
-                    variant={page === currentPage ? 'raised' : 'outlined'}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    style={{
-                      ['--forge-button-min-width' as any]: '24px',
-                      ['--forge-button-padding-inline' as any]: '6px',
-                      fontSize: '0.75rem',
-                    }}
-                  >
-                    {page}
-                  </ForgeButton>
-                ))}
-                <ForgeButton
-                  variant="outlined"
-                  size="sm"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  style={{ padding: 'var(--forge-spacing-xxsmall) var(--forge-spacing-xsmall)' }}
-                >
-                  <forge-icon name="chevron_right" style={{ fontSize: '18px' }}></forge-icon>
-                </ForgeButton>
-              </div>
-            )}
+          {/* forge-paginator, same as the Forge build and the incidents grid. */}
+          <div style={{ paddingTop: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
+            {/* @ts-ignore */}
+            <forge-paginator
+              ref={paginatorRef}
+              total={sortedStudents.length}
+              page-size={rowsPerPage}
+              page-index={currentPage - 1}
+              page-size-options="10,25,50"
+              offset={(currentPage - 1) * rowsPerPage}
+              first-last
+            ></forge-paginator>
           </div>
         </div>
       </ForgeCard>
@@ -1765,7 +1766,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
         <div style={{ padding: 'var(--forge-spacing-large)', minWidth: '500px', maxWidth: '700px', maxHeight: '85vh', overflowY: 'auto' }}>
           {selectedStudent && (
             <>
-              {/* Header: 2-column split — name+grade/school left, last incident+ID right */}
+              {/* Header: 2-column split, name+grade/school left, last incident+ID right */}
               <div className="flex items-start justify-between gap-4" style={{ marginBottom: 'var(--forge-spacing-medium)' }}>
                 <div>
                   <h2 style={{ margin: 0, marginBottom: 'var(--forge-spacing-xxsmall)', fontFamily: 'var(--forge-font-family)', fontWeight: 700, fontSize: 'var(--forge-font-size-xl)' }}>

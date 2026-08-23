@@ -268,7 +268,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
               Workflow Details
             </span>
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)', marginLeft: 4 }}>
-              — {workflowName}{workflowCategory ? ` · ${workflowCategory}` : ''}{workflowSeverity ? ` · ${workflowSeverity}` : ''}
+             , {workflowName}{workflowCategory ? ` · ${workflowCategory}` : ''}{workflowSeverity ? ` · ${workflowSeverity}` : ''}
             </span>
           </div>
           <ChevronDown
@@ -350,7 +350,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                     checked={workflowActive}
                     onChange={(e) => setWorkflowActive(e.target.checked)}
                   />
-                  <span style={{ fontSize: 'var(--text-sm)' }}>Active — available for assignment to new incidents</span>
+                  <span style={{ fontSize: 'var(--text-sm)' }}>Active, available for assignment to new incidents</span>
                 </label>
               </div>
             </div>

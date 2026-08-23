@@ -1191,7 +1191,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 style={{ margin: '0 0 4px 0', fontSize: '1.125rem', fontWeight: 600 }}>
-                Edit Incident — {editingIncident?.id}
+                Edit Incident, {editingIncident?.id}
               </h2>
               <p className="text-muted-foreground" style={{ margin: 0, fontSize: '0.875rem' }}>
                 Update incident details and information

@@ -59,7 +59,7 @@ function getReportData(reportId: string) {
       // Past 30 days from today (2026-05-12)
       return mockIncidents.filter(inc => inc.date >= '2026-04-12').sort((a, b) => b.date.localeCompare(a.date));
     case 'yearly-summary':
-      // Current school year: Sept 1 2025 – today
+      // Current school year: Sept 1 2025, today
       return mockIncidents.filter(inc => inc.date >= '2025-09-01').sort((a, b) => b.date.localeCompare(a.date));
     case 'high-critical-severity':
       return mockIncidents.filter(inc => inc.severity === 'High' || inc.severity === 'Critical').sort((a, b) => b.date.localeCompare(a.date));
@@ -74,7 +74,7 @@ interface ReportsPageProps {
   onNavigate: (page: string) => void;
 }
 
-// Mock incident data for preview — dates span school year 2025-2026 and include current month (May 2026)
+// Mock incident data for preview, dates span school year 2025-2026 and include current month (May 2026)
 const mockIncidents = [
   // ── May 2026 (current month) ──
   {
@@ -429,7 +429,7 @@ export function ReportsPage({ onNavigate }: ReportsPageProps) {
   const handleGenerateReport = () => {
     const formatLabel = selectedFormat === 'pdf' ? 'PDF' : selectedFormat === 'excel' ? 'Excel' : 'CSV';
     toastHelper[0]({
-      message: `Report Generated — your custom ${formatLabel} report with ${filteredIncidents.length} incident(s) is ready for download.`,
+      message: `Report Generated, your custom ${formatLabel} report with ${filteredIncidents.length} incident(s) is ready for download.`,
       theme: 'success',
       duration: 3000,
     } as any);
@@ -445,7 +445,7 @@ export function ReportsPage({ onNavigate }: ReportsPageProps) {
     };
 
     toastHelper[0]({
-      message: `${reportTitle} Generated — ${messages[reportId] || `Your ${reportTitle} report is ready for download.`}`,
+      message: `${reportTitle} Generated, ${messages[reportId] || `Your ${reportTitle} report is ready for download.`}`,
       theme: 'success',
       duration: 3000,
     } as any);

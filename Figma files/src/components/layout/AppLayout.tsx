@@ -174,7 +174,7 @@ export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommu
     };
   }, []);
 
-  // Sync drawer open state — set both property and attribute for reliability
+  // Sync drawer open state, set both property and attribute for reliability
   useEffect(() => {
     const drawer = drawerRef.current;
     if (!drawer) return;

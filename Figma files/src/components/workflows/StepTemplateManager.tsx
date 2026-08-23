@@ -662,7 +662,7 @@ export function StepTemplateManager({
                           })
                         }
                       />
-                      <span style={{ fontSize: 'var(--text-sm)' }}>Before the step — notify that this step is starting</span>
+                      <span style={{ fontSize: 'var(--text-sm)' }}>Before the step, notify that this step is starting</span>
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--forge-spacing-small)', cursor: 'pointer' }}>
                       <input
@@ -677,7 +677,7 @@ export function StepTemplateManager({
                           })
                         }
                       />
-                      <span style={{ fontSize: 'var(--text-sm)' }}>After the step — notify once this step is complete</span>
+                      <span style={{ fontSize: 'var(--text-sm)' }}>After the step, notify once this step is complete</span>
                     </label>
                     <div style={{ marginTop: 'var(--forge-spacing-xsmall)' }}>
                       <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>Email template</span>
@@ -920,11 +920,11 @@ export function StepTemplateManager({
                     <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>When should the email be sent?</span>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--forge-spacing-small)', cursor: 'pointer' }}>
                       <input type="radio" name="edit-email-timing" value="before" checked={editForm.emailNotifications.emailTiming === 'before'} onChange={() => setEditForm({ ...editForm, emailNotifications: { ...editForm.emailNotifications, emailTiming: 'before' } })} />
-                      <span style={{ fontSize: 'var(--text-sm)' }}>Before the step — notify that this step is starting</span>
+                      <span style={{ fontSize: 'var(--text-sm)' }}>Before the step, notify that this step is starting</span>
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--forge-spacing-small)', cursor: 'pointer' }}>
                       <input type="radio" name="edit-email-timing" value="after" checked={editForm.emailNotifications.emailTiming === 'after'} onChange={() => setEditForm({ ...editForm, emailNotifications: { ...editForm.emailNotifications, emailTiming: 'after' } })} />
-                      <span style={{ fontSize: 'var(--text-sm)' }}>After the step — notify once this step is complete</span>
+                      <span style={{ fontSize: 'var(--text-sm)' }}>After the step, notify once this step is complete</span>
                     </label>
                     <div style={{ marginTop: 'var(--forge-spacing-xsmall)' }}>
                       <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>Email template</span>

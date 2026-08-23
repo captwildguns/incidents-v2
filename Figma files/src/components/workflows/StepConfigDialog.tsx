@@ -369,7 +369,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                   </span>
                 </label>
 
-                {/* Timing radio group — only visible when sendEmail is true */}
+                {/* Timing radio group, only visible when sendEmail is true */}
                 {(config.emailNotifications?.sendEmail ?? true) && (
                   <div style={{ paddingLeft: 'var(--forge-spacing-large)', display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-small)' }}>
                     <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>
@@ -392,7 +392,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                         }
                       />
                       <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                        Before the step — notify recipients that this step is starting
+                        Before the step, notify recipients that this step is starting
                       </span>
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--forge-spacing-small)', cursor: 'pointer' }}>
@@ -412,7 +412,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
                         }
                       />
                       <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                        After the step — notify recipients once this step is complete
+                        After the step, notify recipients once this step is complete
                       </span>
                     </label>
                   </div>

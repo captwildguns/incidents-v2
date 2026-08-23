@@ -800,7 +800,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
     };
 
     toastHelper[0]({
-      message: `Export started — preparing ${formatLabels[format]} for vehicles data.`,
+      message: `Export started, preparing ${formatLabels[format]} for vehicles data.`,
       theme: 'success',
       duration: 3000,
     } as any);
@@ -826,7 +826,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
       window.URL.revokeObjectURL(url);
 
       toastHelper[0]({
-        message: `Export complete — your ${formatLabels[format]} has been downloaded.`,
+        message: `Export complete, your ${formatLabels[format]} has been downloaded.`,
         theme: 'success',
         duration: 3000,
       } as any);
@@ -910,16 +910,16 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
             <div className="shrink-0">
               <ForgeMultiSelect
                 options={[
-                  { value: '0k-10k', label: '0 – 10,000 mi' },
-                  { value: '10k-20k', label: '10,000 – 20,000 mi' },
-                  { value: '20k-30k', label: '20,000 – 30,000 mi' },
-                  { value: '30k-40k', label: '30,000 – 40,000 mi' },
-                  { value: '40k-50k', label: '40,000 – 50,000 mi' },
-                  { value: '50k-60k', label: '50,000 – 60,000 mi' },
-                  { value: '60k-70k', label: '60,000 – 70,000 mi' },
-                  { value: '70k-80k', label: '70,000 – 80,000 mi' },
-                  { value: '80k-90k', label: '80,000 – 90,000 mi' },
-                  { value: '90k-100k', label: '90,000 – 100,000 mi' },
+                  { value: '0k-10k', label: '0, 10,000 mi' },
+                  { value: '10k-20k', label: '10,000, 20,000 mi' },
+                  { value: '20k-30k', label: '20,000, 30,000 mi' },
+                  { value: '30k-40k', label: '30,000, 40,000 mi' },
+                  { value: '40k-50k', label: '40,000, 50,000 mi' },
+                  { value: '50k-60k', label: '50,000, 60,000 mi' },
+                  { value: '60k-70k', label: '60,000, 70,000 mi' },
+                  { value: '70k-80k', label: '70,000, 80,000 mi' },
+                  { value: '80k-90k', label: '80,000, 90,000 mi' },
+                  { value: '90k-100k', label: '90,000, 100,000 mi' },
                 ]}
                 selected={mileageRangeFilter}
                 onChange={setMileageRangeFilter}
@@ -1105,7 +1105,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
           <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', whiteSpace: 'nowrap' }}>
-                Showing {startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedVehicles.length)} of {sortedVehicles.length} vehicles
+                Showing {startIndex + 1}-{Math.min(startIndex + rowsPerPage, sortedVehicles.length)} of {sortedVehicles.length} vehicles
               </span>
               {rowsPerPage === 5 && sortedVehicles.length > 5 && (
                 <ForgeButton

@@ -57,7 +57,7 @@ export function GlobalSearch({ onNavigate, onNavigateToIncidentDetail, onNavigat
         out.push({
           id: inc.id,
           category: 'Incidents',
-          title: `${inc.id} — ${inc.type}`,
+          title: `${inc.id}, ${inc.type}`,
           subtitle: [involved, inc.bus, inc.status].filter(Boolean).join(' • '),
           payload: inc,
         });
@@ -105,7 +105,7 @@ export function GlobalSearch({ onNavigate, onNavigateToIncidentDetail, onNavigat
         out.push({
           id: `comm-${inc.id}`,
           category: 'Communications',
-          title: `${inc.id} — ${inc.type}`,
+          title: `${inc.id}, ${inc.type}`,
           // Was `${inc.driver} (Employee)`, which printed "undefined (Employee)"
           // on any incident with no driver and mislabelled the rest.
           subtitle: (() => {

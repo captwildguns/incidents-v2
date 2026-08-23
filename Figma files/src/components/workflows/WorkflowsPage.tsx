@@ -711,7 +711,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                         const isLinked = linkedIncidentTypeLabels.has(t.label) || linkedIncidentTypeLabels.has(t.id);
                         return (
                           <option key={t.id} value={t.id} disabled={isLinked} style={isLinked ? { color: 'var(--muted-foreground)' } : {}}>
-                            {t.label} ({t.category}) — {t.defaultSeverity}{isLinked ? '  ✓ Linked' : ''}
+                            {t.label} ({t.category}), {t.defaultSeverity}{isLinked ? '  ✓ Linked' : ''}
                           </option>
                         );
                       })}
@@ -721,7 +721,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                         const isLinked = linkedIncidentTypeLabels.has(t.label) || linkedIncidentTypeLabels.has(t.id);
                         return (
                           <option key={t.id} value={t.id} disabled={isLinked} style={isLinked ? { color: 'var(--muted-foreground)' } : {}}>
-                            {t.label} ({t.category}) — {t.defaultSeverity}{isLinked ? '  ✓ Linked' : ''}
+                            {t.label} ({t.category}), {t.defaultSeverity}{isLinked ? '  ✓ Linked' : ''}
                           </option>
                         );
                       })}

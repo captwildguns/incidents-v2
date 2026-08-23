@@ -134,7 +134,7 @@ interface PermArea {
   delete: boolean;
 }
 
-// ST-style tabs — Incident Tracker lives inside "General"
+// ST-style tabs, Incident Tracker lives inside "General"
 const PERM_TAB_DEFS = [
   { id: 'general',      label: 'General' },
   { id: 'report',       label: 'Report' },
@@ -154,7 +154,7 @@ const PERM_COLS: { key: PermCol; label: string }[] = [
 
 const GROUP_COLORS = ['#4A6FA5', '#3F51B5', '#7B8458', '#607D8B', '#F59E0B', '#EF4444', '#10B981', '#8B5CF6'];
 
-// General-tab areas — incidents, workflows, communications, admin
+// General-tab areas, incidents, workflows, communications, admin
 const ALL_AREAS: { id: string; label: string }[] = [
   { id: 'my-incidents',        label: 'My Incidents' },
   { id: 'all-incidents',       label: 'Student Incidents' },
@@ -170,7 +170,7 @@ const ALL_AREAS: { id: string; label: string }[] = [
   { id: 'permission-groups',   label: 'Permission Groups' },
 ];
 
-// Report-tab areas — matches the 4 Quick Reports in ReportsPage.tsx (Accessible only)
+// Report-tab areas, matches the 4 Quick Reports in ReportsPage.tsx (Accessible only)
 const REPORT_AREAS: { id: string; label: string }[] = [
   { id: 'rpt-monthly-summary',   label: 'Monthly Summary' },
   { id: 'rpt-yearly-summary',    label: 'Yearly Summary' },
@@ -195,13 +195,13 @@ const PERM_TREE: Record<string, Array<{ id: string; label: string; children: str
   accounts: [], terms: [], schools: [], users: [],
 };
 
-// Accounts tab — reference only
+// Accounts tab, reference only
 const ACCOUNT_AREAS: { id: string; label: string }[] = [
   { id: 'acct-default',    label: 'Default - Ungrouped Account' },
   { id: 'acct-requesters', label: 'Trip Requesters - Ungrouped Account' },
 ];
 
-// Trip Workflow tab — reference only, does not affect app behaviour
+// Trip Workflow tab, reference only, does not affect app behaviour
 const TRIP_WORKFLOW_AREAS: { id: string; label: string }[] = [
   { id: 'tw-enter-request',       label: 'Enter a Trip Request' },
   { id: 'tw-enter-request-other', label: 'Enter a Trip Request for another Requester' },
@@ -242,7 +242,7 @@ const TRIP_WORKFLOW_AREAS: { id: string; label: string }[] = [
   { id: 'tw-view-payment',        label: 'View a Trip Payment' },
 ];
 
-// Schools tab — reference only, uses schools from sample incident data
+// Schools tab, reference only, uses schools from sample incident data
 const SCHOOL_AREAS: { id: string; label: string }[] = [
   { id: 'sch-jefferson',  label: 'Jefferson Middle School' },
   { id: 'sch-lincoln-e',  label: 'Lincoln Elementary' },
@@ -251,7 +251,7 @@ const SCHOOL_AREAS: { id: string; label: string }[] = [
   { id: 'sch-washington', label: 'Washington High School' },
 ];
 
-// Terms tab — reference only
+// Terms tab, reference only
 const TERM_AREAS: { id: string; label: string; alwaysOn?: boolean }[] = [
   { id: 'term-72cft',       label: '72 CFT SAP (transfers)' },
   { id: 'term-default',     label: 'Default SAP (Default)', alwaysOn: true },
@@ -1035,7 +1035,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                   onKeyUp={(e) => saveCursor(e.currentTarget)}
                   onMouseUp={(e) => saveCursor(e.currentTarget)}
                   onSelect={(e) => saveCursor(e.currentTarget)}
-                  placeholder="e.g., [Incident Tracker] Incident {{incident_id}} — Action Required"
+                  placeholder="e.g., [Incident Tracker] Incident {{incident_id}}, Action Required"
                   style={{ fontFamily: 'var(--forge-font-family)' }}
                 />
               {/* @ts-ignore */}
@@ -1498,7 +1498,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
               </forge-text-field>
             </div>
 
-            {/* Applies To — which incident subject this type belongs to. Drives
+            {/* Applies To, which incident subject this type belongs to. Drives
                 which types the New Incident wizard offers for a given subject. */}
             <div>
               <div style={labelStyle}>Applies To <span style={{ color: 'var(--destructive)' }}>*</span></div>
@@ -1608,7 +1608,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                       onChange={(e) => setSelectedWorkflowId(e.target.value)}
                       style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-sm)', width: '100%' }}
                     >
-                      <option value="">— Select a workflow —</option>
+                      <option value="">- Select a workflow -</option>
                       {workflowsList
                         .filter((w) => w.isActive)
                         .sort((a, b) => a.id.localeCompare(b.id))
@@ -1728,7 +1728,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
       </forge-dialog>
 
       {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* PERMISSIONS SECTION — ST Groups design                               */}
+      {/* PERMISSIONS SECTION, ST Groups design                               */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
 
       {/* ── Groups List (ST Index.cshtml style) ─────────────────────────────── */}
@@ -1894,7 +1894,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 ))}
               </div>
 
-              {/* Trip Workflow tab — left-checkbox layout, no column headers, reference only */}
+              {/* Trip Workflow tab, left-checkbox layout, no column headers, reference only */}
               {isTripWorkflowTab && (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <tbody>
@@ -1925,7 +1925,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 </table>
               )}
 
-              {/* Accounts tab — Enable/Disable All buttons + flat permissions table, reference only */}
+              {/* Accounts tab, Enable/Disable All buttons + flat permissions table, reference only */}
               {isAccountsTab && (() => {
                 const acctAreas = groupForm.areas.filter(a => ACCOUNT_AREAS.some(ac => ac.id === a.id));
                 const allEnabled = acctAreas.every(a => a.read);
@@ -1966,7 +1966,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 );
               })()}
 
-              {/* Schools tab — Enable/Disable All + flat permissions table, reference only */}
+              {/* Schools tab, Enable/Disable All + flat permissions table, reference only */}
               {isSchoolsTab && (() => {
                 const schoolAreas = groupForm.areas.filter(a => SCHOOL_AREAS.some(s => s.id === a.id));
                 return (
@@ -2006,7 +2006,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 );
               })()}
 
-              {/* Terms tab — info banner + flat checkbox list, reference only */}
+              {/* Terms tab, info banner + flat checkbox list, reference only */}
               {isTermsTab && (
                 <div>
                   <div style={{ background: '#eef4fb', border: '1px solid #c8d8ee', borderRadius: 3, padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#333', lineHeight: 1.5 }}>
@@ -2034,7 +2034,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 </div>
               )}
 
-              {/* Users tab — member list */}
+              {/* Users tab, member list */}
               {isUsersTab && (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginTop: 0 }}>
                   <thead>
@@ -2058,7 +2058,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                 </table>
               )}
 
-              {/* Permission grid — hidden on Users, Trip Workflow, Accounts, Terms, Schools tabs */}
+              {/* Permission grid, hidden on Users, Trip Workflow, Accounts, Terms, Schools tabs */}
               {!isUsersTab && !isTripWorkflowTab && !isAccountsTab && !isTermsTab && !isSchoolsTab && <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginTop: 0 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #c0c8d4' }}>

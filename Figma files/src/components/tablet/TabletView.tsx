@@ -8,13 +8,13 @@ import tylerLogo from '../../assets/tyler-logo.png';
 import { getIncidentTypesForCategory, type IncidentSubject } from '../incidents/IncidentTypes';
 
 /* ============================================================
-   Tyler Drive — working driver tablet mockup
+   Tyler Drive, working driver tablet mockup
    Visual language taken from tyler-drive-maui + TYD screencaps:
    • Home: white bar + Tyler logo + welcome, grey tile grid.
    • In-app: navy toolbar (logo chip → desktop, home, mail, clock).
    • Lists: light-grey cards with green action buttons (My Runs / bus search).
    • Data entry: TYD's own on-screen keyboard (grey #AFB0B4 panel,
-     #5F5F5F key text), shown inline — never the OS keyboard.
+     #5F5F5F key text), shown inline, never the OS keyboard.
    ============================================================ */
 
 interface TabletViewProps {
@@ -55,7 +55,7 @@ const TYPES = [
   { label: 'Safety Violation', desc: 'seatbelt, standing, window, exit', def: 'medium' },
   { label: 'Property Damage', desc: 'vandalism, bus or personal property', def: 'medium' },
   { label: 'Weapon / Prohibited Items', desc: 'contact dispatch immediately', def: 'critical' },
-  { label: 'Witness / Bystander Statement', desc: 'record a helper or witness — no fault assigned', def: 'low' },
+  { label: 'Witness / Bystander Statement', desc: 'record a helper or witness, no fault assigned', def: 'low' },
 ];
 
 const ROLES = ['instigator', 'participant', 'victim', 'bystander'] as const;
@@ -70,7 +70,7 @@ const SEED_INCIDENTS = [
 
 type PerStudent = { role: string; severity: string; statement: string };
 
-// "Where it stands" — status flow shown on the incident detail, keyed to status.
+// "Where it stands", status flow shown on the incident detail, keyed to status.
 const STATUS_FLOW: Record<string, { t: string; sub: string; state: string }[]> = {
   open: [
     { t: 'Reported by driver', sub: 'you · 3:56 PM', state: 'done' },
@@ -101,7 +101,7 @@ const STATUS_FLOW: Record<string, { t: string; sub: string; state: string }[]> =
 const COORD = 'S. Williams · Safety Coordinator';
 const DEFAULT_THREADS: Record<string, any[]> = {
   'INC-2025-0064': [
-    { me: true, text: 'Reported the back-row altercation — Marcus & Ethan. Photo attached. Both held at school for pickup.', t: '3:56 PM' },
+    { me: true, text: 'Reported the back-row altercation, Marcus & Ethan. Photo attached. Both held at school for pickup.', t: '3:56 PM' },
     { me: false, who: COORD, text: 'Got it, thanks Gabe. Did either student report an injury?', t: '3:58 PM' },
     { me: true, text: 'No injuries. Ethan said his shoulder was fine, declined the nurse.', t: '3:59 PM' },
     { me: false, who: COORD, text: "Perfect. I'm contacting both parents now. I'll take it from here.", t: '4:01 PM' },
@@ -109,16 +109,16 @@ const DEFAULT_THREADS: Record<string, any[]> = {
   'INC-2025-0059': [
     { me: true, text: 'Filed the back-row altercation involving Brianna and two other students from the Mar 1 run.', t: 'Mar 1 · 4:10 PM' },
     { me: false, who: COORD, text: "Thanks Gabe. I've reviewed it and I'm notifying all three families now. Disciplinary review is in progress.", t: 'Mar 1 · 4:40 PM' },
-    { me: true, text: 'Understood — let me know if you need anything else from me.', t: 'Mar 1 · 4:42 PM' },
-    { me: false, who: COORD, text: "Will do. This one is still in review on my end — I'll update you when it's resolved.", t: 'Mar 2 · 8:15 AM' },
+    { me: true, text: 'Understood, let me know if you need anything else from me.', t: 'Mar 1 · 4:42 PM' },
+    { me: false, who: COORD, text: "Will do. This one is still in review on my end, I'll update you when it's resolved.", t: 'Mar 2 · 8:15 AM' },
   ],
   'INC-2025-0051': [
     { me: false, who: COORD, text: "Gabe, I'm working the Natalie Collins incident from the 9th. Before I can contact her parent, can you add a quick note on exactly what she said when you spoke with her?", t: 'Mar 9 · 3:30 PM' },
-    { me: false, who: COORD, text: "Following up — I still need your follow-up note on this one when you get a chance. It's holding up the parent call.", t: 'Mar 10 · 9:05 AM' },
+    { me: false, who: COORD, text: "Following up, I still need your follow-up note on this one when you get a chance. It's holding up the parent call.", t: 'Mar 10 · 9:05 AM' },
   ],
   'INC-2025-0042': [
     { me: true, text: 'Reported Dylan standing up while the bus was moving on the Feb 18 run.', t: 'Feb 18 · 3:20 PM' },
-    { me: false, who: COORD, text: 'Thanks. I spoke with Dylan and the parent and reinforced the stay-seated rule. Closing this out — no further action needed.', t: 'Feb 18 · 5:00 PM' },
+    { me: false, who: COORD, text: 'Thanks. I spoke with Dylan and the parent and reinforced the stay-seated rule. Closing this out, no further action needed.', t: 'Feb 18 · 5:00 PM' },
     { me: true, text: '👍 understood', t: 'Feb 18 · 5:02 PM' },
   ],
 };
@@ -285,7 +285,7 @@ export function TabletView({ onExit }: TabletViewProps) {
       <div style={st.welcome}>Welcome to Tyler Drive, <b>Gabe Guzman</b></div>
     </div>
   );
-  // Navy in-app toolbar — matches the real TYD nav bar (back, up, mail, timekeeping, clock, more)
+  // Navy in-app toolbar, matches the real TYD nav bar (back, up, mail, timekeeping, clock, more)
   const NavBar = ({ onBack }: { onBack?: () => void }) => (
     <div style={st.navbar}>
       <button onClick={onBack || onExit} title="Back" style={st.nbCell}><ArrowLeft size={32} strokeWidth={2.5} /></button>
@@ -368,11 +368,11 @@ export function TabletView({ onExit }: TabletViewProps) {
     );
   };
 
-  // Step 0 — what kind of incident is this?
+  // Step 0, what kind of incident is this?
   const renderSubject = () => (
     <>
       <div style={st.pad}>
-        <div style={st.titleRow}><span style={st.title}>Report incident — what happened?</span></div>
+        <div style={st.titleRow}><span style={st.title}>Report incident, what happened?</span></div>
         <div style={st.sub}>Pick what this report is about. That decides what we ask you for.</div>
         <div style={st.list}>
           {TABLET_SUBJECTS.map(s => {
@@ -401,7 +401,7 @@ export function TabletView({ onExit }: TabletViewProps) {
     return (
       <>
         <div style={st.pad}>
-          <div style={st.titleRow}><span style={st.title}>Report incident — involved students</span><span style={st.opt}>step 1 of 6</span></div>
+          <div style={st.titleRow}><span style={st.title}>Report incident, involved students</span><span style={st.opt}>step 1 of 6</span></div>
           <div style={st.sub}>Select everyone involved. They are all associated with this one incident.</div>
           <div style={st.search}><Search size={22} color="#7c8aa0" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="search this run by name or ID…" style={st.searchInput} /></div>
           <div style={st.list}>
@@ -444,7 +444,7 @@ export function TabletView({ onExit }: TabletViewProps) {
         </div>
         {type && (
           <>
-            <div style={{ fontSize: 15, color: '#cbd5e1', margin: '14px 0 6px' }}>Severity <span style={{ color: '#8b97a8' }}>(auto-set from type — adjust if needed)</span></div>
+            <div style={{ fontSize: 15, color: '#cbd5e1', margin: '14px 0 6px' }}>Severity <span style={{ color: '#8b97a8' }}>(auto-set from type, adjust if needed)</span></div>
             <div style={{ display: 'flex', gap: 12 }}>{SEVS.map(sv => (<button key={sv} onClick={() => setSeverity(sv)} style={{ ...st.sev, background: sevColor[sv], outline: severity === sv ? '3px solid #fff' : 'none', outlineOffset: 1 }}>{sv}</button>))}</div>
           </>
         )}
@@ -491,7 +491,7 @@ export function TabletView({ onExit }: TabletViewProps) {
     </>
   );
 
-  // STUDENT STATEMENTS — TYD on-screen keyboard shown inline
+  // STUDENT STATEMENTS, TYD on-screen keyboard shown inline
   const renderStatements = () => {
     const s = selStudents[stmtIdx];
     if (!s) return null;
@@ -509,7 +509,7 @@ export function TabletView({ onExit }: TabletViewProps) {
             </div>
             <button onClick={() => setStmtIdx(i => Math.min(selStudents.length - 1, i + 1))} disabled={stmtIdx === selStudents.length - 1} style={{ ...st.navIcon, opacity: stmtIdx === selStudents.length - 1 ? 0.4 : 1 }}><ChevronRight size={26} /></button>
           </div>
-          <div style={{ fontSize: 15, color: '#8b97a8', marginBottom: 6 }}>“In your own words, what happened?” — as told by {s.name.split(' ')[0]}</div>
+          <div style={{ fontSize: 15, color: '#8b97a8', marginBottom: 6 }}>“In your own words, what happened?”, as told by {s.name.split(' ')[0]}</div>
           <NoteField value={d?.statement || ''} placeholder={`Type ${s.name.split(' ')[0]}'s account…`} height={120} />
         </div>
         <Footer>
@@ -521,7 +521,7 @@ export function TabletView({ onExit }: TabletViewProps) {
     );
   };
 
-  // DRIVER ACCOUNT — TYD keyboard inline
+  // DRIVER ACCOUNT, TYD keyboard inline
   const renderDescription = () => (
     <>
       <div style={{ ...st.pad, paddingBottom: 8 }}>
@@ -529,7 +529,7 @@ export function TabletView({ onExit }: TabletViewProps) {
         <NoteField value={driverDesc} placeholder="Describe what you observed…" height={120} />
         <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
           <button onClick={() => setHasPhoto(true)} style={{ ...st.attach, color: hasPhoto ? '#1E7B34' : '#5F5F5F', borderColor: hasPhoto ? '#3FB152' : '#8a8a8a' }}><Camera size={20} /> {hasPhoto ? 'photo added ✓' : 'take photo'}</button>
-          <button onClick={() => setPinned(true)} style={{ ...st.attach, color: pinned ? '#1E7B34' : '#5F5F5F', borderColor: pinned ? '#3FB152' : '#8a8a8a' }}><MapPin size={20} /> {pinned ? 'location pinned — Lot B ✓' : 'pin location'}</button>
+          <button onClick={() => setPinned(true)} style={{ ...st.attach, color: pinned ? '#1E7B34' : '#5F5F5F', borderColor: pinned ? '#3FB152' : '#8a8a8a' }}><MapPin size={20} /> {pinned ? 'location pinned, Lot B ✓' : 'pin location'}</button>
         </div>
       </div>
       <Footer>
@@ -554,7 +554,7 @@ export function TabletView({ onExit }: TabletViewProps) {
                 : `${subject === 'thirdParty' ? 'third party' : subject} incident · 1 record · no students involved`}
             </div>
             <h4 style={{ ...st.sumH, marginTop: 14 }}>Transportation</h4>
-            <div style={st.sumLn}>Run: Washington High PM — Wolf Rd</div>
+            <div style={st.sumLn}>Run: Washington High PM, Wolf Rd</div>
             <div style={st.sumLn}>Bus 8{pinned ? ' · Lot B (pinned)' : ''}</div>
             <div style={st.sumDim}>Reported by G. Guzman · today</div>
           </div>
@@ -565,13 +565,13 @@ export function TabletView({ onExit }: TabletViewProps) {
                 const d = per[s.id]; const hasStmt = (d?.statement || '').trim().length > 0;
                 return (
                   <div key={s.id} style={st.sumItem}>
-                    <b style={{ color: '#ffd479' }}>{s.name}</b> — {d?.role}<span style={{ fontSize: 16, color: '#9aa6b6' }}> · {d?.severity === 'shared' ? severity : d?.severity}</span>
+                    <b style={{ color: '#ffd479' }}>{s.name}</b>, {d?.role}<span style={{ fontSize: 16, color: '#9aa6b6' }}> · {d?.severity === 'shared' ? severity : d?.severity}</span>
                     <div style={{ fontSize: 16, color: hasStmt ? '#bfe3c4' : '#8b97a8', marginTop: 2 }}>{hasStmt ? '“' + (d!.statement.length > 60 ? d!.statement.slice(0, 60) + '…' : d!.statement) + '”' : 'no student statement'}</div>
                   </div>
                 );
               })}
               {!isStudentReport && !driverDesc.trim() && !hasPhoto && (
-                <div style={{ ...st.sumItem, color: '#8b97a8' }}>Nothing captured yet — your account and a photo are both optional.</div>
+                <div style={{ ...st.sumItem, color: '#8b97a8' }}>Nothing captured yet, your account and a photo are both optional.</div>
               )}
               {driverDesc.trim() && <div style={st.sumItem}>Driver description <span style={{ fontSize: 16, color: '#9aa6b6' }}>· captured</span></div>}
               {hasPhoto && <div style={st.sumItem}>📷 Photo evidence <span style={{ fontSize: 16, color: '#9aa6b6' }}>· 1 file</span></div>}
@@ -603,7 +603,7 @@ export function TabletView({ onExit }: TabletViewProps) {
   );
 
   // ============================================================
-  //  MY INCIDENTS — TYD list (light bg, grey cards, green action)
+  //  MY INCIDENTS, TYD list (light bg, grey cards, green action)
   // ============================================================
   const renderList = () => {
     const shown = incidents
@@ -782,7 +782,7 @@ const st: Record<string, React.CSSProperties> = {
   // home bar
   homeBar: { height: 72, flexShrink: 0, background: '#fff', borderBottom: '1px solid #E4E4E4', display: 'flex', alignItems: 'center', padding: '0 22px', gap: 18 },
   welcome: { flex: 1, textAlign: 'center', color: '#333', fontSize: 30, fontWeight: 400 },
-  // navy in-app toolbar — matches the TYD nav bar
+  // navy in-app toolbar, matches the TYD nav bar
   navbar: { height: 64, flexShrink: 0, background: '#2E3F8F', display: 'flex', alignItems: 'stretch', color: '#fff' },
   nbCell: { flex: 1, background: 'none', border: 'none', borderRight: '1px solid rgba(255,255,255,.16)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   nbCellText: { flex: 1, background: 'none', border: 'none', borderRight: '1px solid rgba(255,255,255,.16)', color: '#fff', cursor: 'pointer', fontSize: 19, textTransform: 'lowercase', fontFamily: 'inherit' },
@@ -848,7 +848,7 @@ const st: Record<string, React.CSSProperties> = {
   tydCardSub: { fontSize: 15, color: '#555', flex: 1 },
   statPill: { alignSelf: 'flex-start', fontSize: 14, fontWeight: 700, padding: '5px 12px', borderRadius: 14, whiteSpace: 'nowrap' },
   tydOpen: { marginTop: 6, background: 'linear-gradient(to top,#117922,#1E8431 55%,#469F5A)', color: '#fff', border: '1px solid #5A955D', borderRadius: 5, fontSize: 20, padding: '10px 0', cursor: 'pointer', textTransform: 'lowercase' },
-  // detail — light TYD theme (light bg, white cards, dark text)
+  // detail, light TYD theme (light bg, white cards, dark text)
   detailScreen: { flex: 1, background: '#ECECEC', color: '#1a1a1a', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   card2: { background: '#fff', border: '1px solid #d6d6d6', borderRadius: 6, padding: '16px 18px' },
   cardH: { margin: '0 0 10px', fontSize: 22, fontWeight: 700, color: '#3a3a3a' },

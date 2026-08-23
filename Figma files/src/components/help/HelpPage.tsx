@@ -173,7 +173,7 @@ export function HelpPage() {
                       <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Reports &amp; Analytics</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      4 pre-configured quick reports — Monthly Summary, Yearly Summary, High &amp; Critical Incidents, and Open Incidents Report. Click View Report to preview and download.
+                      4 pre-configured quick reports, Monthly Summary, Yearly Summary, High &amp; Critical Incidents, and Open Incidents Report. Click View Report to preview and download.
                     </p>
                   </div>
 
@@ -193,7 +193,7 @@ export function HelpPage() {
                       <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Workflow System</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      5 pre-configured workflows — one per incident type — with auto-assignment, manual step progression, role-based assignments, approval gates, configurable email notifications, and full audit trail.
+                      5 pre-configured workflows, one per incident type, with auto-assignment, manual step progression, role-based assignments, approval gates, configurable email notifications, and full audit trail.
                     </p>
                   </div>
 
@@ -294,10 +294,10 @@ export function HelpPage() {
                       <h4 className="mb-2">Creating a New Incident</h4>
                       <p className="mb-2">Click <strong>&ldquo;+ New Incident&rdquo;</strong> on the Incidents page to open the 4-step wizard:</p>
                       <ol className="ml-5 space-y-1">
-                        <li><strong>Step 1 — Involved Students:</strong> Search for and add all students involved. A linked incident record will be created for each student.</li>
-                        <li><strong>Step 2 — Incident Details:</strong> Enter the shared details that apply to all students — incident type (one of 5), severity, description, location, and any supporting documents.</li>
-                        <li><strong>Step 3 — Per-Student Details:</strong> Customize details for each individual student, including their role, specific actions taken, and notes.</li>
-                        <li><strong>Step 4 — Review &amp; Submit:</strong> Review all entered information, then click <strong>&ldquo;Submit&rdquo;</strong> to create the incident records. The system automatically assigns the matching workflow based on incident type.</li>
+                        <li><strong>Step 1, Involved Students:</strong> Search for and add all students involved. A linked incident record will be created for each student.</li>
+                        <li><strong>Step 2, Incident Details:</strong> Enter the shared details that apply to all students, incident type (one of 5), severity, description, location, and any supporting documents.</li>
+                        <li><strong>Step 3, Per-Student Details:</strong> Customize details for each individual student, including their role, specific actions taken, and notes.</li>
+                        <li><strong>Step 4, Review &amp; Submit:</strong> Review all entered information, then click <strong>&ldquo;Submit&rdquo;</strong> to create the incident records. The system automatically assigns the matching workflow based on incident type.</li>
                       </ol>
                     </div>
 
@@ -344,13 +344,13 @@ export function HelpPage() {
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4 text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <p>
-                      The Workflow System provides structured, multi-step incident response processes. <strong>5 pre-configured workflows</strong> cover all student incident types — one per type — and are automatically assigned when an incident is created.
+                      The Workflow System provides structured, multi-step incident response processes. <strong>5 pre-configured workflows</strong> cover all student incident types, one per type, and are automatically assigned when an incident is created.
                     </p>
 
                     <div>
                       <h4 className="mb-2">How Workflows Are Assigned</h4>
                       <p className="mb-2">
-                        When an incident is created, the system automatically matches the workflow to the incident type. Severity is used as a secondary signal but the primary match is always by incident type — ensuring every student incident gets the correct process immediately.
+                        When an incident is created, the system automatically matches the workflow to the incident type. Severity is used as a secondary signal but the primary match is always by incident type, ensuring every student incident gets the correct process immediately.
                       </p>
                     </div>
 
@@ -559,10 +559,10 @@ export function HelpPage() {
                     <div>
                       <h4 className="mb-2">Quick Reports</h4>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Monthly Summary</strong> — Incident statistics and trends for the current month</li>
-                        <li><strong>Yearly Summary</strong> — Annual incident totals broken down by school term (Fall, Spring, Summer)</li>
-                        <li><strong>High &amp; Critical Incidents</strong> — All High and Critical severity incidents requiring immediate attention</li>
-                        <li><strong>Open Incidents Report</strong> — All currently open incidents requiring action</li>
+                        <li><strong>Monthly Summary</strong>, Incident statistics and trends for the current month</li>
+                        <li><strong>Yearly Summary</strong>, Annual incident totals broken down by school term (Fall, Spring, Summer)</li>
+                        <li><strong>High &amp; Critical Incidents</strong>, All High and Critical severity incidents requiring immediate attention</li>
+                        <li><strong>Open Incidents Report</strong>, All currently open incidents requiring action</li>
                       </ul>
                     </div>
                   </AccordionContent>
@@ -596,7 +596,7 @@ export function HelpPage() {
                       <h4 className="mb-2">Email Templates Tab</h4>
                       <p className="mb-2">Manage the 3 notification email templates used by workflow steps:</p>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Templates:</strong> Urgent Action Required, Approval Request, Parent/Guardian Notification — displayed as expandable cards</li>
+                        <li><strong>Templates:</strong> Urgent Action Required, Approval Request, Parent/Guardian Notification, displayed as expandable cards</li>
                         <li><strong>Variable Placeholders:</strong> Templates use {`{{variable_name}}`} syntax (e.g., {`{{recipient_name}}`}, {`{{incident_id}}`}, {`{{step_name}}`}) that are populated when emails are sent</li>
                         <li><strong>Actions per template:</strong> Edit, duplicate, preview, delete</li>
                         <li><strong>Workflow Integration:</strong> Templates selected here appear in the Configure Step &rarr; Notifications &rarr; Email Template dropdown when building workflows</li>
@@ -704,7 +704,7 @@ export function HelpPage() {
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <ul className="ml-5 space-y-1">
                       <li><strong>Open:</strong> Newly created, awaiting action.</li>
-                      <li><strong>In Progress:</strong> Actively being worked — workflow steps are underway.</li>
+                      <li><strong>In Progress:</strong> Actively being worked, workflow steps are underway.</li>
                       <li><strong>Closed:</strong> Fully resolved with no further action needed. Still searchable for historical analysis.</li>
                       <li><strong>Cancelled:</strong> Incident was voided or entered in error.</li>
                     </ul>
@@ -860,11 +860,11 @@ export function HelpPage() {
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <p className="mb-2">In Step 2 of the new incident form, select from the <strong>Location</strong> dropdown:</p>
                     <ul className="ml-5 space-y-1">
-                      <li><strong>On Vehicle</strong> — incident occurred while riding the bus</li>
-                      <li><strong>At Vehicle Stop</strong> — incident at a bus stop</li>
-                      <li><strong>Loading/Unloading</strong> — incident during boarding or exit</li>
-                      <li><strong>Layover Location</strong> — incident at a staging or layover area</li>
-                      <li><strong>Other</strong> — any other location</li>
+                      <li><strong>On Vehicle</strong>, incident occurred while riding the bus</li>
+                      <li><strong>At Vehicle Stop</strong>, incident at a bus stop</li>
+                      <li><strong>Loading/Unloading</strong>, incident during boarding or exit</li>
+                      <li><strong>Layover Location</strong>, incident at a staging or layover area</li>
+                      <li><strong>Other</strong>, any other location</li>
                     </ul>
                     <p className="mt-2">You can also optionally select the vehicle and run associated with the incident.</p>
                   </AccordionContent>

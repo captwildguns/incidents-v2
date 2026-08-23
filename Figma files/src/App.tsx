@@ -272,7 +272,7 @@ export default function App() {
     return <PasswordGate onUnlock={() => setAuthenticated(true)} />;
   }
 
-  // Full-screen driver tablet view — rendered outside the desktop chrome.
+  // Full-screen driver tablet view, rendered outside the desktop chrome.
   // Tapping the Tyler logo (onExit) returns to the desktop view.
   if (currentPage === 'tablet') {
     return <TabletView onExit={() => navigateToPage('dashboard')} />;
