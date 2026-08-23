@@ -2079,7 +2079,8 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
               total={sortedIncidents.length}
               page-size={rowsPerPage}
               page-index={currentPage - 1}
-              page-size-options={JSON.stringify([10, 25, 50, 100])}
+              page-size-options="10,25,50"
+              offset={(currentPage - 1) * rowsPerPage}
               first-last
             ></forge-paginator>
           </div>
