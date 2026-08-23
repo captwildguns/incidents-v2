@@ -9,6 +9,7 @@ import {
   defineAutocompleteComponent,
   defineIconComponent,
   defineIconButtonComponent,
+  definePaginatorComponent,
 } from '@tylertech/forge';
 defineCardComponent();
 defineDialogComponent();
@@ -18,6 +19,7 @@ defineBadgeComponent();
 defineAutocompleteComponent();
 defineIconComponent();
 defineIconButtonComponent();
+definePaginatorComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import { EditIncidentDialog } from './EditIncidentDialog';
 import { NewIncidentFormUnified } from './NewIncidentFormUnified';
@@ -47,6 +49,44 @@ const severityTheme = (severity: string): string => {
     default: return 'default';
   }
 };
+// Styling for the per-column text filters in the table header.
+const colFilterStyle: any = {
+  width: '100%',
+  boxSizing: 'border-box',
+  font: 'inherit',
+  fontSize: 'var(--forge-font-size-sm, 0.875rem)',
+  fontWeight: 400,
+  padding: '4px 8px',
+  border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+  borderRadius: 'var(--forge-shape-medium)',
+  background: 'var(--forge-theme-surface, #fff)',
+  color: 'var(--forge-theme-text-high)',
+};
+
+// One column's dropdown filter. Thin wrapper over the existing multiselect so
+// every column control looks and behaves the same, and so this row stays
+// readable rather than repeating the same six props nine times.
+function ColumnSelect({
+  label, options, selected, onChange,
+}: {
+  label: string;
+  options: Array<string | { value: string; label: string }>;
+  selected: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const normalized = options.map(o => (typeof o === 'string' ? { value: o, label: o } : o));
+  return (
+    <ForgeMultiSelect
+      options={normalized}
+      selected={selected}
+      onChange={onChange}
+      placeholder={`Filter ${label}...`}
+      allLabel={`All ${label}`}
+      width="100%"
+    />
+  );
+}
+
 const statusTheme = (status: string): string => {
   switch (status) {
     case 'Open': return 'info-primary';
@@ -1351,19 +1391,17 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   const [dateAfterFilter, setDateAfterFilter] = useState(initialDateAfterFilter || '');
 
   // Pending (uncommitted) filter values — updated by inputs, applied on Search click
-  const [pendingSearchTerm, setPendingSearchTerm] = useState(initialSearchTerm || '');
-  const [pendingStatusFilter, setPendingStatusFilter] = useState<string[]>(initialStatusFilter ? [initialStatusFilter] : []);
-  const [pendingSubjectFilter, setPendingSubjectFilter] = useState<string[]>([]);
-  const [pendingTypeFilter, setPendingTypeFilter] = useState<string[]>([]);
-  const [pendingAssignedToFilter, setPendingAssignedToFilter] = useState<string[]>(initialAssignedToFilter ? [initialAssignedToFilter] : []);
-  const [pendingSeverityFilter, setPendingSeverityFilter] = useState<string[]>(initialSeverityFilter ? [initialSeverityFilter] : []);
-  const [pendingDateAfterFilter, setPendingDateAfterFilter] = useState(initialDateAfterFilter || '');
 
   const [isNewIncidentDialogOpen, setIsNewIncidentDialogOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const paginatorRef = useRef<HTMLElement>(null);
+  // Per-column filter, matching the Forge build. The old design put every
+  // filter in a card above the table behind a Search button; these apply as
+  // you type, and each one sits under the column it filters.
+  const [idFilter, setIdFilter] = useState('');
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const toastHelper = useForgeToast();
   const newIncidentDialogRef = useRef<HTMLElement>(null);
@@ -1481,17 +1519,6 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
     return () => el.removeEventListener('forge-dialog-close', handler);
   }, []);
 
-  // Apply pending filters to active filters
-  const handleSearch = () => {
-    setSearchTerm(pendingSearchTerm);
-    setStatusFilter(pendingStatusFilter);
-    setSubjectFilter(pendingSubjectFilter);
-    setTypeFilter(pendingTypeFilter);
-    setAssignedToFilter(pendingAssignedToFilter);
-    setSeverityFilter(pendingSeverityFilter);
-    setDateAfterFilter(pendingDateAfterFilter);
-  };
-
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       // Toggle direction: desc -> asc -> null -> desc
@@ -1568,6 +1595,22 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
     }, 1500);
   };
 
+
+  // Paginator changes. Mount-only, and the handler is read from a ref so the
+  // listener identity stays stable; re-registering on every render was what
+  // made removeEventListener silently fail in EntitySearchField.
+  useEffect(() => {
+    const el = paginatorRef.current;
+    if (!el) return;
+    const onChange = (evt: any) => {
+      const d = evt.detail ?? {};
+      if (typeof d.pageSize === 'number') setRowsPerPage(d.pageSize);
+      if (typeof d.pageIndex === 'number') setCurrentPage(d.pageIndex + 1);
+    };
+    el.addEventListener('forge-paginator-change', onChange);
+    return () => el.removeEventListener('forge-paginator-change', onChange);
+  }, []);
+
   const filteredIncidents = useMemo(() => incidentsWithWorkflows.filter((incident) => {
     // Driver and every involved party name are matched, not just the subject
     // label. The label collapses a multi-party incident to "First Name +1", so
@@ -1590,9 +1633,10 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
     const matchesAssignedTo = assignedToFilter.length === 0 || assignedToFilter.includes(incident.assignedTo);
     const matchesSeverity = severityFilter.length === 0 || severityFilter.includes(incident.severity);
     const matchesDateAfter = !dateAfterFilter || incident.date >= dateAfterFilter;
+    const matchesId = !idFilter.trim() || String(incident.id).toLowerCase().includes(idFilter.trim().toLowerCase());
 
-    return matchesSearch && matchesStatus && matchesSubject && matchesType && matchesAssignedTo && matchesSeverity && matchesDateAfter;
-  }), [incidentsWithWorkflows, searchTerm, statusFilter, subjectFilter, typeFilter, assignedToFilter, severityFilter, dateAfterFilter]);
+    return matchesSearch && matchesId && matchesStatus && matchesSubject && matchesType && matchesAssignedTo && matchesSeverity && matchesDateAfter;
+  }), [incidentsWithWorkflows, searchTerm, idFilter, statusFilter, subjectFilter, typeFilter, assignedToFilter, severityFilter, dateAfterFilter]);
 
   // Sort incidents
   const sortedIncidents = useMemo(() => [...filteredIncidents].sort((a, b) => {
@@ -1640,7 +1684,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   // Reset to first page when filters or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, typeFilter, assignedToFilter, severityFilter, dateAfterFilter, sortField, sortDirection, rowsPerPage]);
+  }, [searchTerm, idFilter, statusFilter, subjectFilter, typeFilter, assignedToFilter, severityFilter, dateAfterFilter, sortField, sortDirection, rowsPerPage]);
 
   // Pagination calculations
   const totalPages = Math.ceil(sortedIncidents.length / rowsPerPage);
@@ -1726,156 +1770,6 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
         </ForgeCard>
       </div>
 
-      {/* Filters Card */}
-      <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-large)', borderRadius: 'var(--forge-shape-large)', borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))' }}>
-        <div style={{ padding: 'var(--forge-spacing-medium)' }}>
-          <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
-            {/* Search */}
-            <div className="flex-1 min-w-0">
-              <EntitySearchField
-                value={pendingSearchTerm}
-                onChange={setPendingSearchTerm}
-                onSubmit={handleSearch}
-                placeholder="Search by person, vehicle, run, or location..."
-                groups={searchSuggestionGroups}
-              />
-            </div>
-
-            {/* Status Filter */}
-            <div className="shrink-0">
-              <ForgeMultiSelect
-                options={[
-                  { value: 'Open', label: 'Open' },
-                  { value: 'In Progress', label: 'In Progress' },
-                  { value: 'Closed', label: 'Closed' },
-                  { value: 'Cancelled', label: 'Cancelled' },
-                ]}
-                selected={pendingStatusFilter}
-                onChange={setPendingStatusFilter}
-                placeholder="Status"
-                allLabel="All Statuses"
-                width="160px"
-              />
-            </div>
-
-            {/* Subject Filter */}
-            <div className="shrink-0">
-              <ForgeMultiSelect
-                options={INCIDENT_SUBJECTS.map(s => ({ value: s.label, label: s.label }))}
-                selected={pendingSubjectFilter}
-                onChange={setPendingSubjectFilter}
-                placeholder="Subject"
-                allLabel="All Subjects"
-                width="160px"
-              />
-            </div>
-
-            {/* Type Filter. Derived from INCIDENT_TYPES rather than a hardcoded
-                list, otherwise any newly added type is silently unfilterable. */}
-            <div className="shrink-0">
-              <ForgeMultiSelect
-                options={typeFilterOptions}
-                selected={pendingTypeFilter}
-                onChange={setPendingTypeFilter}
-                placeholder="Type"
-                allLabel="All Types"
-                width="180px"
-              />
-            </div>
-
-            {/* Assigned To Filter */}
-            <div className="shrink-0">
-              <ForgeMultiSelect
-                options={uniqueAssignedUsers.map(user => ({ value: user, label: user }))}
-                selected={pendingAssignedToFilter}
-                onChange={setPendingAssignedToFilter}
-                placeholder="Assigned To"
-                allLabel="All Assigned To"
-                width="180px"
-              />
-            </div>
-
-            {/* Severity Filter */}
-            <div className="shrink-0">
-              <ForgeMultiSelect
-                options={[
-                  { value: 'Critical', label: 'Critical' },
-                  { value: 'High', label: 'High' },
-                  { value: 'Medium', label: 'Medium' },
-                  { value: 'Low', label: 'Low' },
-                ]}
-                selected={pendingSeverityFilter}
-                onChange={setPendingSeverityFilter}
-                placeholder="Severity"
-                allLabel="All Severities"
-                width="160px"
-              />
-            </div>
-
-            {/* Search Button */}
-            <ForgeButton
-              variant="outlined"
-              className="shrink-0"
-              onClick={handleSearch}
-              style={{
-                fontFamily: 'Roboto, sans-serif',
-                fontSize: 'var(--forge-font-size-base)',
-                fontWeight: 'var(--forge-font-weight-medium)',
-                borderRadius: 'var(--forge-shape-medium)',
-                borderColor: 'var(--forge-theme-outline, rgba(0,0,0,0.12))',
-              }}
-            >
-              <forge-icon slot="start" name="search"></forge-icon>
-              Search
-            </ForgeButton>
-          </div>
-        </div>
-      </ForgeCard>
-
-      {/* Active Filter Banner */}
-      {(severityFilter.length > 0 || statusFilter.length > 0 || subjectFilter.length > 0 || dateAfterFilter || searchTerm.trim()) && (
-        <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #eff6ff)', border: '1px solid var(--forge-color-border-info, #bfdbfe)', borderRadius: 'var(--forge-shape-medium)', fontFamily: 'var(--forge-font-family)' }}>
-          <forge-icon name="error" style={{ fontSize: '16px', flexShrink: 0, color: 'var(--forge-color-text-info, #2563eb)' }}></forge-icon>
-          <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-color-text-info, #1e40af)' }}>
-            {/* Joined rather than each line prefixing its own separator, which
-                left a dangling bullet whenever the first filter was unset. */}
-            Filtered view: {[
-              // Search first, since it is what an incoming link from the drivers
-              // or vehicles grid sets, and the user did not type it themselves.
-              searchTerm.trim() && `Matching "${searchTerm.trim()}"`,
-              severityFilter.length > 0 && `Severity = ${severityFilter.join(', ')}`,
-              statusFilter.length > 0 && `Status = ${statusFilter.join(', ')}`,
-              subjectFilter.length > 0 && `Subject = ${subjectFilter.join(', ')}`,
-              dateAfterFilter && `Created after ${dateAfterFilter}`,
-            ].filter(Boolean).join(' • ')}
-          </span>
-          <ForgeButton
-            variant="flat"
-            size="sm"
-            className="ml-auto h-7"
-            style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}
-            onClick={() => {
-              setStatusFilter([]);
-              setSeverityFilter([]);
-              setDateAfterFilter('');
-              setAssignedToFilter([]);
-              setSubjectFilter([]);
-              setTypeFilter([]);
-              setSearchTerm('');
-              setPendingStatusFilter([]);
-              setPendingSeverityFilter([]);
-              setPendingDateAfterFilter('');
-              setPendingAssignedToFilter([]);
-              setPendingSubjectFilter([]);
-              setPendingTypeFilter([]);
-              setPendingSearchTerm('');
-            }}
-          >
-            Clear Filters
-          </ForgeButton>
-        </div>
-      )}
-
       {/* Incidents Table */}
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }} className="flex flex-row items-center justify-between">
@@ -1888,10 +1782,10 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
         </div>
         <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
           <div className="overflow-x-auto">
-            <table className="forge-table" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'calc(var(--forge-font-size-base) + 4px)', minWidth: '1400px', width: '100%' }}>
+            <table className="forge-table" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'calc(var(--forge-font-size-base) + 4px)', minWidth: '1080px', width: '100%' }}>
               <thead>
                 <tr>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '130px' }}>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '70px' }}>
                     <button
                       onClick={() => handleSort('id')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
@@ -1902,7 +1796,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       {sortField !== 'id' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
                     </button>
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '110px' }}>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '90px' }}>
                     <button
                       onClick={() => handleSort('date')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
@@ -1913,7 +1807,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       {sortField !== 'date' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
                     </button>
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '140px' }}>
                     <button
                       onClick={() => handleSort('student')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
@@ -1924,7 +1818,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       {sortField !== 'student' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
                     </button>
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '120px' }}>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '95px' }}>
                     <button
                       onClick={() => handleSort('subject')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
@@ -1935,7 +1829,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       {sortField !== 'subject' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
                     </button>
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '140px' }}>
                     <button
                       onClick={() => handleSort('type')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
@@ -1946,8 +1840,8 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       {sortField !== 'type' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
                     </button>
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '220px' }}>Vehicle/Run</th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '110px' }}>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '115px' }}>Vehicle/Run</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '90px' }}>
                     <button
                       onClick={() => handleSort('severity')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
@@ -1958,7 +1852,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       {sortField !== 'severity' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
                     </button>
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '130px' }}>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '70px' }}>
                     <button
                       onClick={() => handleSort('status')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
@@ -1969,8 +1863,83 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       {sortField !== 'status' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
                     </button>
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '150px' }}>Assigned To</th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '100px' }}>Messages</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '115px' }}>Assigned To</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '70px' }}>Messages</th>
+                </tr>
+                {/* Filter row. Sits under the headers the way the Forge build
+                    does it, so each control is next to the column it narrows
+                    and there is no Search button to press. */}
+                <tr>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input
+                      value={idFilter}
+                      onChange={(e) => setIdFilter(e.target.value)}
+                      placeholder="Filter ID..."
+                      aria-label="Filter by incident ID"
+                      style={colFilterStyle}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input
+                      type="date"
+                      value={dateAfterFilter}
+                      onChange={(e) => setDateAfterFilter(e.target.value)}
+                      aria-label="Show incidents on or after this date"
+                      title="On or after"
+                      style={colFilterStyle}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Filter involved..."
+                      aria-label="Filter by person, vehicle, run or location"
+                      style={colFilterStyle}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect
+                      label="Subject"
+                      options={INCIDENT_SUBJECTS.map(s => s.label)}
+                      selected={subjectFilter}
+                      onChange={setSubjectFilter}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect
+                      label="Type"
+                      options={typeFilterOptions}
+                      selected={typeFilter}
+                      onChange={setTypeFilter}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect
+                      label="Severity"
+                      options={['Critical', 'High', 'Medium', 'Low']}
+                      selected={severityFilter}
+                      onChange={setSeverityFilter}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect
+                      label="Status"
+                      options={['Open', 'In Progress', 'Pending Approval', 'Completed', 'Closed']}
+                      selected={statusFilter}
+                      onChange={setStatusFilter}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect
+                      label="Assigned To"
+                      options={uniqueAssignedUsers}
+                      selected={assignedToFilter}
+                      onChange={setAssignedToFilter}
+                    />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
                 </tr>
               </thead>
               <tbody>
@@ -2093,74 +2062,26 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
               </tbody>
             </table>
           </div>
-          {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
-            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', whiteSpace: 'nowrap' }}>
-                Showing {sortedIncidents.length === 0 ? 0 : startIndex + 1}–{Math.min(startIndex + rowsPerPage, sortedIncidents.length)} of {sortedIncidents.length} incidents
-              </span>
-              {rowsPerPage === 5 && sortedIncidents.length > 5 && (
-                <ForgeButton
-                  variant="outlined"
-                  dense
-                  onClick={() => { setRowsPerPage(25); setCurrentPage(1); }}
-                  style={{ fontSize: '0.75rem' }}
-                >
-                  Show 25
-                </ForgeButton>
-              )}
-              {rowsPerPage === 25 && (
-                <ForgeButton
-                  variant="outlined"
-                  dense
-                  onClick={() => { setRowsPerPage(5); setCurrentPage(1); }}
-                  style={{ fontSize: '0.75rem' }}
-                >
-                  Show 5
-                </ForgeButton>
-              )}
-            </div>
+          {/* Pagination. forge-paginator, matching the Forge build: a rows-per-page
+              select, a range label, and first/prev/next/last. Replaces a
+              hand-rolled control that rendered a button per page and a
+              Show 5 / Show 25 toggle.
 
-            {totalPages > 1 && (
-              <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)' }}>
-                <ForgeIconButton
-                  aria-label="Previous page"
-                  dense
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                >
-                  <button type="button">
-                    <forge-icon name="chevron_left"></forge-icon>
-                  </button>
-                </ForgeIconButton>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <ForgeButton
-                    key={page}
-                    variant={page === currentPage ? 'raised' : 'outlined'}
-                    dense
-                    onClick={() => setCurrentPage(page)}
-                    className="pagination-page-btn"
-                    style={{
-                      ['--forge-button-min-width' as any]: '24px',
-                      ['--forge-button-padding-inline' as any]: '6px',
-                      fontSize: '0.75rem',
-                    }}
-                  >
-                    {page}
-                  </ForgeButton>
-                ))}
-                <ForgeIconButton
-                  aria-label="Next page"
-                  dense
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                >
-                  <button type="button">
-                    <forge-icon name="chevron_right"></forge-icon>
-                  </button>
-                </ForgeIconButton>
-              </div>
-            )}
+              The change event is wired through a ref rather than an
+              on-forge-paginator-change prop, because the reactify-wc bridge
+              only forwards custom events for hyphenated props and fails
+              silently otherwise, which is unusually hard to spot with no
+              typechecking in this project. */}
+          <div style={{ paddingTop: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
+            {/* @ts-ignore */}
+            <forge-paginator
+              ref={paginatorRef}
+              total={sortedIncidents.length}
+              page-size={rowsPerPage}
+              page-index={currentPage - 1}
+              page-size-options={JSON.stringify([10, 25, 50, 100])}
+              first-last
+            ></forge-paginator>
           </div>
         </div>
       </ForgeCard>

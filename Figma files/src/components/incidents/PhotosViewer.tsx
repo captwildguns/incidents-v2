@@ -81,10 +81,14 @@ export function PhotosViewer({ photos, incidentId, driverName }: PhotosViewerPro
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }}>
           <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xl)', fontWeight: 'var(--font-weight-semibold)' }}>
-            Driver Submitted Photos
+            {/* Not always a driver now that a location or vehicle incident can
+                carry photos with nobody aboard. */}
+            {driverName ? 'Driver Submitted Photos' : 'Photo Evidence'}
           </h3>
           <p className="forge-typography--body2" style={{ fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)', margin: 0, fontFamily: 'Roboto, sans-serif' }}>
-            {photos.length} photo{photos.length !== 1 ? 's' : ''} submitted by {driverName}
+            {photos.length === 0
+              ? 'No photos attached to this incident'
+              : `${photos.length} photo${photos.length !== 1 ? 's' : ''}${driverName ? ' submitted by ' + driverName : ' attached'}`}
           </p>
           <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
           {/* Photos Grid */}

@@ -18,6 +18,7 @@ import {
   getIncidentTypesForCategory,
   subjectRequiresParties,
   getSubjectLabel,
+  subjectHasField,
   PersonContact,
   emptyContact,
 } from './IncidentTypes';
@@ -842,9 +843,11 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               </>
             ),
           },
-          // Dropped on a Vehicle incident, where Affected Vehicle already names
-          // the vehicle. Asking twice invites the two to disagree.
-          assetKind !== 'vehicle' && {
+          // Which of these three apply is now one shared map, read by the
+          // detail page too, so the form and the record cannot disagree about
+          // what a subject needs. Vehicle drops this because Affected Vehicle
+          // already names the bus; Location drops all three.
+          subjectHasField(subject, 'vehicleNumber') && {
             key: 'vehicleNumber',
             node: (
               <>
@@ -859,7 +862,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               </>
             ),
           },
-          {
+          subjectHasField(subject, 'driver') && {
             key: 'driver',
             node: (
               <>
@@ -877,7 +880,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               </>
             ),
           },
-          {
+          subjectHasField(subject, 'run') && {
             key: 'run',
             node: (
               <>

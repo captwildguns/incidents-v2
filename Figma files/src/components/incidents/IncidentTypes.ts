@@ -328,3 +328,41 @@ export const termForDate = (date?: string): string => {
 // on purpose: the list divides on calendar year because that is what a reader
 // scanning dates sees, while the record names the term.
 export const yearForDate = (date?: string): string => (date ?? '').slice(0, 4);
+
+// ─── Which fields each subject needs ─────────────────────────────────────────
+
+// The operational context fields, and which subjects they apply to. One map,
+// read by both the New Incident form and the incident detail page, so the form
+// can never collect a field the record has nowhere to show, and the record can
+// never display a field the form never offered.
+//
+// Everything else on the record (type, severity, description, date, time,
+// location type, tags, evidence, people) applies to all five subjects, which is
+// the point of the container form.
+export interface SubjectFieldMap {
+  vehicleNumber: boolean;
+  driver: boolean;
+  run: boolean;
+}
+
+export const SUBJECT_FIELDS: Record<IncidentSubject, SubjectFieldMap> = {
+  // A bus incident: which bus, who was driving, which run.
+  student: { vehicleNumber: true, driver: true, run: true },
+  // Kept in full deliberately. An aide hurt on a wheelchair lift happened on a
+  // specific bus, on a specific run, with a specific driver present, and that
+  // is the most useful context on the record. Yard incidents simply carry no
+  // bus, driver or run, so they stay clean on their own.
+  employee: { vehicleNumber: true, driver: true, run: true },
+  // A collision or a parent at a stop: same context as a student incident.
+  thirdParty: { vehicleNumber: true, driver: true, run: true },
+  // Affected Vehicle already names the bus, so a separate Vehicle Number just
+  // invites the two to disagree. Nobody is aboard, so there is no run.
+  vehicle: { vehicleNumber: false, driver: true, run: false },
+  // A depot, garage or yard problem has no bus, driver or run.
+  location: { vehicleNumber: false, driver: false, run: false },
+};
+
+export const subjectHasField = (
+  subject: IncidentSubject | undefined,
+  field: keyof SubjectFieldMap,
+): boolean => SUBJECT_FIELDS[subject ?? 'student']?.[field] ?? true;

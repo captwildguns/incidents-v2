@@ -2,6 +2,11 @@ import { ReactNode, useState, useRef, useEffect } from 'react';
 import {
   defineScaffoldComponent,
   defineAppBarComponent,
+  defineAppBarMenuButtonComponent,
+  defineAppBarNotificationButtonComponent,
+  defineAppBarHelpButtonComponent,
+  defineAppBarProfileButtonComponent,
+  defineDrawerComponent,
   defineModalDrawerComponent,
   defineIconComponent,
   defineIconButtonComponent,
@@ -18,6 +23,16 @@ import {
   tylIconHome,
   tylIconWarning,
   tylIconPeople,
+  tylIconHomeOutline,
+  tylIconErrorOutline,
+  tylIconPeopleOutline,
+  tylIconAccountCircleOutline,
+  tylIconBusSide,
+  tylIconMessageTextOutline,
+  tylIconFileDocumentOutline,
+  tylIconTablet,
+  tylIconSourceBranch,
+  tylIconShieldOutline,
   tylIconPerson,
   tylIconDirectionsBus,
   tylIconChat,
@@ -77,6 +92,11 @@ import {
 defineScaffoldComponent();
 defineAppBarComponent();
 defineModalDrawerComponent();
+defineDrawerComponent();
+defineAppBarMenuButtonComponent();
+defineAppBarNotificationButtonComponent();
+defineAppBarHelpButtonComponent();
+defineAppBarProfileButtonComponent();
 defineIconComponent();
 defineIconButtonComponent();
 defineAvatarComponent();
@@ -88,6 +108,11 @@ defineMenuComponent();
 // Register Tyler icons
 IconRegistry.define([
   tylIconMenu,
+  // Prod drawer icons
+  tylIconHomeOutline, tylIconErrorOutline, tylIconPeopleOutline,
+  tylIconAccountCircleOutline, tylIconBusSide, tylIconTablet,
+  tylIconMessageTextOutline, tylIconFileDocumentOutline,
+  tylIconSourceBranch, tylIconShieldOutline,
   tylIconHome, tylIconWarning, tylIconPeople, tylIconPerson,
   tylIconDirectionsBus, tylIconChat, tylIconDescription,
   tylIconAccountTree, tylIconSettings, tylIconHelpOutline,
@@ -115,20 +140,25 @@ interface AppLayoutProps {
 }
 
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', forgeIcon: 'home' },
-  { id: 'incidents', label: 'Incidents', forgeIcon: 'warning' },
-  { id: 'students', label: 'Students', forgeIcon: 'people' },
-  { id: 'employees', label: 'Employees', forgeIcon: 'badge' },
-  { id: 'vehicles', label: 'Vehicles', forgeIcon: 'directions_bus' },
+  // Icon names lifted from the Forge build so the drawer reads identically.
+  // Employees keeps the icon prod uses for Drivers, since it is the same page
+  // widened to non-driver staff. Locations has no counterpart there yet.
+  { id: 'dashboard', label: 'Dashboard', forgeIcon: 'home_outline' },
+  { id: 'incidents', label: 'Incidents', forgeIcon: 'error_outline' },
+  { id: 'students', label: 'Students', forgeIcon: 'people_outline' },
+  { id: 'employees', label: 'Employees', forgeIcon: 'account_circle_outline' },
+  { id: 'vehicles', label: 'Vehicles', forgeIcon: 'bus_side' },
   { id: 'locations', label: 'Locations', forgeIcon: 'warehouse' },
-  { id: 'communications', label: 'Communications', forgeIcon: 'chat' },
-  { id: 'reports', label: 'Reports', forgeIcon: 'description' },
-  { id: 'workflows', label: 'Workflows', forgeIcon: 'account_tree' },
-  { id: 'admin', label: 'Admin', forgeIcon: 'settings' },
+  { id: 'communications', label: 'Communications', forgeIcon: 'message_text_outline' },
+  { id: 'reports', label: 'Reports', forgeIcon: 'file_document_outline' },
+  { id: 'workflows', label: 'Workflows', forgeIcon: 'source_branch' },
+  { id: 'admin', label: 'Admin', forgeIcon: 'shield_outline' },
 ];
 
 export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommunication, onNavigateToIncidentDetail, onLogout }: AppLayoutProps) {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  // Open by default. Prod shows a persistent left rail rather than an overlay
+  // you have to summon, so the nav is part of the page, not a detour.
+  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
   const drawerRef = useRef<HTMLElement>(null);
 
   // Listen for drawer dismiss (clicking backdrop / pressing Escape)
@@ -158,41 +188,23 @@ export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommu
   }, [isDrawerOpen]);
 
   return (
-    <>
-    {/* Modal Drawer for Navigation — outside scaffold so overlay renders on top */}
-    <forge-modal-drawer ref={drawerRef}>
+    <forge-scaffold>
+    {/* Persistent navigation, matching the Forge build: a forge-drawer in the
+        scaffold's body-left slot rather than a modal overlay. The menu button
+        collapses it instead of summoning it. */}
+    <forge-drawer ref={drawerRef} slot="body-left" direction="left" id="navigation-drawer">
       <aside style={{
         width: '280px', height: '100%', display: 'flex', flexDirection: 'column',
         backgroundColor: 'var(--forge-theme-surface)', color: 'var(--forge-theme-text-high)',
         overflowX: 'hidden',
       }}>
-        {/* Profile Section */}
-        <div style={{
-          padding: 'var(--forge-spacing-medium) var(--forge-spacing-large)',
-          borderBottom: '1px solid var(--forge-theme-outline)',
-          backgroundColor: 'var(--forge-theme-primary)',
-          color: 'white',
-          display: 'flex', alignItems: 'center', gap: 'var(--forge-spacing-small)',
-        }}>
-          <button
-            type="button"
-            onClick={() => { onNavigate('tablet'); setIsDrawerOpen(false); }}
-            title="Open driver tablet view"
-            aria-label="Open driver tablet view"
-            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', borderRadius: '50%' }}
-          >
-            <forge-avatar text="SW" style={{ '--forge-avatar-background': 'var(--brand-olive-dark)', '--forge-avatar-color': 'white' } as any}></forge-avatar>
-          </button>
-          <span className="forge-typography--body1" style={{ fontWeight: 500, color: 'white', fontSize: '14px' }}>Sarah Williams</span>
-        </div>
-
         {/* Navigation Items */}
         <forge-list className="drawer-nav-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
           {navItems.map((item) => (
             <forge-list-item
               key={item.id}
               {...(currentPage === item.id ? { selected: true } : {})}
-              onClick={() => { onNavigate(item.id); setIsDrawerOpen(false); }}
+              onClick={() => { onNavigate(item.id) }}
             >
               <forge-icon slot="start" name={item.forgeIcon}></forge-icon>
               {item.label}
@@ -203,7 +215,17 @@ export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommu
         {/* Bottom Actions */}
         <forge-divider></forge-divider>
         <forge-list className="drawer-nav-bottom">
-          <forge-list-item onClick={() => { onNavigate('help'); setIsDrawerOpen(false); }}>
+          {/* The driver tablet used to be reachable only by clicking the avatar
+              in a drawer header that prod does not have. A named entry is both
+              more discoverable and more honest about it being a real view. */}
+          <forge-list-item
+            {...(currentPage === 'tablet' ? { selected: true } : {})}
+            onClick={() => { onNavigate('tablet') }}
+          >
+            <forge-icon slot="start" name="tablet"></forge-icon>
+            Driver Tablet
+          </forge-list-item>
+          <forge-list-item onClick={() => { onNavigate('help') }}>
             <forge-icon slot="start" name="help_outline"></forge-icon>
             Help
           </forge-list-item>
@@ -222,24 +244,17 @@ export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommu
           &copy; 2025 Tyler Technologies Inc. V2 test build
         </div>
       </aside>
-    </forge-modal-drawer>
+    </forge-drawer>
 
-    <forge-scaffold>
       {/* App Bar */}
       <div slot="header">
-        <forge-app-bar>
+        <forge-app-bar elevation="raised" title-text="Incident Tracker V2">
           <forge-icon-button slot="start" aria-label="Menu"
             onClick={() => setIsDrawerOpen(!isDrawerOpen)}
             style={{ color: 'white' }}
           >
             <forge-icon name="menu"></forge-icon>
           </forge-icon-button>
-
-          <div slot="start" style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }} onClick={() => onNavigate('dashboard')}>
-            <span className="forge-typography--heading4" style={{ color: 'var(--forge-theme-text-high-inverse)', lineHeight: 1.3 }}>
-              Incident Tracker V2
-            </span>
-          </div>
 
           <div slot="center" style={{ display: 'flex', alignItems: 'center' }}>
             <GlobalSearch
@@ -279,21 +294,6 @@ export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommu
         {children}
       </main>
 
-      {/* Footer */}
-      <footer
-        slot="footer"
-        className="forge-typography--label1"
-        style={{
-          backgroundColor: '#2a2a2a',
-          color: 'var(--forge-theme-text-medium-inverse)',
-          padding: 'var(--forge-spacing-small) var(--forge-spacing-large)',
-          textAlign: 'center',
-          borderTop: '1px solid #444',
-        }}
-      >
-        &copy; 2025 Tyler Technologies Inc. - Student Transportation powered by Traversa
-      </footer>
     </forge-scaffold>
-    </>
   );
 }

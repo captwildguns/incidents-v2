@@ -18,7 +18,7 @@ import { CurrentStepActionCard } from './CurrentStepActionCard';
 import { DocumentsViewer } from './DocumentsViewer';
 import { PhotosViewer } from './PhotosViewer';
 import { buildMapUrl } from './IncidentLocationMap';
-import { getSubjectLabel, getSubjectMeta, normalizeContacts, termForDate } from './IncidentTypes';
+import { getSubjectLabel, getSubjectMeta, normalizeContacts, termForDate, subjectHasField } from './IncidentTypes';
 
 interface IncidentDetailPageProps {
   incident: any;
@@ -677,7 +677,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
             </Badge>
           )}
         </button>
-        {incident.photos && incident.photos.length > 0 && (
+        {(
           <button
             onClick={() => setActiveTab('photos')}
             style={{
@@ -693,10 +693,10 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
             }}
           >
             <Camera className="inline h-4 w-4 mr-2" />
-            Photos ({incident.photos.length})
+            Photos ({incident.photos?.length ?? 0})
           </button>
         )}
-        {incident.documents && incident.documents.length > 0 && (
+        {(
           <button
             onClick={() => setActiveTab('documents')}
             style={{
@@ -712,7 +712,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
             }}
           >
             <Paperclip className="inline h-4 w-4 mr-2" />
-            Documents ({incident.documents.length})
+            Documents ({incident.documents?.length ?? 0})
           </button>
         )}
         <button
@@ -805,7 +805,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         ) : '-'}
                       </div>
                     </div>
-                    {incident.bus && incident.bus !== 'N/A' && (
+                    {subjectHasField(incident.subject, 'vehicleNumber') && incident.bus && incident.bus !== 'N/A' && (
                     <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Vehicle
@@ -815,7 +815,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                       </div>
                     </div>
                     )}
-                    {incident.driver && incident.driver !== 'N/A' && (
+                    {subjectHasField(incident.subject, 'driver') && incident.driver && incident.driver !== 'N/A' && (
                     <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Driver
@@ -825,7 +825,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                       </div>
                     </div>
                     )}
-                    {incident.route && incident.route !== 'N/A' && (
+                    {subjectHasField(incident.subject, 'run') && incident.route && incident.route !== 'N/A' && (
                     <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         Run
@@ -2332,18 +2332,20 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
           </ForgeCard>
         )}
 
-        {/* Photos Tab */}
-        {activeTab === 'photos' && incident.photos && incident.photos.length > 0 && (
+        {/* Photos Tab. The tab is always present now, matching the Forge build,
+            so these have to tolerate an incident with no evidence rather than
+            relying on the tab being hidden. */}
+        {activeTab === 'photos' && (
           <PhotosViewer 
-            photos={incident.photos} 
+            photos={incident.photos ?? []} 
             incidentId={incident.id}
             driverName={incident.driver}
           />
         )}
 
         {/* Documents Tab */}
-        {activeTab === 'documents' && incident.documents && incident.documents.length > 0 && (
-          <DocumentsViewer documents={incident.documents} incidentId={incident.id} />
+        {activeTab === 'documents' && (
+          <DocumentsViewer documents={incident.documents ?? []} incidentId={incident.id} />
         )}
 
         {/* Communications Tab */}

@@ -1856,69 +1856,75 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                           <span style={{ flex: 1, height: 1, background: 'var(--forge-theme-outline, rgba(0,0,0,0.12))' }} />
                         </div>
                       )}
-                      <ForgeCard
-                        className="hover:shadow-md transition-all cursor-pointer"
+                      {/* Compact row, matching the Forge build's student
+                          profile rather than the tall card this used to be. The
+                          type leads, severity and status sit on the same line,
+                          and the description is one clamped line. Four incidents
+                          now fit where one used to. */}
+                      <div
+                        className="cursor-pointer"
                         style={{
-                          border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
-                          borderLeft: `4px solid ${borderColor}`,
-                          boxShadow: 'var(--forge-elevation-1)',
+                          display: 'flex', alignItems: 'flex-start', gap: 'var(--forge-spacing-small)',
+                          padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)',
+                          borderBottom: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
+                          borderLeft: `3px solid ${borderColor}`,
+                          transition: 'background-color 0.15s',
                         }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--forge-theme-primary-container-minimum)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
                         onClick={() => {
-                          // The record is a real mockIncidents row, so it already
-                          // carries the bus, run, driver, and assignee. This used
-                          // to fabricate "Assigned Driver" and "Jane Doe" because
-                          // the per-student array had none of that.
+                          // A real mockIncidents row, so it already carries the
+                          // bus, run, driver and assignee.
                           if (onNavigateToIncidentDetail) onNavigateToIncidentDetail(incident);
                         }}
                       >
-                        <div style={{ padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)' }}>
-                          {/* Row 1: Incident ID (bold) + Severity badge */}
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="font-semibold" style={{ fontSize: '1rem', lineHeight: 1.2 }}>
-                              {incident.id}
-                            </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="flex items-center justify-between gap-2">
+                            <span style={{ fontWeight: 600, fontSize: '0.9375rem', lineHeight: 1.3 }}>
+                              {incident.type}
+                            </span>
+                            <span className="text-muted-foreground" style={{ fontSize: '0.75rem', flexShrink: 0 }}>
+                              {fmtDate(incident.date)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center flex-wrap" style={{ gap: '6px', marginTop: '3px' }}>
+                            {/* @ts-ignore */}
                             <forge-badge
                               theme={incident.severity === 'Critical' ? 'danger' : incident.severity === 'High' ? 'error' : incident.severity === 'Medium' ? 'warning' : 'info'}
                               strong
                             >
-                              {incident.severity.toUpperCase()}
+                              {incident.severity}
                             </forge-badge>
+                            {/* @ts-ignore */}
+                            <forge-badge theme={incident.status === 'Open' ? 'info-primary' : incident.status === 'In Progress' ? 'warning' : 'default'}>
+                              {incident.status}
+                            </forge-badge>
+                            {incident.role && (
+                              /* @ts-ignore */
+                              <forge-badge theme="default">{incident.role}</forge-badge>
+                            )}
+                            <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
+                              {/* The incident's own bus, not the student's current
+                                  assignment; a student may have been on another. */}
+                              {incident.bus ?? selectedStudent.bus} &nbsp;&middot;&nbsp; {incident.id}
+                            </span>
                           </div>
 
-                          {/* Row 2: Date (muted) + Type badge (right) */}
-                          <div className="flex items-center justify-between gap-2" style={{ marginTop: '2px' }}>
-                            <p className="text-muted-foreground" style={{ fontSize: '0.75rem', margin: 0 }}>
-                              {fmtDate(incident.date)}
-                            </p>
-                            <forge-badge theme="default">{incident.type}</forge-badge>
-                          </div>
-
-                          {/* Row 2b: Role chip */}
-                          {incident.role && (
-                            <div className="flex justify-end" style={{ marginTop: '2px' }}>
-                              <forge-badge
-                                theme={incident.role === 'Instigator' ? 'error' : incident.role === 'Victim' ? 'info-primary' : incident.role === 'Participant' ? 'warning' : 'default'}
-                              >
-                                {incident.role}
-                              </forge-badge>
+                          {incident.description && (
+                            <div
+                              className="text-muted-foreground"
+                              style={{
+                                fontSize: '0.8125rem', marginTop: '4px',
+                                display: '-webkit-box', WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                              }}
+                            >
+                              {incident.description}
                             </div>
                           )}
-
-                          {/* Row 3: Bus + Status */}
-                          <div className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.8125rem', marginTop: 'var(--forge-spacing-xsmall)' }}>
-                            <forge-icon name="access_time" style={{ fontSize: '12px' }}></forge-icon>
-                            {/* The incident's own bus, not the student's current
-                                assignment; a student may have been on another. */}
-                            <span>{incident.bus ?? selectedStudent.bus} • {incident.status}</span>
-                          </div>
-
-                          {/* Row 4: Description */}
-                          <div className="flex items-start gap-1 text-muted-foreground" style={{ fontSize: '0.8125rem', marginTop: '2px' }}>
-                            <forge-icon name="error" style={{ fontSize: '12px', marginTop: '2px', flexShrink: 0 }}></forge-icon>
-                            <span>{incident.description}</span>
-                          </div>
                         </div>
-                      </ForgeCard>
+                      </div>
                       </React.Fragment>
                       );
                     })}
