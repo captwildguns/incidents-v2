@@ -9,8 +9,6 @@ import {
   defineTooltipComponent,
   defineIconComponent,
   definePaginatorComponent,
-  defineSelectComponent,
-  defineOptionComponent,
 } from '@tylertech/forge';
 defineCardComponent();
 defineButtonComponent();
@@ -20,8 +18,6 @@ defineBadgeComponent();
 defineTooltipComponent();
 defineIconComponent();
 definePaginatorComponent();
-defineSelectComponent();
-defineOptionComponent();
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { workflows as importedWorkflows, Workflow, WorkflowStep, resolveWorkflowOwner } from '../../data/workflows';
@@ -29,62 +25,11 @@ import { INCIDENT_TYPES, INCIDENT_CATEGORIES, getSubjectLabel } from '../inciden
 import { WorkflowStepLibrary, WorkflowStepTemplate } from './WorkflowStepLibrary';
 import { StepTemplateManager } from './StepTemplateManager';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
+import { colFilterStyle, ColumnSelect } from '../shared/ColumnFilters';
 
 interface WorkflowsPageProps {
   onNavigate: (page: string) => void;
   onNavigateToWorkflowBuilder: (workflow: any) => void;
-}
-
-// Per-column filter styling and control, matching the incidents and students
-// grids and the Forge build.
-const colFilterStyle: any = {
-  width: '100%',
-  boxSizing: 'border-box',
-  font: 'inherit',
-  fontSize: 'var(--forge-font-size-sm, 0.875rem)',
-  fontWeight: 400,
-  padding: '4px 8px',
-  border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
-  borderRadius: 'var(--forge-shape-medium)',
-  background: 'var(--forge-theme-surface, #fff)',
-  color: 'var(--forge-theme-text-high)',
-};
-
-function ColumnSelect({
-  placeholder, options, selected, onChange,
-}: {
-  placeholder: string;
-  options: Array<string | { value: string; label: string }>;
-  selected: string[];
-  onChange: (v: string[]) => void;
-}) {
-  const ref = useRef<any>(null);
-  const handler = useRef(onChange);
-  handler.current = onChange;
-  const normalized = options.map(o => (typeof o === 'string' ? { value: o, label: o } : o));
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const onNativeChange = (evt: any) => {
-      const v = evt?.detail ?? el.value;
-      handler.current(v ? [String(v)] : []);
-    };
-    el.addEventListener('change', onNativeChange);
-    return () => el.removeEventListener('change', onNativeChange);
-  }, []);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.options = normalized;
-    el.value = selected[0] ?? '';
-  }, [JSON.stringify(normalized), selected[0]]);
-
-  return (
-    /* @ts-ignore */
-    <forge-select ref={ref} placeholder={placeholder} density="extra-small" style={{ width: '100%' }}></forge-select>
-  );
 }
 
 export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: WorkflowsPageProps) {

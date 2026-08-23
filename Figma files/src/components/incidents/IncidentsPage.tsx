@@ -10,8 +10,6 @@ import {
   defineIconComponent,
   defineIconButtonComponent,
   definePaginatorComponent,
-  defineSelectComponent,
-  defineOptionComponent,
 } from '@tylertech/forge';
 defineCardComponent();
 defineDialogComponent();
@@ -22,8 +20,6 @@ defineAutocompleteComponent();
 defineIconComponent();
 defineIconButtonComponent();
 definePaginatorComponent();
-defineSelectComponent();
-defineOptionComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import { EditIncidentDialog } from './EditIncidentDialog';
 import { NewIncidentFormUnified } from './NewIncidentFormUnified';
@@ -33,6 +29,7 @@ import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
 import { EntitySearchField } from '../shared/EntitySearchField';
 import { mockLocations } from '../../data/locations';
+import { colFilterStyle, ColumnSelect } from '../shared/ColumnFilters';
 import {
   INCIDENT_TYPES,
   INCIDENT_SUBJECTS,
@@ -53,73 +50,6 @@ const severityTheme = (severity: string): string => {
     default: return 'default';
   }
 };
-// Styling for the per-column text filters in the table header.
-const colFilterStyle: any = {
-  width: '100%',
-  boxSizing: 'border-box',
-  font: 'inherit',
-  fontSize: 'var(--forge-font-size-sm, 0.875rem)',
-  fontWeight: 400,
-  padding: '4px 8px',
-  border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
-  borderRadius: 'var(--forge-shape-medium)',
-  background: 'var(--forge-theme-surface, #fff)',
-  color: 'var(--forge-theme-text-high)',
-};
-
-// One column's dropdown filter. Single-select forge-select, matching the Forge
-// build exactly, including its placeholder wording.
-//
-// Filter state stays an array so the predicate and the drill-through props from
-// the dashboard keep working unchanged; a single select simply sets [] or [one].
-//
-// Options and value are set as properties, and the change listener is attached
-// through a ref with a mount-only effect. reactify-wc only forwards custom
-// events for hyphenated props, so an onChange prop on a raw custom element
-// fails silently, which is very hard to spot with no typechecking here.
-function ColumnSelect({
-  placeholder, options, selected, onChange,
-}: {
-  placeholder: string;
-  options: Array<string | { value: string; label: string }>;
-  selected: string[];
-  onChange: (v: string[]) => void;
-}) {
-  const ref = useRef<any>(null);
-  const handler = useRef(onChange);
-  handler.current = onChange;
-
-  const normalized = options.map(o => (typeof o === 'string' ? { value: o, label: o } : o));
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const onNativeChange = (evt: any) => {
-      const v = evt?.detail ?? el.value;
-      handler.current(v ? [String(v)] : []);
-    };
-    el.addEventListener('change', onNativeChange);
-    return () => el.removeEventListener('change', onNativeChange);
-  }, []);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.options = normalized;
-    el.value = selected[0] ?? '';
-  }, [JSON.stringify(normalized), selected[0]]);
-
-  return (
-    /* @ts-ignore */
-    <forge-select
-      ref={ref}
-      placeholder={placeholder}
-      density="extra-small"
-      style={{ width: '100%' }}
-    ></forge-select>
-  );
-}
-
 const statusTheme = (status: string): string => {
   switch (status) {
     case 'Open': return 'info-primary';

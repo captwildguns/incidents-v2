@@ -7,6 +7,7 @@ import {
   defineButtonComponent,
   defineBadgeComponent,
   defineIconComponent,
+  definePaginatorComponent,
 } from '@tylertech/forge';
 defineCardComponent();
 defineDialogComponent();
@@ -14,6 +15,7 @@ defineTextFieldComponent();
 defineButtonComponent();
 defineBadgeComponent();
 defineIconComponent();
+definePaginatorComponent();
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
@@ -22,6 +24,7 @@ import { mockLocations, locationTypes } from '../../data/locations';
 import { allEmployees } from '../../data/employees';
 import { mockVehicles } from '../vehicles/VehiclesPage';
 import { mockIncidents } from '../incidents/IncidentsPage';
+import { colFilterStyle, ColumnSelect } from '../shared/ColumnFilters';
 
 // The Locations page, GH #196's first gap. Vehicles and Employees each list an
 // entity, show an incident count, and drill into the incidents behind it;
@@ -43,6 +46,9 @@ const fmtDate = (d: string) => (d ? d.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2-$
 
 export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: LocationsPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  // Per-column filters and a paginator, so this grid behaves like the others.
+  const [idFilter, setIdFilter] = useState('');
+  const paginatorRef = useRef<HTMLElement>(null);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
@@ -125,7 +131,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(loc.status);
     const matchesType = typeFilter.length === 0 || typeFilter.includes(loc.locationType);
 
-    return matchesSearch && matchesStatus && matchesType;
+    return (!idFilter.trim() || String(loc.id).toLowerCase().includes(idFilter.trim().toLowerCase())) && matchesSearch && matchesStatus && matchesType;
   });
 
   const handleSort = (column: typeof sortColumn) => {
@@ -151,6 +157,18 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
     }
     return sortDirection === 'asc' ? c : -c;
   });
+
+  useEffect(() => {
+    const el = paginatorRef.current;
+    if (!el) return;
+    const onChange = (evt: any) => {
+      const d = evt.detail ?? {};
+      if (typeof d.pageSize === 'number') setRowsPerPage(d.pageSize);
+      if (typeof d.pageIndex === 'number') setCurrentPage(d.pageIndex + 1);
+    };
+    el.addEventListener('forge-paginator-change', onChange);
+    return () => el.removeEventListener('forge-paginator-change', onChange);
+  }, []);
 
   const totalPages = Math.ceil(sortedLocations.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -232,45 +250,6 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
         {kpi(totalLocationIncidents, 'Incidents', totalLocationIncidents > 0 ? '#ea580c' : 'var(--brand-blue-dark)')}
       </div>
 
-      <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-large)' }}>
-        <div style={{ padding: 'var(--forge-spacing-medium)', paddingTop: 'var(--forge-spacing-large)' }}>
-          <div className="flex items-center" style={{ gap: 'var(--forge-spacing-medium)' }}>
-            <div className="flex-1 min-w-0">
-              <EntitySearchField
-                value={searchTerm}
-                onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
-                placeholder="Search locations, types, managers, or addresses..."
-                groups={searchSuggestionGroups}
-              />
-            </div>
-
-            <div className="shrink-0">
-              <ForgeMultiSelect
-                options={[
-                  { value: 'Active', label: 'Active' },
-                  { value: 'Inactive', label: 'Inactive' },
-                ]}
-                selected={statusFilter}
-                onChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}
-                placeholder="Status"
-                allLabel="All Statuses"
-                width="180px"
-              />
-            </div>
-
-            <div className="shrink-0">
-              <ForgeMultiSelect
-                options={locationTypes.map(t => ({ value: t, label: t }))}
-                selected={typeFilter}
-                onChange={(val) => { setTypeFilter(val); setCurrentPage(1); }}
-                placeholder="Location Type"
-                allLabel="All Location Types"
-                width="200px"
-              />
-            </div>
-          </div>
-        </div>
-      </ForgeCard>
 
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }} className="flex flex-row items-center justify-between">
@@ -307,6 +286,25 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
                       </button>
                     </th>
                   ))}
+                </tr>
+                {/* Filter row, matching the other grids. */}
+                <tr>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input value={idFilter} onChange={(e) => setIdFilter(e.target.value)} placeholder="Filter Location ID..." aria-label="Filter by location ID" style={colFilterStyle} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Filter Name..." aria-label="Filter by name, type, manager or address" style={colFilterStyle} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect placeholder="Filter Type..." options={locationTypes} selected={typeFilter} onChange={setTypeFilter} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect placeholder="Filter Status..." options={['Active', 'Inactive']} selected={statusFilter} onChange={setStatusFilter} />
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -384,30 +382,17 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
             </table>
           </div>
 
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', whiteSpace: 'nowrap' }}>
-              Showing {sortedLocations.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + rowsPerPage, sortedLocations.length)} of {sortedLocations.length} locations
-            </span>
-            {totalPages > 1 && (
-              <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)' }}>
-                <ForgeButton variant="outlined" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
-                  <forge-icon name="chevron_left" style={{ fontSize: '18px' }}></forge-icon>
-                </ForgeButton>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <ForgeButton
-                    key={page}
-                    variant={page === currentPage ? 'raised' : 'outlined'}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </ForgeButton>
-                ))}
-                <ForgeButton variant="outlined" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>
-                  <forge-icon name="chevron_right" style={{ fontSize: '18px' }}></forge-icon>
-                </ForgeButton>
-              </div>
-            )}
+          <div style={{ paddingTop: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
+            {/* @ts-ignore */}
+            <forge-paginator
+              ref={paginatorRef}
+              total={sortedLocations.length}
+              page-size={rowsPerPage}
+              page-index={currentPage - 1}
+              page-size-options="10,25,50"
+              offset={(currentPage - 1) * rowsPerPage}
+              first-last
+            ></forge-paginator>
           </div>
         </div>
       </ForgeCard>
