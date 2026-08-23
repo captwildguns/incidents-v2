@@ -196,11 +196,10 @@ function CustomPieChart({ data }: { data: { name: string; value: number; fill: s
 // Custom SVG Horizontal Bar Chart (for Incidents by Vehicle)
 // Generic horizontal bars. Was vehicle-specific; now takes label/value so
 // the driver chart can reuse it rather than a near-copy.
-function CustomHorizontalBarChart({ data }: { data: { label: string; value: number }[] }) {
+function CustomHorizontalBarChart({ data, labelWidth = 80 }: { data: { label: string; value: number }[]; labelWidth?: number }) {
   const maxValue = Math.max(...data.map(d => d.value), 0);
   const barHeight = 22;
   const gap = 6;
-  const labelWidth = 80;
   const chartWidth = 240;
   const svgHeight = data.length * (barHeight + gap) + 20;
 
@@ -941,11 +940,15 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       </div>
 
       {/* Charts Row */}
-      {/* Five charts, three across. Five across was tried and abandoned: at
-          254px a column is too narrow for the Type pie's seven-entry legend,
-          which overflowed its card. Three gives every chart room and reads as
-          two rows of 3 and 2. */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
+      {/* Five charts. Breakpoints measured rather than guessed, against the
+          screens people actually use:
+            1080p full screen (1904 viewport): 5 across gives 301px per chart,
+              no overflow.
+            1440p full screen (2560): 5 across gives ~450px, comfortable.
+            A windowed browser around 1600px: 5 across gives 254px, at which
+              the Type pie's seven-entry legend overflows its card, so 3 across.
+          Hence the 1800px cutoff rather than Tailwind's 2xl at 1536. */}
+      <div className="dashboard-chart-grid" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
         {/* Incidents by Subject. First, because it is the question a district
             that has just started tracking more than students asks first. */}
         <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
@@ -982,7 +985,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
             <h3 className="forge-typography--heading4" style={{ fontSize: '1rem' }}>Incidents by Driver</h3>
           </div>
           <div style={{ paddingTop: 0 }}>
-            <CustomHorizontalBarChart data={incidentsByDriverData.slice(0, 6)} />
+            <CustomHorizontalBarChart data={incidentsByDriverData.slice(0, 6)} labelWidth={120} />
           </div>
         </ForgeCard>
 
