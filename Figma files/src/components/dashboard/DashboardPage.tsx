@@ -73,7 +73,24 @@ const incidentsByVehicleData = (() => {
   return Array.from(counts.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
-    .map(([vehicle, incidents]) => ({ vehicle, incidents }));
+    .map(([label, value]) => ({ label, value }));
+})();
+
+// Incidents by driver. Asked for by Seana on Aug 19, and present in the Forge
+// build where we had only the vehicle equivalent. Skips the 'N/A' placeholder
+// and incidents with no driver, so a location or yard incident does not become
+// a bar with no name.
+const incidentsByDriverData = (() => {
+  const counts = new Map<string, number>();
+  for (const inc of mockIncidents as any[]) {
+    const name = inc.driver;
+    if (typeof name !== 'string' || !name || name === 'N/A') continue;
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([label, value]) => ({ label, value }));
 })();
 
 // Incidents by weekday, Monday to Friday. Seed dates are historical, so a real
@@ -177,8 +194,10 @@ function CustomPieChart({ data }: { data: { name: string; value: number; fill: s
 }
 
 // Custom SVG Horizontal Bar Chart (for Incidents by Vehicle)
-function CustomHorizontalBarChart({ data }: { data: { vehicle: string; incidents: number }[] }) {
-  const maxValue = Math.max(...data.map(d => d.incidents));
+// Generic horizontal bars. Was vehicle-specific; now takes label/value so
+// the driver chart can reuse it rather than a near-copy.
+function CustomHorizontalBarChart({ data }: { data: { label: string; value: number }[] }) {
+  const maxValue = Math.max(...data.map(d => d.value), 0);
   const barHeight = 22;
   const gap = 6;
   const labelWidth = 80;
@@ -190,7 +209,7 @@ function CustomHorizontalBarChart({ data }: { data: { vehicle: string; incidents
       <svg width="100%" height={svgHeight} viewBox={`0 0 ${labelWidth + chartWidth + 30} ${svgHeight}`} preserveAspectRatio="xMinYMin meet">
         {data.map((item, index) => {
           const y = index * (barHeight + gap) + 8;
-          const barWidth = maxValue > 0 ? (item.incidents / maxValue) * chartWidth : 0;
+          const barWidth = maxValue > 0 ? (item.value / maxValue) * chartWidth : 0;
           return (
             <g key={`bar-${index}`}>
               <text
@@ -199,7 +218,7 @@ function CustomHorizontalBarChart({ data }: { data: { vehicle: string; incidents
                 textAnchor="end"
                 style={{ fontSize: '11px', fill: 'var(--forge-text-secondary, #666)', fontFamily: 'var(--forge-font-family, Roboto, sans-serif)' }}
               >
-                {item.vehicle}
+                {item.label}
               </text>
               <rect
                 x={labelWidth}
@@ -209,14 +228,14 @@ function CustomHorizontalBarChart({ data }: { data: { vehicle: string; incidents
                 rx={4}
                 fill="#4A6FA5"
               >
-                <title>{`${item.vehicle}: ${item.incidents} incidents`}</title>
+                <title>{`${item.label}: ${item.value} incidents`}</title>
               </rect>
               <text
                 x={labelWidth + barWidth + 6}
                 y={y + barHeight / 2 + 4}
                 style={{ fontSize: '11px', fill: 'var(--forge-text-secondary, #666)', fontFamily: 'var(--forge-font-family, Roboto, sans-serif)' }}
               >
-                {item.incidents}
+                {item.value}
               </text>
             </g>
           );
@@ -922,8 +941,11 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       </div>
 
       {/* Charts Row */}
-      {/* All four charts on one row, matching the KPI row above. */}
-      <div className="grid grid-cols-4 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
+      {/* Five charts, three across. Five across was tried and abandoned: at
+          254px a column is too narrow for the Type pie's seven-entry legend,
+          which overflowed its card. Three gives every chart room and reads as
+          two rows of 3 and 2. */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
         {/* Incidents by Subject. First, because it is the question a district
             that has just started tracking more than students asks first. */}
         <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
@@ -952,6 +974,15 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
           </div>
           <div style={{ paddingTop: 0 }}>
             <CustomHorizontalBarChart data={incidentsByVehicleData.slice(0, 6)} />
+          </div>
+        </ForgeCard>
+
+        <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
+          <div style={{ padding: 'var(--forge-spacing-medium)', paddingBottom: 'var(--forge-spacing-small)' }}>
+            <h3 className="forge-typography--heading4" style={{ fontSize: '1rem' }}>Incidents by Driver</h3>
+          </div>
+          <div style={{ paddingTop: 0 }}>
+            <CustomHorizontalBarChart data={incidentsByDriverData.slice(0, 6)} />
           </div>
         </ForgeCard>
 
