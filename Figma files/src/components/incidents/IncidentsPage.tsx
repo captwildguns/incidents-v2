@@ -10,6 +10,8 @@ import {
   defineIconComponent,
   defineIconButtonComponent,
   definePaginatorComponent,
+  defineSelectComponent,
+  defineOptionComponent,
 } from '@tylertech/forge';
 defineCardComponent();
 defineDialogComponent();
@@ -20,6 +22,8 @@ defineAutocompleteComponent();
 defineIconComponent();
 defineIconButtonComponent();
 definePaginatorComponent();
+defineSelectComponent();
+defineOptionComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import { EditIncidentDialog } from './EditIncidentDialog';
 import { NewIncidentFormUnified } from './NewIncidentFormUnified';
@@ -63,27 +67,56 @@ const colFilterStyle: any = {
   color: 'var(--forge-theme-text-high)',
 };
 
-// One column's dropdown filter. Thin wrapper over the existing multiselect so
-// every column control looks and behaves the same, and so this row stays
-// readable rather than repeating the same six props nine times.
+// One column's dropdown filter. Single-select forge-select, matching the Forge
+// build exactly, including its placeholder wording.
+//
+// Filter state stays an array so the predicate and the drill-through props from
+// the dashboard keep working unchanged; a single select simply sets [] or [one].
+//
+// Options and value are set as properties, and the change listener is attached
+// through a ref with a mount-only effect. reactify-wc only forwards custom
+// events for hyphenated props, so an onChange prop on a raw custom element
+// fails silently, which is very hard to spot with no typechecking here.
 function ColumnSelect({
-  label, options, selected, onChange,
+  placeholder, options, selected, onChange,
 }: {
-  label: string;
+  placeholder: string;
   options: Array<string | { value: string; label: string }>;
   selected: string[];
   onChange: (v: string[]) => void;
 }) {
+  const ref = useRef<any>(null);
+  const handler = useRef(onChange);
+  handler.current = onChange;
+
   const normalized = options.map(o => (typeof o === 'string' ? { value: o, label: o } : o));
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onNativeChange = (evt: any) => {
+      const v = evt?.detail ?? el.value;
+      handler.current(v ? [String(v)] : []);
+    };
+    el.addEventListener('change', onNativeChange);
+    return () => el.removeEventListener('change', onNativeChange);
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.options = normalized;
+    el.value = selected[0] ?? '';
+  }, [JSON.stringify(normalized), selected[0]]);
+
   return (
-    <ForgeMultiSelect
-      options={normalized}
-      selected={selected}
-      onChange={onChange}
-      placeholder={`Filter ${label}...`}
-      allLabel={`All ${label}`}
-      width="100%"
-    />
+    /* @ts-ignore */
+    <forge-select
+      ref={ref}
+      placeholder={placeholder}
+      density="extra-small"
+      style={{ width: '100%' }}
+    ></forge-select>
   );
 }
 
@@ -1519,6 +1552,22 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
     return () => el.removeEventListener('forge-dialog-close', handler);
   }, []);
 
+  const hasActiveFilters =
+    !!searchTerm.trim() || !!idFilter.trim() || !!dateAfterFilter ||
+    statusFilter.length > 0 || subjectFilter.length > 0 || typeFilter.length > 0 ||
+    assignedToFilter.length > 0 || severityFilter.length > 0;
+
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setIdFilter('');
+    setDateAfterFilter('');
+    setStatusFilter([]);
+    setSubjectFilter([]);
+    setTypeFilter([]);
+    setAssignedToFilter([]);
+    setSeverityFilter([]);
+  };
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       // Toggle direction: desc -> asc -> null -> desc
@@ -1770,6 +1819,26 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
         </ForgeCard>
       </div>
 
+      {/* Active filters. The Forge build has no banner because it has no
+          drill-through that applies one; ours do, from the dashboard KPI cards
+          and from the incident counts on the roster pages. Without this an
+          arriving filter could be applied with no way to clear it. */}
+      {hasActiveFilters && (
+        <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)', marginBottom: 'var(--forge-spacing-medium)' }}>
+          <div
+            className="flex items-center justify-between"
+            style={{ padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)', gap: 'var(--forge-spacing-medium)' }}
+          >
+            <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--forge-font-size-sm)' }}>
+              Filtered view: showing {filteredIncidents.length} of {mockIncidents.length} incidents
+            </span>
+            <ForgeButton variant="outlined" dense onClick={clearAllFilters}>
+              Clear Filters
+            </ForgeButton>
+          </div>
+        </ForgeCard>
+      )}
+
       {/* Incidents Table */}
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }} className="flex flex-row items-center justify-between">
@@ -1874,33 +1943,27 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                     <input
                       value={idFilter}
                       onChange={(e) => setIdFilter(e.target.value)}
-                      placeholder="Filter ID..."
+                      placeholder="Filter Incident ID..."
                       aria-label="Filter by incident ID"
                       style={colFilterStyle}
                     />
                   </th>
-                  <th className="forge-table-cell forge-table-cell--header">
-                    <input
-                      type="date"
-                      value={dateAfterFilter}
-                      onChange={(e) => setDateAfterFilter(e.target.value)}
-                      aria-label="Show incidents on or after this date"
-                      title="On or after"
-                      style={colFilterStyle}
-                    />
-                  </th>
+                  {/* Date has no filter, matching the Forge build. A date
+                      filter can still arrive from a dashboard drill-through; the
+                      banner above the table surfaces and clears it. */}
+                  <th className="forge-table-cell forge-table-cell--header"></th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <input
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Filter involved..."
+                      placeholder="Filter Involved..."
                       aria-label="Filter by person, vehicle, run or location"
                       style={colFilterStyle}
                     />
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect
-                      label="Subject"
+                      placeholder="Filter Subject..."
                       options={INCIDENT_SUBJECTS.map(s => s.label)}
                       selected={subjectFilter}
                       onChange={setSubjectFilter}
@@ -1908,7 +1971,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect
-                      label="Type"
+                      placeholder="Filter Type..."
                       options={typeFilterOptions}
                       selected={typeFilter}
                       onChange={setTypeFilter}
@@ -1917,7 +1980,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                   <th className="forge-table-cell forge-table-cell--header"></th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect
-                      label="Severity"
+                      placeholder="Filter Severity..."
                       options={['Critical', 'High', 'Medium', 'Low']}
                       selected={severityFilter}
                       onChange={setSeverityFilter}
@@ -1925,7 +1988,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect
-                      label="Status"
+                      placeholder="Filter Status..."
                       options={['Open', 'In Progress', 'Pending Approval', 'Completed', 'Closed']}
                       selected={statusFilter}
                       onChange={setStatusFilter}
@@ -1933,7 +1996,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect
-                      label="Assigned To"
+                      placeholder="Filter Assigned To..."
                       options={uniqueAssignedUsers}
                       selected={assignedToFilter}
                       onChange={setAssignedToFilter}
