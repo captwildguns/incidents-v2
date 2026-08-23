@@ -8,6 +8,7 @@ import {
   defineBadgeComponent,
   defineAutocompleteComponent,
   defineIconComponent,
+  definePaginatorComponent,
 } from '@tylertech/forge';
 defineCardComponent();
 defineDialogComponent();
@@ -16,12 +17,14 @@ defineButtonComponent();
 defineBadgeComponent();
 defineAutocompleteComponent();
 defineIconComponent();
+definePaginatorComponent();
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
 import { EntitySearchField } from '../shared/EntitySearchField';
 import { allEmployees, employeeJobRoles } from '../../data/employees';
 import { mockIncidents } from '../incidents/IncidentsPage';
+import { colFilterStyle, ColumnSelect } from '../shared/ColumnFilters';
 
 interface EmployeesPageProps {
   onNavigate: (page: string) => void;
@@ -32,6 +35,11 @@ interface EmployeesPageProps {
 
 export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: EmployeesPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  // Per-column filters, matching the Forge build's Drivers grid.
+  const [idFilter, setIdFilter] = useState('');
+  const [contactFilter, setContactFilter] = useState('');
+  const [emailFilter, setEmailFilter] = useState('');
+  const paginatorRef = useRef<HTMLElement>(null);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [yearsOfServiceFilter, setYearsOfServiceFilter] = useState<string[]>([]);
   const [garageFilter, setGarageFilter] = useState<string[]>([]);
@@ -46,7 +54,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   // Pagination state
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -162,7 +170,12 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
     const matchesGarage = garageFilter.length === 0 || garageFilter.includes(driver.defaultGarage);
     const matchesRole = roleFilter.length === 0 || roleFilter.includes(driver.jobRole);
 
-    return matchesSearch && matchesStatus && matchesYears && matchesGarage && matchesRole;
+    const matchesId = !idFilter.trim() || String(driver.id).toLowerCase().includes(idFilter.trim().toLowerCase());
+    const matchesContact = !contactFilter.trim() || String(driver.phone ?? '').toLowerCase().includes(contactFilter.trim().toLowerCase());
+    const matchesEmail = !emailFilter.trim() || String(driver.email ?? '').toLowerCase().includes(emailFilter.trim().toLowerCase());
+
+    return matchesSearch && matchesStatus && matchesYears && matchesGarage && matchesRole
+      && matchesId && matchesContact && matchesEmail;
   });
   
   // Function to handle column header clicks
@@ -212,6 +225,18 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
   });
 
   // Pagination
+  useEffect(() => {
+    const el = paginatorRef.current;
+    if (!el) return;
+    const onChange = (evt: any) => {
+      const d = evt.detail ?? {};
+      if (typeof d.pageSize === 'number') setRowsPerPage(d.pageSize);
+      if (typeof d.pageIndex === 'number') setCurrentPage(d.pageIndex + 1);
+    };
+    el.addEventListener('forge-paginator-change', onChange);
+    return () => el.removeEventListener('forge-paginator-change', onChange);
+  }, []);
+
   const totalPages = Math.ceil(sortedDrivers.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const paginatedDrivers = sortedDrivers.slice(startIndex, startIndex + rowsPerPage);
@@ -491,6 +516,29 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
                     </button>
                   </th>
                 </tr>
+                {/* Filter row, matching the Forge build's equivalent grid. */}
+                <tr>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input value={idFilter} onChange={(e) => setIdFilter(e.target.value)} placeholder="Filter Employee ID..." style={colFilterStyle} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Filter Name..." style={colFilterStyle} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect placeholder="Filter Job Role..." options={employeeJobRoles} selected={roleFilter} onChange={setRoleFilter} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input value={contactFilter} onChange={(e) => setContactFilter(e.target.value)} placeholder="Filter Contact..." style={colFilterStyle} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input value={emailFilter} onChange={(e) => setEmailFilter(e.target.value)} placeholder="Filter Email..." style={colFilterStyle} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect placeholder="Filter Status..." options={['Active', 'Inactive']} selected={statusFilter} onChange={setStatusFilter} />
+                  </th>
+                </tr>
               </thead>
               <tbody>
                 {paginatedDrivers.map((driver) => (
@@ -580,71 +628,17 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
-            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', whiteSpace: 'nowrap' }}>
-                Showing {startIndex + 1}-{Math.min(startIndex + rowsPerPage, sortedDrivers.length)} of {sortedDrivers.length} employees
-              </span>
-              {rowsPerPage === 5 && sortedDrivers.length > 5 && (
-                <ForgeButton
-                  variant="outlined"
-                  dense
-                  onClick={() => { setRowsPerPage(25); setCurrentPage(1); }}
-                  style={{ fontSize: '0.75rem', fontFamily: 'var(--forge-font-family)' }}
-                >
-                  Show 25
-                </ForgeButton>
-              )}
-              {rowsPerPage === 25 && (
-                <ForgeButton
-                  variant="outlined"
-                  dense
-                  onClick={() => { setRowsPerPage(5); setCurrentPage(1); }}
-                  style={{ fontSize: '0.75rem', fontFamily: 'var(--forge-font-family)' }}
-                >
-                  Show 5
-                </ForgeButton>
-              )}
-            </div>
-
-            {totalPages > 1 && (
-              <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)' }}>
-                <ForgeButton
-                  variant="outlined"
-                  size="sm"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  style={{ padding: 'var(--forge-spacing-xxsmall) var(--forge-spacing-xsmall)' }}
-                >
-                  <forge-icon name="chevron_left" style={{ fontSize: '18px' }}></forge-icon>
-                </ForgeButton>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <ForgeButton
-                    key={page}
-                    variant={page === currentPage ? 'raised' : 'outlined'}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    style={{
-                      ['--forge-button-min-width' as any]: '24px',
-                      ['--forge-button-padding-inline' as any]: '6px',
-                      fontSize: '0.75rem',
-                      fontFamily: 'var(--forge-font-family)',
-                    }}
-                  >
-                    {page}
-                  </ForgeButton>
-                ))}
-                <ForgeButton
-                  variant="outlined"
-                  size="sm"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  style={{ padding: 'var(--forge-spacing-xxsmall) var(--forge-spacing-xsmall)' }}
-                >
-                  <forge-icon name="chevron_right" style={{ fontSize: '18px' }}></forge-icon>
-                </ForgeButton>
-              </div>
-            )}
+          <div style={{ paddingTop: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
+            {/* @ts-ignore */}
+            <forge-paginator
+              ref={paginatorRef}
+              total={sortedDrivers.length}
+              page-size={rowsPerPage}
+              page-index={currentPage - 1}
+              page-size-options="10,25,50"
+              offset={(currentPage - 1) * rowsPerPage}
+              first-last
+            ></forge-paginator>
           </div>
         </div>
       </ForgeCard>

@@ -8,6 +8,7 @@ import {
   defineBadgeComponent,
   defineAutocompleteComponent,
   defineIconComponent,
+  definePaginatorComponent,
 } from '@tylertech/forge';
 defineCardComponent();
 defineDialogComponent();
@@ -16,6 +17,7 @@ defineButtonComponent();
 defineBadgeComponent();
 defineAutocompleteComponent();
 defineIconComponent();
+definePaginatorComponent();
 import { ExportDropdown } from '../shared/ExportDropdown';
 import type { ExportFormat } from '../shared/ExportDropdown';
 import { ForgeMultiSelect } from '../ui/forge-multiselect';
@@ -33,6 +35,7 @@ import icBusCESeriesImage from 'figma:asset/21d74f75357e2f9c963f7de5c42dc2984e42
 import thomasSafTLinerC2Image from 'figma:asset/3a2ed08444e1236b5d2ed085fae8108be0e34f25.png';
 import blueBirdAllAmericanImage from 'figma:asset/cc1ace2efdf898535c090348483c30c45b97c1ee.png';
 import thomasSafTLinerHDXImage from 'figma:asset/82ee4edb9142f194220fb71fddfb690c50f6e977.png';
+import { colFilterStyle, ColumnSelect } from '../shared/ColumnFilters';
 
 // Helper function to get bus image based on make and model
 const getBusImage = (make: string, model: string) => {
@@ -562,6 +565,11 @@ interface VehiclesPageProps {
 
 export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: VehiclesPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  // Per-column filters, matching the Forge build's Vehicles grid.
+  const [idFilter, setIdFilter] = useState('');
+  const [driverFilter, setDriverFilter] = useState('');
+  const [garageTextFilter, setGarageTextFilter] = useState('');
+  const paginatorRef = useRef<HTMLElement>(null);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [mileageRangeFilter, setMileageRangeFilter] = useState<string[]>([]);
   const [garageFilter, setGarageFilter] = useState<string[]>([]);
@@ -575,7 +583,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Pagination state
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Function to get bus icon based on make and model
@@ -676,7 +684,12 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
     // return vehicles whose visible garage disagrees with the filter chip.
     const matchesGarage = garageFilter.length === 0 || garageFilter.includes(vehicle.defaultGarage);
 
-    return matchesSearch && matchesStatus && matchesMaintenance && matchesGarage;
+    const matchesId = !idFilter.trim() || String(vehicle.id).toLowerCase().includes(idFilter.trim().toLowerCase());
+    const matchesDriverText = !driverFilter.trim() || String(vehicle.assignedDriver ?? '').toLowerCase().includes(driverFilter.trim().toLowerCase());
+    const matchesGarageText = !garageTextFilter.trim() || String(vehicle.defaultGarage ?? '').toLowerCase().includes(garageTextFilter.trim().toLowerCase());
+
+    return matchesSearch && matchesStatus && matchesMaintenance && matchesGarage
+      && matchesId && matchesDriverText && matchesGarageText;
   });
   
   // Function to handle column header clicks
@@ -729,6 +742,18 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
   });
   
   // Pagination calculations
+  useEffect(() => {
+    const el = paginatorRef.current;
+    if (!el) return;
+    const onChange = (evt: any) => {
+      const d = evt.detail ?? {};
+      if (typeof d.pageSize === 'number') setRowsPerPage(d.pageSize);
+      if (typeof d.pageIndex === 'number') setCurrentPage(d.pageIndex + 1);
+    };
+    el.addEventListener('forge-paginator-change', onChange);
+    return () => el.removeEventListener('forge-paginator-change', onChange);
+  }, []);
+
   const totalPages = Math.ceil(sortedVehicles.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const paginatedVehicles = sortedVehicles.slice(startIndex, startIndex + rowsPerPage);
@@ -1024,6 +1049,24 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                     </button>
                   </th>
                 </tr>
+                {/* Filter row, matching the Forge build's equivalent grid. */}
+                <tr>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input value={idFilter} onChange={(e) => setIdFilter(e.target.value)} placeholder="Filter Vehicle ID..." style={colFilterStyle} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input value={driverFilter} onChange={(e) => setDriverFilter(e.target.value)} placeholder="Filter Driver..." style={colFilterStyle} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <input value={garageTextFilter} onChange={(e) => setGarageTextFilter(e.target.value)} placeholder="Filter Default Garage..." style={colFilterStyle} />
+                  </th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header"></th>
+                  <th className="forge-table-cell forge-table-cell--header">
+                    <ColumnSelect placeholder="Filter Status..." options={['Active', 'Inactive']} selected={statusFilter} onChange={setStatusFilter} />
+                  </th>
+                </tr>
               </thead>
               <tbody>
                 {paginatedVehicles.map((vehicle) => (
@@ -1102,71 +1145,17 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex items-center justify-between" style={{ paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
-            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', whiteSpace: 'nowrap' }}>
-                Showing {startIndex + 1}-{Math.min(startIndex + rowsPerPage, sortedVehicles.length)} of {sortedVehicles.length} vehicles
-              </span>
-              {rowsPerPage === 5 && sortedVehicles.length > 5 && (
-                <ForgeButton
-                  variant="outlined"
-                  dense
-                  onClick={() => { setRowsPerPage(25); setCurrentPage(1); }}
-                  style={{ fontSize: '0.75rem', fontFamily: 'var(--forge-font-family)' }}
-                >
-                  Show 25
-                </ForgeButton>
-              )}
-              {rowsPerPage === 25 && (
-                <ForgeButton
-                  variant="outlined"
-                  dense
-                  onClick={() => { setRowsPerPage(5); setCurrentPage(1); }}
-                  style={{ fontSize: '0.75rem', fontFamily: 'var(--forge-font-family)' }}
-                >
-                  Show 5
-                </ForgeButton>
-              )}
-            </div>
-
-            {totalPages > 1 && (
-              <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)' }}>
-                <ForgeButton
-                  variant="outlined"
-                  size="sm"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  style={{ padding: 'var(--forge-spacing-xxsmall) var(--forge-spacing-xsmall)' }}
-                >
-                  <forge-icon name="chevron_left" style={{ fontSize: '18px' }}></forge-icon>
-                </ForgeButton>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <ForgeButton
-                    key={page}
-                    variant={page === currentPage ? 'raised' : 'outlined'}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    style={{
-                      ['--forge-button-min-width' as any]: '24px',
-                      ['--forge-button-padding-inline' as any]: '6px',
-                      fontSize: '0.75rem',
-                      fontFamily: 'var(--forge-font-family)',
-                    }}
-                  >
-                    {page}
-                  </ForgeButton>
-                ))}
-                <ForgeButton
-                  variant="outlined"
-                  size="sm"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  style={{ padding: 'var(--forge-spacing-xxsmall) var(--forge-spacing-xsmall)' }}
-                >
-                  <forge-icon name="chevron_right" style={{ fontSize: '18px' }}></forge-icon>
-                </ForgeButton>
-              </div>
-            )}
+          <div style={{ paddingTop: 'var(--forge-spacing-small)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', marginTop: 'var(--forge-spacing-medium)' }}>
+            {/* @ts-ignore */}
+            <forge-paginator
+              ref={paginatorRef}
+              total={sortedVehicles.length}
+              page-size={rowsPerPage}
+              page-index={currentPage - 1}
+              page-size-options="10,25,50"
+              offset={(currentPage - 1) * rowsPerPage}
+              first-last
+            ></forge-paginator>
           </div>
         </div>
       </ForgeCard>
