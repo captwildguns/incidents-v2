@@ -382,14 +382,18 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                 <table className="forge-table" style={{ fontFamily: 'var(--forge-font-family)' }}>
                   <thead>
                     <tr>
-                      <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Workflow Name</th>
+                      {/* Column names and order copied from the Forge build:
+                          Name, Category, Severity, Status. Incident Owner is
+                          ours and sits after Status, and Actions has no header
+                          text there either. */}
+                      <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Name</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Category</th>
+                      <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Severity</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Status</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Incident Owner</th>
-                      <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Severity</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>Steps</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Last Modified</th>
-                      <th className="forge-table-cell forge-table-cell--header" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Actions</th>
+                      <th className="forge-table-cell forge-table-cell--header" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -423,6 +427,14 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                             <forge-badge theme="default">{workflow.category}</forge-badge>
                           </td>
                           <td className="forge-table-cell">
+                            <forge-badge
+                              theme={workflow.severity === 'Critical' ? 'danger' : workflow.severity === 'High' ? 'error' : workflow.severity === 'Medium' ? 'warning' : 'info'}
+                              strong
+                            >
+                              {workflow.severity}
+                            </forge-badge>
+                          </td>
+                          <td className="forge-table-cell">
                             <forge-badge theme={workflow.active ? 'success' : 'default'}>
                               {workflow.active ? 'Active' : 'Inactive'}
                             </forge-badge>
@@ -445,14 +457,6 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                                 Unassigned
                               </span>
                             )}
-                          </td>
-                          <td className="forge-table-cell">
-                            <forge-badge
-                              theme={workflow.severity === 'Critical' ? 'danger' : workflow.severity === 'High' ? 'error' : workflow.severity === 'Medium' ? 'warning' : 'info'}
-                              strong
-                            >
-                              {workflow.severity}
-                            </forge-badge>
                           </td>
                           <td className="forge-table-cell" style={{ textAlign: 'center', fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
                             {workflow.steps.length}
