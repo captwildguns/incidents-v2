@@ -8,6 +8,9 @@ import {
   defineBadgeComponent,
   defineTooltipComponent,
   defineIconComponent,
+  definePaginatorComponent,
+  defineSelectComponent,
+  defineOptionComponent,
 } from '@tylertech/forge';
 defineCardComponent();
 defineButtonComponent();
@@ -16,6 +19,9 @@ defineDialogComponent();
 defineBadgeComponent();
 defineTooltipComponent();
 defineIconComponent();
+definePaginatorComponent();
+defineSelectComponent();
+defineOptionComponent();
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { workflows as importedWorkflows, Workflow, WorkflowStep, resolveWorkflowOwner } from '../../data/workflows';
@@ -27,6 +33,58 @@ import { ForgeMultiSelect } from '../ui/forge-multiselect';
 interface WorkflowsPageProps {
   onNavigate: (page: string) => void;
   onNavigateToWorkflowBuilder: (workflow: any) => void;
+}
+
+// Per-column filter styling and control, matching the incidents and students
+// grids and the Forge build.
+const colFilterStyle: any = {
+  width: '100%',
+  boxSizing: 'border-box',
+  font: 'inherit',
+  fontSize: 'var(--forge-font-size-sm, 0.875rem)',
+  fontWeight: 400,
+  padding: '4px 8px',
+  border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+  borderRadius: 'var(--forge-shape-medium)',
+  background: 'var(--forge-theme-surface, #fff)',
+  color: 'var(--forge-theme-text-high)',
+};
+
+function ColumnSelect({
+  placeholder, options, selected, onChange,
+}: {
+  placeholder: string;
+  options: Array<string | { value: string; label: string }>;
+  selected: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const ref = useRef<any>(null);
+  const handler = useRef(onChange);
+  handler.current = onChange;
+  const normalized = options.map(o => (typeof o === 'string' ? { value: o, label: o } : o));
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onNativeChange = (evt: any) => {
+      const v = evt?.detail ?? el.value;
+      handler.current(v ? [String(v)] : []);
+    };
+    el.addEventListener('change', onNativeChange);
+    return () => el.removeEventListener('change', onNativeChange);
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.options = normalized;
+    el.value = selected[0] ?? '';
+  }, [JSON.stringify(normalized), selected[0]]);
+
+  return (
+    /* @ts-ignore */
+    <forge-select ref={ref} placeholder={placeholder} density="extra-small" style={{ width: '100%' }}></forge-select>
+  );
 }
 
 export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: WorkflowsPageProps) {
@@ -58,6 +116,9 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
+  // The Forge build filters this grid on severity too.
+  const [filterSeverities, setFilterSeverities] = useState<string[]>([]);
+  const paginatorRef = useRef<HTMLElement>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
@@ -111,12 +172,29 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
       (filterStatuses.includes('Active') && workflow.active) ||
       (filterStatuses.includes('Inactive') && !workflow.active);
 
-    return matchesSearch && matchesCategory && matchesActive;
+    const matchesSeverity =
+      filterSeverities.length === 0 || filterSeverities.includes(workflow.severity);
+
+    return matchesSearch && matchesCategory && matchesActive && matchesSeverity;
   });
 
   // Pagination state
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Paginator changes, via a ref because reactify-wc only forwards custom
+  // events for hyphenated props.
+  useEffect(() => {
+    const el = paginatorRef.current;
+    if (!el) return;
+    const onChange = (evt: any) => {
+      const d = evt.detail ?? {};
+      if (typeof d.pageSize === 'number') setRowsPerPage(d.pageSize);
+      if (typeof d.pageIndex === 'number') setCurrentPage(d.pageIndex + 1);
+    };
+    el.addEventListener('forge-paginator-change', onChange);
+    return () => el.removeEventListener('forge-paginator-change', onChange);
+  }, []);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredWorkflows.length / rowsPerPage);
@@ -126,7 +204,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterCategories, filterStatuses, rowsPerPage]);
+  }, [searchTerm, filterCategories, filterStatuses, filterSeverities, rowsPerPage]);
 
   const handleCreateWorkflow = () => {
     const selectedType = INCIDENT_TYPES.find(t => t.id === newWorkflow.associatedIncidentType);
@@ -334,39 +412,6 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                   alignItems: 'center',
                 }}
               >
-                <div style={{ flex: '1', minWidth: '200px' }}>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <input
-                      type="text"
-                      placeholder="Search workflows..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </forge-text-field>
-                </div>
-
-                <ForgeMultiSelect
-                  selected={filterCategories}
-                  onChange={setFilterCategories}
-                  options={categories.map(cat => ({ value: cat, label: cat }))}
-                  placeholder="All Categories"
-                  allLabel="All Categories"
-                  width="200px"
-                />
-
-                <ForgeMultiSelect
-                  selected={filterStatuses}
-                  onChange={setFilterStatuses}
-                  options={[
-                    { value: 'Active', label: 'Active' },
-                    { value: 'Inactive', label: 'Inactive' },
-                  ]}
-                  placeholder="All Status"
-                  allLabel="All Status"
-                  width="180px"
-                />
-
                 <ForgeButton onClick={() => setIsCreateDialogOpen(true)}>
                   <forge-icon slot="start" name="add"></forge-icon>
                   Create Workflow
@@ -395,6 +440,48 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Last Modified</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}></th>
                     </tr>
+                  {/* Filter row, matching the Forge build: text on Name,
+                      selects on Category, Severity and Status, nothing on the
+                      derived or action columns. */}
+                  <tr>
+                    <th className="forge-table-cell forge-table-cell--header">
+                      <input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Filter Name..."
+                        aria-label="Filter by workflow name or description"
+                        style={colFilterStyle}
+                      />
+                    </th>
+                    <th className="forge-table-cell forge-table-cell--header">
+                      <ColumnSelect
+                        placeholder="Filter Category..."
+                        options={categories}
+                        selected={filterCategories}
+                        onChange={setFilterCategories}
+                      />
+                    </th>
+                    <th className="forge-table-cell forge-table-cell--header">
+                      <ColumnSelect
+                        placeholder="Filter Severity..."
+                        options={severityLevels}
+                        selected={filterSeverities}
+                        onChange={setFilterSeverities}
+                      />
+                    </th>
+                    <th className="forge-table-cell forge-table-cell--header">
+                      <ColumnSelect
+                        placeholder="Filter Status..."
+                        options={['Active', 'Inactive']}
+                        selected={filterStatuses}
+                        onChange={setFilterStatuses}
+                      />
+                    </th>
+                    <th className="forge-table-cell forge-table-cell--header"></th>
+                    <th className="forge-table-cell forge-table-cell--header"></th>
+                    <th className="forge-table-cell forge-table-cell--header"></th>
+                    <th className="forge-table-cell forge-table-cell--header"></th>
+                  </tr>
                   </thead>
                   <tbody>
                     {paginatedWorkflows.length === 0 ? (
@@ -507,75 +594,19 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                 </table>
               </div>
 
-              {/* Pagination Controls */}
-              {filteredWorkflows.length > 0 && (
-                <div className="flex items-center justify-between" style={{ padding: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--border)' }}>
-                  <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', whiteSpace: 'nowrap' }}>
-                      Showing {startIndex + 1}&ndash;{Math.min(startIndex + rowsPerPage, filteredWorkflows.length)} of {filteredWorkflows.length} workflows
-                    </span>
-                    {rowsPerPage === 10 && filteredWorkflows.length > 10 && (
-                      <ForgeButton
-                        variant="outlined"
-                        dense
-                        onClick={() => { setRowsPerPage(25); setCurrentPage(1); }}
-                        style={{ fontSize: '0.75rem', fontFamily: 'var(--forge-font-family)' }}
-                      >
-                        Show 25
-                      </ForgeButton>
-                    )}
-                    {rowsPerPage === 25 && (
-                      <ForgeButton
-                        variant="outlined"
-                        dense
-                        onClick={() => { setRowsPerPage(10); setCurrentPage(1); }}
-                        style={{ fontSize: '0.75rem', fontFamily: 'var(--forge-font-family)' }}
-                      >
-                        Show 10
-                      </ForgeButton>
-                    )}
-                  </div>
-
-                  {totalPages > 1 && (
-                    <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)' }}>
-                      <ForgeButton
-                        variant="outlined"
-                        size="sm"
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        style={{ padding: 'var(--forge-spacing-xxsmall) var(--forge-spacing-xsmall)' }}
-                      >
-                        <forge-icon name="chevron_left" style={{ fontSize: '18px' }}></forge-icon>
-                      </ForgeButton>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <ForgeButton
-                          key={page}
-                          variant={page === currentPage ? 'raised' : 'outlined'}
-                          dense
-                          onClick={() => setCurrentPage(page)}
-                          style={{
-                            ['--forge-button-min-width' as any]: '24px',
-                            ['--forge-button-padding-inline' as any]: '6px',
-                            fontSize: '0.75rem',
-                            fontFamily: 'var(--forge-font-family)',
-                          }}
-                        >
-                          {page}
-                        </ForgeButton>
-                      ))}
-                      <ForgeButton
-                        variant="outlined"
-                        size="sm"
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        style={{ padding: 'var(--forge-spacing-xxsmall) var(--forge-spacing-xsmall)' }}
-                      >
-                        <forge-icon name="chevron_right" style={{ fontSize: '18px' }}></forge-icon>
-                      </ForgeButton>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* forge-paginator, as the Forge build uses on this grid. */}
+              <div style={{ padding: 'var(--forge-spacing-small) var(--forge-spacing-medium)', borderTop: '1px solid var(--border)' }}>
+                {/* @ts-ignore */}
+                <forge-paginator
+                  ref={paginatorRef}
+                  total={filteredWorkflows.length}
+                  page-size={rowsPerPage}
+                  page-index={currentPage - 1}
+                  page-size-options="10,25,50"
+                  offset={(currentPage - 1) * rowsPerPage}
+                  first-last
+                ></forge-paginator>
+              </div>
             </div>
           </ForgeCard>
 
