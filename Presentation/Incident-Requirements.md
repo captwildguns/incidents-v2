@@ -165,7 +165,17 @@ and no incident is filed unassigned. The builder shows the resolved person under
 the field, and the Workflows grid shows the resolved person with the role
 beneath it.
 
-**R4.5** Six of the forty-six steps require an approval. All forty-six use a
+**R4.5** The builder can also name **a specific person** instead of a role. That
+overrides the role, so the assignment does not follow a change of staff. The
+role stays required, since it is what governs permission.
+
+**R4.6** The person filing an incident can assign it. **Assigned To** on the new
+incident form defaults to the workflow owner and names who that resolves to, for
+example "Workflow default (Jane Doe)". It can be changed to any employee holding
+an incident role. An override applies to that incident only and does not change
+the workflow. Review and Submit states which of the two applied.
+
+**R4.7** Six of the forty-six steps require an approval. All forty-six use a
 manual trigger, so automation is opt-in.
 
 ---

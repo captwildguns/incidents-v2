@@ -10,7 +10,7 @@ import { Badge } from '../ui/badge';
 import { Textarea } from '../ui/textarea';
 import { StepConfigDialog } from './StepConfigDialog';
 import { WorkflowStepLibrary, WorkflowStepTemplate } from './WorkflowStepLibrary';
-import { ROLE_HOLDERS, resolveWorkflowOwner } from '../../data/workflows';
+import { ROLE_HOLDERS, INCIDENT_ROLE_HOLDERS, roleHolderLabel, resolveWorkflowOwner } from '../../data/workflows';
 import {
   Plus,
   Trash2,
@@ -70,6 +70,8 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
   const [workflowActive, setWorkflowActive] = useState(selectedWorkflow?.active ?? true);
   // Required: a workflow that names no owner would file its incidents unassigned.
   const [ownerRole, setOwnerRole] = useState<string>(selectedWorkflow?.ownerRole || '');
+  // Optional: names one person instead of whoever holds the role.
+  const [ownerName, setOwnerName] = useState<string>(selectedWorkflow?.ownerName || '');
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [steps, setSteps] = useState<WorkflowStep[]>(
     selectedWorkflow?.steps && selectedWorkflow.steps.length > 0
@@ -275,7 +277,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
               Workflow Details
             </span>
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)', marginLeft: 4 }}>
-              {workflowName}{workflowCategory ? ` · ${workflowCategory}` : ''}{workflowSeverity ? ` · ${workflowSeverity}` : ''}{ownerRole ? ` · ${ownerRole}` : ''}
+              {workflowName}{workflowCategory ? ` · ${workflowCategory}` : ''}{workflowSeverity ? ` · ${workflowSeverity}` : ''}{ownerName ? ` · ${ownerName}` : ownerRole ? ` · ${ownerRole}` : ''}
             </span>
           </div>
           <ChevronDown
@@ -367,9 +369,32 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                   ))}
                 </select>
                 <div style={{ fontSize: 'var(--text-sm)', color: ownerRole ? 'var(--muted-foreground)' : 'var(--destructive)', marginTop: 'var(--forge-spacing-xxsmall)' }}>
-                  {ownerRole
-                    ? 'Incidents on this workflow are assigned to ' + (resolveWorkflowOwner({ ownerRole }) ?? ownerRole) + '.'
-                    : 'Required. Incidents cannot be assigned without an owner.'}
+                  {!ownerRole
+                    ? 'Required. Incidents cannot be assigned without an owner.'
+                    : ownerName
+                      ? 'Incidents on this workflow are assigned to ' + ownerName + ', regardless of who holds the role.'
+                      : 'Incidents on this workflow are assigned to ' + (resolveWorkflowOwner({ ownerRole }) ?? ownerRole) + '.'}
+                </div>
+              </div>
+
+              <div>
+                <Label style={{ fontSize: 'var(--text-sm)' }}>Assign to a specific person</Label>
+                <select
+                  value={ownerName}
+                  onChange={(e) => setOwnerName(e.target.value)}
+                  style={{
+                    width: '100%', marginTop: 'var(--forge-spacing-xsmall)',
+                    padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)',
+                    border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)',
+                  }}
+                >
+                  <option value="">Whoever holds the role</option>
+                  {INCIDENT_ROLE_HOLDERS.map(h => (
+                    <option key={h.name} value={h.name}>{roleHolderLabel(h)}</option>
+                  ))}
+                </select>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)', marginTop: 'var(--forge-spacing-xxsmall)' }}>
+                  Optional. Overrides the role, so the assignment does not follow a change of staff.
                 </div>
               </div>
 

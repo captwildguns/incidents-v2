@@ -27,7 +27,7 @@ import { mockVehicles } from '../vehicles/VehiclesPage';
 import { mockDrivers, allEmployees } from '../../data/employees';
 import { mockStudents } from '../students/StudentsPage';
 import { IncidentLocationMap } from './IncidentLocationMap';
-import { assignWorkflowToIncident, resolveWorkflowOwner } from '../../data/workflows';
+import { assignWorkflowToIncident, resolveWorkflowOwner, INCIDENT_ROLE_HOLDERS, roleHolderLabel } from '../../data/workflows';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The container form.
@@ -226,6 +226,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const [driver, setDriver] = useState('');
   const [run, setRun] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  // Empty means follow the workflow owner. Set means this incident goes to a
+  // named person regardless of what the workflow routes to.
+  const [assignee, setAssignee] = useState('');
   const [tagDraft, setTagDraft] = useState('');
   const [witnessPresent, setWitnessPresent] = useState(false);
   const [witnesses, setWitnesses] = useState<PersonContact[]>([]);
@@ -1001,6 +1004,32 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               />
             </forge-text-field>
           </div>
+
+          <div>
+            <label style={labelStyle}>Assigned To</label>
+            {/* @ts-ignore */}
+            <forge-text-field>
+              <select
+                value={assignee}
+                onChange={(e) => setAssignee(e.target.value)}
+                style={selectStyle}
+              >
+                <option value="">
+                  {routed?.owner ? `Workflow default (${routed.owner})` : 'Workflow default'}
+                </option>
+                {INCIDENT_ROLE_HOLDERS.map(h => (
+                  <option key={h.name} value={h.name}>{roleHolderLabel(h)}</option>
+                ))}
+              </select>
+            </forge-text-field>
+            <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', marginTop: '4px' }}>
+              {assignee
+                ? 'Overrides the workflow for this incident only.'
+                : routed
+                  ? 'Follows the ' + routed.workflow + ' workflow.'
+                  : 'Set by the workflow once incident type and severity are chosen.'}
+            </div>
+          </div>
         </div>
 
         {witnessPresent && (
@@ -1141,11 +1170,13 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     ['Workflow', routed ? routed.workflow : 'None matches this type and severity'],
     // Unassigned is a real outcome per #197: a workflow with no owner creates
     // the incident unassigned and it lands in the triage queue.
-    ['Assigned to', routed
-      ? (routed.owner
-          ? `${routed.owner}${routed.ownerRole ? ` (${routed.ownerRole})` : ''}`
-          : 'Unassigned, goes to triage')
-      : '-'],
+    ['Assigned to', assignee
+      ? `${assignee}, chosen on this incident`
+      : routed
+        ? (routed.owner
+            ? `${routed.owner}${routed.ownerRole ? ` (${routed.ownerRole})` : ''}`
+            : 'Unassigned, goes to triage')
+        : '-'],
     ['Photos', uploadedPhotos.length ? `${uploadedPhotos.length} attached` : '-'],
     ['Documents', uploadedDocuments.length ? `${uploadedDocuments.length} attached` : '-'],
     ['Location pin', locationAddress || (locationCoordinates ? `${locationCoordinates.lat.toFixed(4)}, ${locationCoordinates.lng.toFixed(4)}` : '-')],

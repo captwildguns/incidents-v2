@@ -80,6 +80,30 @@ export const ROLE_HOLDERS: Record<string, string> = {
   'Driver': 'Mike Chen',
 };
 
+// The people who hold an incident role, and can therefore be assigned an
+// incident. Inverted from ROLE_HOLDERS rather than listed by hand, so the
+// assignable list and the resolver cannot drift apart. A person holding more
+// than one role appears once, carrying both.
+export interface IncidentRoleHolder {
+  name: string;
+  roles: string[];
+}
+
+export const INCIDENT_ROLE_HOLDERS: IncidentRoleHolder[] = Object.entries(ROLE_HOLDERS)
+  .reduce<IncidentRoleHolder[]>((acc, [role, name]) => {
+    const existing = acc.find(h => h.name === name);
+    if (existing) existing.roles.push(role);
+    else acc.push({ name, roles: [role] });
+    return acc;
+  }, [])
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+// "Sarah Williams (Administrator, Safety Coordinator)", so a person picking an
+// assignee can see what that person is allowed to handle.
+export function roleHolderLabel(holder: IncidentRoleHolder): string {
+  return holder.name + ' (' + holder.roles.join(', ') + ')';
+}
+
 // The person an incident on this workflow is assigned to at creation.
 // Incident Owner is required in the workflow builder, so a saved workflow always
 // names one. The null return covers a workflow that predates the field.
