@@ -77,7 +77,7 @@ export function HelpPage() {
               <div>
                 <h3 className="mb-3" style={{ fontFamily: 'var(--forge-font-family)' }}>Overview</h3>
                 <p className="text-foreground leading-relaxed" style={{ fontFamily: 'var(--forge-font-family)' }}>
-                  The Incident Tracker is an application designed for Student Transportation departments to capture, manage, and communicate about incidents that occur during daily operations. The Tyler Tech Incident Tracker is integrated into Student Transportation to leverage student, vehicle, and driver data. The application helps safety coordinators, supervisors, and administrators track student behavioral incidents across 5 types, manage multi-step workflows, communicate with drivers, administer email templates and user roles, and generate reports for analysis and compliance.
+                  The Incident Tracker is an application designed for Student Transportation departments to capture, manage, and communicate about incidents that occur during daily operations. It is integrated into Student Transportation to leverage student, employee, vehicle, and location data. An incident is not always about a student, so the application covers five subjects: Student, Vehicle, Location, Third Party, and Employee. Choosing the subject is the first thing you do, and it determines which details you are asked for. Across those subjects there are 20 incident types in 10 categories. The application helps safety coordinators, supervisors, and administrators file incidents, run multi-step workflows, communicate with drivers, administer email templates and user roles, and generate reports for analysis and compliance.
                 </p>
               </div>
 
@@ -88,11 +88,11 @@ export function HelpPage() {
                   The application uses Tyler Forge navigation patterns:
                 </p>
                 <ul className="space-y-2 ml-5 text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
-                  <li><strong>Hamburger Menu:</strong> Click the menu icon in the top-left to open the slide-out navigation panel with your profile and all application areas</li>
-                  <li><strong>Top Navigation Tabs:</strong> Quick access to Dashboard, Incidents, Students, Drivers, Vehicles, Communications, Reports, Workflows, and Admin</li>
+                  <li><strong>Navigation Drawer:</strong> Always visible down the left side, listing every application area: Dashboard, Incidents, Students, Employees, Vehicles, Locations, Communications, Reports, Workflows, and Admin. Click the menu icon in the top-left to collapse it to icons when you need the width</li>
+                  <li><strong>Students, Employees, Vehicles, and Locations:</strong> One page per thing an incident can be about, so every subject has a record to point at</li>
                   <li><strong>Help Icon (?):</strong> Located in the top-right app bar, click to access this Help &amp; Support page</li>
                   <li><strong>Profile Menu:</strong> Click the avatar in the top-right to log out</li>
-                  <li><strong>Global Search:</strong> Search bar in the top-center of the app bar for quick access to incidents, students, drivers, vehicles, and communications</li>
+                  <li><strong>Global Search:</strong> Search bar in the top-center of the app bar for quick access to incidents, students, drivers, and vehicles. Employees who are not drivers, and locations, are found from their own pages</li>
                 </ul>
               </div>
 
@@ -107,8 +107,8 @@ export function HelpPage() {
                   <li><strong>Administrator</strong> &mdash; Full system access including Admin configuration, workflow builder, and system settings</li>
                   <li><strong>School Principal</strong> &mdash; Reviews incidents involving their school&rsquo;s students, participates in disciplinary workflows</li>
                   <li><strong>Driver</strong> &mdash; Completes initial response workflow steps, receives communications</li>
-                  <li><strong>Fleet Manager</strong> &mdash; Manages vehicle incidents, repairs, and fleet maintenance workflows</li>
-                  <li><strong>Nurse</strong> &mdash; Provides victim support and medical assessments in behavioral incident workflows</li>
+                  <li><strong>Fleet Manager</strong> &mdash; Owns Vehicle incidents, assesses damage, and schedules repairs</li>
+                  <li><strong>Nurse</strong> &mdash; Provides medical assessment and first aid, and owns the Employee Injury workflow</li>
                   <li><strong>Mechanic</strong> &mdash; Handles vehicle repair tasks within maintenance and breakdown workflows</li>
                 </ul>
               </div>
@@ -133,17 +133,17 @@ export function HelpPage() {
                       <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Incident Management</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      Create, edit, filter, and track student incidents across 5 types: Disruptive Behavior, Safety Violation, Physical Altercation, Property Damage, and Weapon / Prohibited Items. Includes visual bus seat selection, photo/document attachments, and full audit history.
+                      File, edit, filter, and track incidents on any of the five subjects, using 20 incident types. One form serves all five: the fields that do not apply to the subject are not shown. Records when the incident happened separately from when it was filed, and carries photo and document attachments plus a full audit history.
                     </p>
                   </div>
 
                   <div style={featureCard}>
                     <div className="flex items-center gap-2 mb-2">
                       <Users className="h-5 w-5 text-primary" />
-                      <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Student Profiles</h4>
+                      <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Students, Employees, and Locations</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      View student incident history, pattern analysis, and transportation details to support behavioral interventions.
+                      A page for each, showing incident history and the details behind it. Employees covers drivers and non-drivers alike, so an Employee incident can name an aide or a mechanic, and Locations covers depots, garages, and yards.
                     </p>
                   </div>
 
@@ -160,10 +160,10 @@ export function HelpPage() {
                   <div style={featureCard}>
                     <div className="flex items-center gap-2 mb-2">
                       <UserCircle className="h-5 w-5 text-primary" />
-                      <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Driver Management</h4>
+                      <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Vehicles and Fleet</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      Track driver assignments, certifications, incident history, safety ratings, and performance scores.
+                      Track vehicle assignments, maintenance status, default garage, and incident history. A Vehicle incident names the affected bus rather than a person.
                     </p>
                   </div>
 
@@ -193,7 +193,7 @@ export function HelpPage() {
                       <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Workflow System</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      5 pre-configured workflows, one per incident type, with auto-assignment, manual step progression, role-based assignments, approval gates, configurable email notifications, and full audit trail.
+                      12 delivered workflows containing 46 steps, selected automatically from incident type and severity. Every workflow names a required Incident Owner, so no incident is filed unassigned, and can name a specific person instead of a role. Manual step progression, approval gates, configurable email notifications, and a full audit trail.
                     </p>
                   </div>
 
@@ -203,7 +203,7 @@ export function HelpPage() {
                       <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Administration</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      Manage user roles (7 types), 3 email notification templates with variable placeholders, and incident types with full CRUD operations.
+                      Manage user roles (7 types), 3 email notification templates with variable placeholders, and the 20 incident types with full CRUD operations.
                     </p>
                   </div>
                 </div>
@@ -245,21 +245,22 @@ export function HelpPage() {
                     <div>
                       <h4 className="mb-2">My Incidents Section</h4>
                       <p className="mb-2">
-                        Shows incidents assigned to you. Each card displays the student name, priority badge, incident type, vehicle, time, and a brief reason. Quick action buttons let you View the incident, send a Message, or Mark In Progress without leaving the dashboard.
+                        Shows incidents assigned to you. Each card displays who or what the incident is about, a priority badge, the incident type, the vehicle, the time, and a brief reason. Quick action buttons let you View the incident, send a Message, or Mark In Progress without leaving the dashboard.
                       </p>
                     </div>
                     <div>
                       <h4 className="mb-2">Charts</h4>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Incidents by Type:</strong> Pie chart showing distribution across the student incident types</li>
-                        <li><strong>Incidents by Vehicle:</strong> Horizontal bar chart of the top 6 buses by incident count</li>
+                        <li><strong>Incidents by Subject:</strong> Pie chart splitting incidents across Student, Vehicle, Location, Third Party, and Employee</li>
+                        <li><strong>Incidents by Type:</strong> Pie chart showing distribution across the 20 incident types</li>
+                        <li><strong>Incidents by Driver:</strong> Horizontal bar chart of drivers by incident count</li>
                         <li><strong>Incidents by Day:</strong> Vertical bar chart showing incident volume by day of the week</li>
                       </ul>
                     </div>
                     <div>
                       <h4 className="mb-2">Active Incidents Table</h4>
                       <p>
-                        Displays the most recent open incidents. Click any row to navigate directly to the incident detail page.
+                        Displays the most recent open incidents using the same columns as the Incidents page, including Subject. Click any row to navigate directly to the incident detail page.
                       </p>
                     </div>
                   </AccordionContent>
@@ -280,14 +281,17 @@ export function HelpPage() {
 
                     <div>
                       <h4 className="mb-2">Incident Types</h4>
-                      <p className="mb-2">The system tracks <strong>5 student incident types:</strong></p>
+                      <p className="mb-2">The system tracks <strong>20 incident types</strong>, and the list you are offered is filtered to the subject you chose, so a Vehicle incident only offers vehicle types:</p>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Disruptive Behavior:</strong> Offensive language, excessive noise, harassment, bullying, refusal of driver directives, or any disruptive conduct on the bus</li>
-                        <li><strong>Safety Violation:</strong> Seat or seatbelt refusal, unsafe movement, window misuse, emergency exit misuse, wrong stop exit, or eating/drinking on the bus</li>
-                        <li><strong>Physical Altercation:</strong> Fighting, physical assault, throwing objects, or verbal/physical threats directed toward another student or any person on the bus</li>
-                        <li><strong>Property Damage:</strong> Vandalism or damage to the bus, equipment, or personal belongings requiring restitution</li>
-                        <li><strong>Weapon / Prohibited Items:</strong> Possession of a weapon, weapon-like object, tobacco, vaping devices, illegal substances, or any other prohibited materials on the bus</li>
+                        <li><strong>Student (6):</strong> Disruptive Behavior, Safety Violation, Physical Altercation, Property Damage, Weapon / Prohibited Items, and Witness / Bystander Statement</li>
+                        <li><strong>Employee (4):</strong> Employee Altercation, Employee Misconduct, Employee Injury, and Employee Substance Violation</li>
+                        <li><strong>Third Party (4):</strong> Third Party Collision, Third Party Injury, Third Party Conduct, and Public Complaint</li>
+                        <li><strong>Vehicle (3):</strong> Vehicle Damage, Mechanical Failure, and Single Vehicle Collision</li>
+                        <li><strong>Location (3):</strong> Location Damage, Utility Failure, and Location Safety Hazard</li>
                       </ul>
+                      <p className="mb-2" style={{ marginTop: 'var(--forge-spacing-small)' }}>
+                        Every type sits in a category describing what happened rather than who was involved, which is what the list filters on and what reports group by. The subject carries the relationship.
+                      </p>
                     </div>
 
                     <div>
@@ -303,11 +307,14 @@ export function HelpPage() {
                     <div>
                       <h4 className="mb-2">Filtering &amp; Search</h4>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Search:</strong> By student name, vehicle, or run</li>
+                        <li><strong>Per-column filters:</strong> A filter sits under each column header and applies as you type or choose</li>
+                        <li><strong>Involved:</strong> Who or what the incident is about, whether that is a student, an employee, a vehicle, or a location</li>
+                        <li><strong>Subject:</strong> Student, Vehicle, Location, Third Party, or Employee</li>
                         <li><strong>Status:</strong> Open, In Progress, Closed, Cancelled</li>
                         <li><strong>Severity:</strong> Critical, High, Medium, Low</li>
-                        <li><strong>Type:</strong> Any incident type</li>
-                        <li><strong>Assigned To:</strong> Filter by coordinator</li>
+                        <li><strong>Type:</strong> Any of the 20 incident types</li>
+                        <li><strong>Assigned To:</strong> Filter by the person the incident is assigned to</li>
+                        <li><strong>Year separation:</strong> Incidents are listed newest first with a break between years, so past years stay visible rather than being filtered out</li>
                         <li><strong>Pagination:</strong> Navigate through large result sets with page controls</li>
                       </ul>
                     </div>
@@ -316,10 +323,11 @@ export function HelpPage() {
                       <h4 className="mb-2">Incident Detail Page</h4>
                       <p className="mb-2">Click any incident row or ID to open the full detail page with these tabs:</p>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Overview:</strong> Complete incident info, student profile, severity, assigned coordinator, and workflow status widget</li>
+                        <li><strong>Overview:</strong> Every field the form collected, including subject, type, severity, status, the term the incident falls in, when it happened and when it was reported, the people or the affected asset, and who it is assigned to. Fields that do not apply to the subject are not shown</li>
                         <li><strong>Workflow:</strong> Step-by-step progress with &ldquo;Complete this step&rdquo; buttons, role assignments, approval gates, and timestamps</li>
                         <li><strong>Communications:</strong> All messages related to this incident</li>
-                        <li><strong>Documents:</strong> Attached evidence and documentation</li>
+                        <li><strong>Photos:</strong> Photo evidence, with a count on the tab</li>
+                        <li><strong>Documents:</strong> Attached documentation, with a count on the tab</li>
                         <li><strong>History:</strong> Full audit trail with chronological timeline of all activities</li>
                       </ul>
                     </div>
@@ -343,25 +351,31 @@ export function HelpPage() {
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4 text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <p>
-                      The Workflow System provides structured, multi-step incident response processes. <strong>5 pre-configured workflows</strong> cover all student incident types, one per type, and are automatically assigned when an incident is created.
+                      The Workflow System provides structured, multi-step incident response processes. <strong>12 delivered workflows containing 46 steps</strong> cover all 20 incident types across the five subjects, and are automatically assigned when an incident is created.
                     </p>
 
                     <div>
                       <h4 className="mb-2">How Workflows Are Assigned</h4>
                       <p className="mb-2">
-                        When an incident is created, the system automatically matches the workflow to the incident type. Severity is used as a secondary signal but the primary match is always by incident type, ensuring every student incident gets the correct process immediately.
+                        When an incident is created, the system matches a workflow on incident type plus severity, so every incident gets the correct process immediately. The workflow names a required <strong>Incident Owner</strong>, and the incident is assigned to whoever holds that role at the moment it is created, or to a specific person if the workflow names one. Because the owner is required, no incident is filed unassigned. The person filing can also choose a different assignee for that one incident.
                       </p>
                     </div>
 
                     <div>
                       <h4 className="mb-2">Pre-Configured Workflows</h4>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>WF-001 Disruptive Behavior Response</strong> &mdash; Disruptive Behavior</li>
-                        <li><strong>WF-002 Physical Altercation Response</strong> &mdash; Physical Altercation</li>
-                        <li><strong>WF-003 Prohibited Items Response</strong> &mdash; Weapon / Prohibited Items</li>
-                        <li><strong>WF-004 Property Damage Investigation</strong> &mdash; Property Damage</li>
-                        <li><strong>WF-005 Safety Violation Response</strong> &mdash; Safety Violation</li>
-                        <li><strong>WF-006 Witness / Bystander Statement</strong> &mdash; Witness / Bystander Statement</li>
+                        <li><strong>WF-001 Disruptive Behavior Response</strong> &mdash; Disruptive Behavior, owned by School Principal</li>
+                        <li><strong>WF-002 Physical Altercation Response</strong> &mdash; Physical Altercation, owned by School Principal</li>
+                        <li><strong>WF-003 Prohibited Items Response</strong> &mdash; Weapon / Prohibited Items, owned by Administrator</li>
+                        <li><strong>WF-004 Property Damage Investigation</strong> &mdash; Property Damage, owned by Administrator</li>
+                        <li><strong>WF-005 Safety Violation Response</strong> &mdash; Safety Violation, owned by Safety Coordinator</li>
+                        <li><strong>WF-006 Witness / Bystander Statement</strong> &mdash; Witness / Bystander Statement, owned by Safety Coordinator</li>
+                        <li><strong>WF-007 Employee Conduct Review</strong> &mdash; Employee Altercation, Employee Misconduct, and Employee Substance Violation, owned by Administrator</li>
+                        <li><strong>WF-008 Employee Injury Report</strong> &mdash; Employee Injury, owned by Nurse</li>
+                        <li><strong>WF-009 Location Issue Response</strong> &mdash; Location Damage, Utility Failure, and Location Safety Hazard, owned by Administrator</li>
+                        <li><strong>WF-010 Vehicle Damage and Mechanical Response</strong> &mdash; Vehicle Damage, Mechanical Failure, and Single Vehicle Collision, owned by Fleet Manager</li>
+                        <li><strong>WF-011 Third Party Incident Response</strong> &mdash; Third Party Collision, Third Party Injury, and Third Party Conduct, owned by Safety Coordinator</li>
+                        <li><strong>WF-012 Public Complaint Review</strong> &mdash; Public Complaint, owned by Safety Coordinator</li>
                       </ul>
                     </div>
 
@@ -371,7 +385,7 @@ export function HelpPage() {
                         <strong>All step progression is manual.</strong> Users click &ldquo;Complete this step&rdquo; within the incident detail&rsquo;s Workflow tab &mdash; there are no automated triggers. Each step includes:
                       </p>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Assigned Role:</strong> Who is responsible (Driver, Safety Coordinator, Administrator, School Principal, Fleet Manager, Nurse)</li>
+                        <li><strong>Assigned Role:</strong> Who is responsible, one of the seven incident roles (Driver, Safety Coordinator, Administrator, Fleet Manager, Mechanic, School Principal, Nurse)</li>
                         <li><strong>Clear Instructions:</strong> Detailed description of what needs to be done</li>
                         <li><strong>Time Estimate:</strong> Expected completion timeframe</li>
                         <li><strong>Status Tracking:</strong> Not Started, In Progress, Completed, Pending Approval, Approved, Rejected</li>
@@ -397,8 +411,9 @@ export function HelpPage() {
                         <li>Navigate to the <strong>Workflows</strong> page</li>
                         <li>Click <strong>&ldquo;+ Create New Workflow&rdquo;</strong></li>
                         <li>Enter workflow name and description</li>
-                        <li>Select a <strong>specific incident type</strong> from the 5 available types</li>
+                        <li>Select a <strong>specific incident type</strong> from the 20 available types</li>
                         <li>Choose a severity level</li>
+                        <li>Choose an <strong>Incident Owner</strong>. This is required, and the workflow cannot be saved without one. The resolved person is shown under the field, and you can name a specific person instead of a role</li>
                         <li>Add steps from the step library (8 templates across 3 categories: Notification, Review &amp; Action, Close Out) or create custom steps</li>
                         <li>Configure each step&rsquo;s notifications and approvals using the gear icon</li>
                         <li>Save as draft or activate immediately</li>
@@ -432,7 +447,7 @@ export function HelpPage() {
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4 text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <p>
-                      The Students page provides a comprehensive view of all students with incident records, helping identify patterns and students needing support.
+                      The Students page provides a comprehensive view of all students with incident records, helping identify patterns and students needing support. It is one of four record pages, alongside Employees, Vehicles, and Locations, so every incident subject has something to point at.
                     </p>
                     <div>
                       <h4 className="mb-2">Student List View</h4>
@@ -520,18 +535,21 @@ export function HelpPage() {
                   <AccordionTrigger>
                     <div className="flex items-center gap-2">
                       <UserCircle className="h-4 w-4" />
-                      <span style={{ fontFamily: 'var(--forge-font-family)' }}>Driver Management</span>
+                      <span style={{ fontFamily: 'var(--forge-font-family)' }}>Employees</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4 text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <p>
-                      The Drivers page manages driver records, certifications, performance tracking, and safety ratings.
+                      The Employees page manages employee records, covering drivers and non-drivers alike. An Employee incident is often about an aide hurt on a wheelchair lift or a mechanic in a yard dispute, so the roster is not limited to drivers.
                     </p>
                     <div>
-                      <h4 className="mb-2">Driver List View</h4>
+                      <h4 className="mb-2">Employee List View</h4>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Driver ID:</strong> Clickable identifier</li>
-                        <li><strong>Name, Status, Vehicle, Incidents, Communications</strong></li>
+                        <li><strong>Employee ID:</strong> Clickable identifier</li>
+                        <li><strong>Name:</strong> Employee&rsquo;s full name</li>
+                        <li><strong>Job Role:</strong> What the person does day to day, which is separate from the incident role a workflow step is assigned to</li>
+                        <li><strong>Contact and Email:</strong> How to reach them</li>
+                        <li><strong>Status:</strong> Active or Inactive</li>
                       </ul>
                     </div>
                     <div>
@@ -539,6 +557,37 @@ export function HelpPage() {
                       <ul className="ml-5 space-y-1">
                         <li>CDL expiration: 90-day warning (yellow), expired (red)</li>
                       </ul>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* ─── Locations ─── */}
+                <AccordionItem value="locations">
+                  <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      <span style={{ fontFamily: 'var(--forge-font-family)' }}>Locations</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                    <p>
+                      The Locations page lists the depots, garages, and yards a Location incident can be filed against, such as a burst pipe or a power loss. Location is the word Student Transportation already uses for these places, so the subject, its category, and its types all use it.
+                    </p>
+                    <div>
+                      <h4 className="mb-2">Location List View</h4>
+                      <ul className="ml-5 space-y-1">
+                        <li><strong>Location ID:</strong> Clickable identifier</li>
+                        <li><strong>Name:</strong> The depot, garage, or yard</li>
+                        <li><strong>Type:</strong> What kind of place it is</li>
+                        <li><strong>Status:</strong> Active or Inactive</li>
+                        <li><strong>Incidents:</strong> Count of incidents filed against it</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="mb-2">Filing a Location Incident</h4>
+                      <p>
+                        A Location incident names no people. The affected location is what identifies the record, so it is required, and the Vehicle Number, Driver, and Run fields are not shown at all.
+                      </p>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -684,17 +733,72 @@ export function HelpPage() {
                   </AccordionContent>
                 </AccordionItem>
 
+                <AccordionItem value="faq-subjects">
+                  <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>Can I file an incident that does not involve a student?</AccordionTrigger>
+                  <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                    <p className="mb-2">Yes. An incident is not always about a student, so the form asks what the incident is about before anything else. There are five subjects:</p>
+                    <ul className="ml-5 space-y-1">
+                      <li><strong>Student:</strong> One or more students involved</li>
+                      <li><strong>Vehicle:</strong> Damage or breakdown with nobody aboard</li>
+                      <li><strong>Location:</strong> A depot, garage, or yard problem such as a burst pipe or power loss</li>
+                      <li><strong>Third Party:</strong> A motorist, parent, or member of the public</li>
+                      <li><strong>Employee:</strong> Employees only, no students involved</li>
+                    </ul>
+                    <p className="mt-2">The subject determines which fields you are asked for. Vehicle and Location incidents name an affected asset instead of people, and a Location incident does not ask for a vehicle, driver, or run at all.</p>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-subject-change">
+                  <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>What happens if I pick the wrong subject and change it?</AccordionTrigger>
+                  <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                    <p>Changing the subject clears only the answers that are specific to it: the incident type, the people involved, and the affected asset. The date, time, description, location, and any evidence you attached are kept. You are warned before it happens, so a mid-report switch is never a silent loss of what you already typed.</p>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-dates">
+                  <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>What is the difference between the incident date and the reported date?</AccordionTrigger>
+                  <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                    <p className="mb-2">They are two separate values, and both appear on the incident.</p>
+                    <ul className="ml-5 space-y-1">
+                      <li><strong>Incident date and time:</strong> When the incident actually happened. Required. The date defaults to today and cannot be set in the future. The time is deliberately left blank rather than prefilled, so you enter what happened instead of accepting a clock value you never looked at</li>
+                      <li><strong>Reported date and time:</strong> When the record was created. Set by the system and not editable</li>
+                    </ul>
+                    <p className="mt-2">This matters because an incident filed the next morning has to carry the date it happened, not the date it was filed.</p>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-term">
+                  <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>How is the term determined, and can I see incidents from past terms?</AccordionTrigger>
+                  <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                    <p className="mb-2">The term is derived from the incident date rather than being entered separately, and it is shown on the incident record.</p>
+                    <p>Nothing is hidden by term. The Incidents page lists every incident newest first, with a break between years, so past years stay visible instead of being filtered out.</p>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="faq-assignee">
+                  <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>Who is an incident assigned to when I file it?</AccordionTrigger>
+                  <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
+                    <p className="mb-2">To the owner of the workflow that the incident type and severity matched. Every workflow names a required Incident Owner, so nothing is filed unassigned.</p>
+                    <ul className="ml-5 space-y-1">
+                      <li>The owner is a <strong>role</strong>, and the incident goes to whoever holds that role when it is created</li>
+                      <li>A workflow can name <strong>a specific person</strong> instead, which overrides the role so the assignment does not follow a change of staff</li>
+                      <li>On the form, <strong>Assigned To</strong> shows who that resolves to, for example &ldquo;Workflow default (Jane Doe)&rdquo;, and you can pick someone else for that one incident</li>
+                    </ul>
+                  </AccordionContent>
+                </AccordionItem>
+
                 <AccordionItem value="faq-2">
                   <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>What are the incident types?</AccordionTrigger>
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
-                    <p className="mb-2">The system tracks 5 student behavioral incident types. Each type has a dedicated workflow automatically assigned on creation:</p>
+                    <p className="mb-2">There are 20 incident types, grouped by the subject they apply to. The dropdown only offers the types that match the subject you chose, and every type carries a default severity that you can change:</p>
                     <ul className="ml-5 space-y-2">
-                      <li><strong>Disruptive Behavior:</strong> Offensive language, excessive noise, harassment, bullying, refusal of driver directives, or any disruptive conduct on the bus</li>
-                      <li><strong>Safety Violation:</strong> Seat or seatbelt refusal, unsafe movement, window misuse, emergency exit misuse, wrong stop exit, or eating/drinking on the bus</li>
-                      <li><strong>Physical Altercation:</strong> Fighting, hitting, pushing, or any physical contact between students or toward the driver</li>
-                      <li><strong>Property Damage:</strong> Vandalism or damage to the bus, another student&rsquo;s belongings, or district property</li>
-                      <li><strong>Weapon / Prohibited Items:</strong> Possession of weapons, dangerous objects, or prohibited substances on the bus</li>
+                      <li><strong>Student:</strong> Disruptive Behavior, Safety Violation, Physical Altercation, Property Damage, Weapon / Prohibited Items, and Witness / Bystander Statement</li>
+                      <li><strong>Employee:</strong> Employee Altercation, Employee Misconduct, Employee Injury, and Employee Substance Violation</li>
+                      <li><strong>Third Party:</strong> Third Party Collision, Third Party Injury, Third Party Conduct, and Public Complaint</li>
+                      <li><strong>Vehicle:</strong> Vehicle Damage, Mechanical Failure, and Single Vehicle Collision</li>
+                      <li><strong>Location:</strong> Location Damage, Utility Failure, and Location Safety Hazard</li>
                     </ul>
+                    <p className="mt-2">Each type sits in one of 10 categories describing what happened rather than who was involved, so a district asking how many collisions it had gets one number regardless of who was in them.</p>
                   </AccordionContent>
                 </AccordionItem>
 
@@ -719,7 +823,7 @@ export function HelpPage() {
                       A workflow is a structured, step-by-step process that guides you through incident response according to district policies. Instead of remembering all the steps manually, the workflow:
                     </p>
                     <ul className="ml-5 space-y-1">
-                      <li>Automatically assigns the right process based on incident type</li>
+                      <li>Automatically assigns the right process based on incident type and severity</li>
                       <li>Tells you exactly what to do at each step with clear instructions</li>
                       <li>Assigns responsibility to specific roles</li>
                       <li>Enforces approval gates for critical decisions</li>
@@ -733,7 +837,7 @@ export function HelpPage() {
                 <AccordionItem value="faq-5">
                   <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>How are workflows assigned to incidents?</AccordionTrigger>
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
-                    <p className="mb-2">When an incident is created, the system matches the workflow to the <strong>incident type</strong>. Since there is one workflow per student incident type, every student incident is guaranteed a matching workflow automatically. You can see the assigned workflow on the incident detail page&rsquo;s Overview and Workflow tabs.</p>
+                    <p className="mb-2">When an incident is created, the system matches a workflow on <strong>incident type plus severity</strong>. The 12 delivered workflows cover all 20 types, so every incident is guaranteed a matching workflow automatically, and the workflow&rsquo;s required Incident Owner determines who it is assigned to. You can see both on the incident detail page&rsquo;s Overview and Workflow tabs.</p>
                   </AccordionContent>
                 </AccordionItem>
 
@@ -848,7 +952,7 @@ export function HelpPage() {
                   <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>Can I export data for use in other systems?</AccordionTrigger>
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <ul className="ml-5 space-y-1">
-                      <li><strong>CSV Export:</strong> Available on Incidents, Students, Vehicles, and Drivers pages via the Export dropdown</li>
+                      <li><strong>CSV Export:</strong> Available on the Incidents, Students, Employees, Vehicles, and Locations pages via the Export dropdown</li>
                       <li><strong>PDF Reports:</strong> Generate and download one of the 4 pre-configured reports from the Reports page</li>
                     </ul>
                   </AccordionContent>
@@ -857,15 +961,10 @@ export function HelpPage() {
                 <AccordionItem value="faq-14">
                   <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>How do I specify where the incident occurred?</AccordionTrigger>
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
-                    <p className="mb-2">In Step 2 of the new incident form, select from the <strong>Location</strong> dropdown:</p>
-                    <ul className="ml-5 space-y-1">
-                      <li><strong>On Vehicle</strong>, incident occurred while riding the bus</li>
-                      <li><strong>At Vehicle Stop</strong>, incident at a bus stop</li>
-                      <li><strong>Loading/Unloading</strong>, incident during boarding or exit</li>
-                      <li><strong>Layover Location</strong>, incident at a staging or layover area</li>
-                      <li><strong>Other</strong>, any other location</li>
-                    </ul>
-                    <p className="mt-2">You can also optionally select the vehicle and run associated with the incident.</p>
+                    <p className="mb-2">Two things record where it happened, and they answer different questions.</p>
+                    <p className="mb-2"><strong>Location Type</strong> says what kind of place it was, chosen from 12 options: At Vehicle Stop, Fuel Station, Garage, Layover Location, Loading/Unloading, Maintenance Bay, On Vehicle, Parking Lot, School Campus, Wash Bay, Yard, and Other.</p>
+                    <p className="mb-2"><strong>Incident Location Pin</strong> records the actual spot on a map, set from your current location, by clicking the map, or by searching an address.</p>
+                    <p className="mt-2">For a Vehicle or Location incident, the affected asset is separate and required, because with no people named it is the only thing identifying the record. Vehicle Number, Driver, and Run are optional where they apply, and are not shown where they do not.</p>
                   </AccordionContent>
                 </AccordionItem>
 
@@ -878,8 +977,8 @@ export function HelpPage() {
                       <li><strong>Administrators:</strong> Complete system access including Admin configuration and workflow builder</li>
                       <li><strong>School Principals:</strong> View and participate in incidents involving their students</li>
                       <li><strong>Drivers:</strong> View incidents involving their bus, receive communications</li>
-                      <li><strong>Fleet Managers:</strong> Manage vehicle incidents and maintenance workflows</li>
-                      <li><strong>Nurses:</strong> Participate in behavioral/medical assessment workflow steps</li>
+                      <li><strong>Fleet Managers:</strong> Own Vehicle incidents, assess damage, and schedule repairs</li>
+                      <li><strong>Nurses:</strong> Provide medical assessment and first aid, and own the Employee Injury workflow</li>
                       <li><strong>Mechanics:</strong> Handle repair-related workflow steps</li>
                     </ul>
                   </AccordionContent>
