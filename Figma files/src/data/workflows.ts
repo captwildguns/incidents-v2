@@ -81,8 +81,8 @@ export const ROLE_HOLDERS: Record<string, string> = {
 };
 
 // The person an incident on this workflow is assigned to at creation.
-// Returns null when the workflow names no owner, which per #197 means the
-// incident is created unassigned and lands in the triage queue.
+// Incident Owner is required in the workflow builder, so a saved workflow always
+// names one. The null return covers a workflow that predates the field.
 export function resolveWorkflowOwner(workflow: Pick<Workflow, 'ownerRole' | 'ownerName'> | null | undefined): string | null {
   if (!workflow) return null;
   if (workflow.ownerName) return workflow.ownerName;

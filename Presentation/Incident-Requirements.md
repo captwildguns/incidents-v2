@@ -159,8 +159,11 @@ is assigned to whoever holds that role at the moment of creation. The owner does
 not change as the workflow advances, which is what makes an assigned-to-me view
 stable. A named person may override the role.
 
-**R4.4** The Workflows grid shows the owner. The prototype grid has no owner
-concept yet, so this one is specified rather than demonstrated.
+**R4.4** Incident Owner is a **required field in the workflow builder**. A
+workflow cannot be saved without one, so every workflow resolves to an assignee
+and no incident is filed unassigned. The builder shows the resolved person under
+the field, and the Workflows grid shows the resolved person with the role
+beneath it.
 
 **R4.5** Six of the forty-six steps require an approval. All forty-six use a
 manual trigger, so automation is opt-in.
