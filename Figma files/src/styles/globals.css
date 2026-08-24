@@ -321,11 +321,12 @@ forge-button.incident-card-action-btn::part(root) {
    which is invisible until you inspect the computed columns.
 
    Breakpoints measured against screens people actually use:
-     1080p full screen (1904 viewport)  5 across = 301px per chart, no overflow
-     1440p full screen (2560)           5 across = ~450px, comfortable
-     a windowed browser near 1600px     5 across = 254px, at which the Type
-                                        pie's legend overflows its card
-   Hence 1800px, not Tailwind's 2xl at 1536. */
+     1080p full screen (1904 viewport)  4 across = 380px per chart, no overflow
+     1440p full screen (2544 viewport)  4 across = ~545px, comfortable
+   Four charts since Incidents by Vehicle was dropped. Written as a real media
+   query rather than Tailwind variants because an arbitrary min-[] variant lost
+   to lg:grid-cols-3 on CSS source order, which is invisible until you inspect
+   the computed columns. */
 .dashboard-chart-grid {
   display: grid;
   gap: 1rem;
@@ -337,6 +338,6 @@ forge-button.incident-card-action-btn::part(root) {
 @media (min-width: 1024px) {
   .dashboard-chart-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-@media (min-width: 1800px) {
-  .dashboard-chart-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (min-width: 1400px) {
+  .dashboard-chart-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }

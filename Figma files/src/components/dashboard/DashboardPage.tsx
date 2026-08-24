@@ -56,26 +56,6 @@ const incidentSubjectData = (() => {
     .filter(d => d.value > 0);
 })();
 
-// Incidents by vehicle. Counted exactly the way the vehicles grid counts them:
-// the bus the incident happened on, plus assetRef on a vehicle-subject incident,
-// skipping the 'N/A' placeholder.
-const incidentsByVehicleData = (() => {
-  const counts = new Map<string, number>();
-  for (const inc of mockIncidents as any[]) {
-    const names = new Set(
-      [inc.bus, inc.subject === 'vehicle' ? inc.assetRef : null]
-        .filter((n: any) => typeof n === 'string' && n && n !== 'N/A')
-    );
-    for (const name of names) {
-      counts.set(name as string, (counts.get(name as string) ?? 0) + 1);
-    }
-  }
-  return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([label, value]) => ({ label, value }));
-})();
-
 // Incidents by driver. Asked for by Seana on Aug 19, and present in the Forge
 // build where we had only the vehicle equivalent. Skips the 'N/A' placeholder
 // and incidents with no driver, so a location or yard incident does not become
@@ -193,7 +173,7 @@ function CustomPieChart({ data }: { data: { name: string; value: number; fill: s
   );
 }
 
-// Custom SVG Horizontal Bar Chart (for Incidents by Vehicle)
+// Custom SVG Horizontal Bar Chart (Incidents by Driver)
 // Generic horizontal bars. Was vehicle-specific; now takes label/value so
 // the driver chart can reuse it rather than a near-copy.
 function CustomHorizontalBarChart({ data, labelWidth = 80 }: { data: { label: string; value: number }[]; labelWidth?: number }) {
@@ -940,7 +920,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       </div>
 
       {/* Charts Row */}
-      {/* Five charts. Breakpoints measured rather than guessed, against the
+      {/* Four charts. Breakpoints measured rather than guessed, against the
           screens people actually use:
             1080p full screen (1904 viewport): 5 across gives 301px per chart,
               no overflow.
@@ -967,16 +947,6 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
           </div>
           <div style={{ paddingTop: 0 }}>
             <CustomPieChart data={incidentTypeData} />
-          </div>
-        </ForgeCard>
-
-        {/* Incidents by Vehicle */}
-        <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
-          <div style={{ padding: 'var(--forge-spacing-medium)', paddingBottom: 'var(--forge-spacing-small)' }}>
-            <h3 className="forge-typography--heading4" style={{ fontSize: '1rem' }}>Incidents by Vehicle</h3>
-          </div>
-          <div style={{ paddingTop: 0 }}>
-            <CustomHorizontalBarChart data={incidentsByVehicleData.slice(0, 6)} />
           </div>
         </ForgeCard>
 
