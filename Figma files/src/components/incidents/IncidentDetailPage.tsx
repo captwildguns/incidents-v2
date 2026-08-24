@@ -1038,13 +1038,9 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                         </div>
                       )}
 
-                      {s.description && (
-                        <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
-                          <div style={labelStyle}>Student Account</div>
-                          <p style={{ margin: 0, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', lineHeight: '1.6' }}>{s.description}</p>
-                        </div>
-                      )}
-
+                      {/* No per-person account. The form stopped collecting it
+                          per the Aug 20 decision on #75, so rendering it here
+                          would only ever show on seeded records. */}
                       {s.actionTaken && (
                         <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
                           <div style={labelStyle}>Immediate Action Taken</div>

@@ -644,14 +644,11 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                     </div>
                   )}
                 </div>
+                {/* No per-person description. Decided with Jon on Aug 20 (#75):
+                    Additional Notes already covers what is specific to a person,
+                    so a second free-text field is not worth an
+                    IncidentEventStudent column. */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
-                  <div>
-                    <label style={labelStyle}>What this person did</label>
-                    {/* @ts-ignore */}
-                    <forge-text-field>
-                      <textarea rows={2} value={person.description} onChange={(e) => updatePerson(person.id, { description: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                    </forge-text-field>
-                  </div>
                   <div>
                     <label style={labelStyle}>Action taken</label>
                     {/* @ts-ignore */}
