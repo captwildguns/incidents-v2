@@ -145,14 +145,14 @@ workflow files an incident with nowhere to go.
 ## R4. Workflows
 
 **R4.1** Twelve delivered workflows containing forty-six steps, selected
-automatically from incident type and severity. Six new workflows are needed
-beyond the six student ones that exist: Employee Conduct Review, Employee Injury
-Report, Location Issue Response, Vehicle Damage and Mechanical Response, Third
-Party Incident Response, Public Complaint Review.
+automatically from incident type and severity. Six cover the student types and
+six cover the rest: Employee Conduct Review, Employee Injury Report, Location
+Issue Response, Vehicle Damage and Mechanical Response, Third Party Incident
+Response, Public Complaint Review.
 
-**R4.2** Every step assignment uses one of the seven incident roles: Driver,
-Safety Coordinator, Administrator, Fleet Manager, Mechanic, School Principal,
-Nurse. No new roles are introduced.
+**R4.2** Every step assignment uses one of the seven incident roles in
+`IncidentRoleType`: Driver, Safety Coordinator, Administrator, Fleet Manager,
+Mechanic, School Principal, Nurse.
 
 **R4.3** A workflow carries an **owner role**, and an incident filed against it
 is assigned to whoever holds that role at the moment of creation. The owner does
