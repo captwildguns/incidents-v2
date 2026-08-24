@@ -292,12 +292,11 @@ export function HelpPage() {
 
                     <div>
                       <h4 className="mb-2">Creating a New Incident</h4>
-                      <p className="mb-2">Click <strong>&ldquo;+ New Incident&rdquo;</strong> on the Incidents page to open the 4-step wizard:</p>
+                      <p className="mb-2">Click <strong>&ldquo;+ New Incident&rdquo;</strong> on the Incidents page. Choose what the incident is about first, then fill out two steps:</p>
                       <ol className="ml-5 space-y-1">
-                        <li><strong>Step 1, Involved Students:</strong> Search for and add all students involved. A linked incident record will be created for each student.</li>
-                        <li><strong>Step 2, Incident Details:</strong> Enter the shared details that apply to all students, incident type (one of 5), severity, description, location, and any supporting documents.</li>
-                        <li><strong>Step 3, Per-Student Details:</strong> Customize details for each individual student, including their role, specific actions taken, and notes.</li>
-                        <li><strong>Step 4, Review &amp; Submit:</strong> Review all entered information, then click <strong>&ldquo;Submit&rdquo;</strong> to create the incident records. The system automatically assigns the matching workflow based on incident type.</li>
+                        <li><strong>Subject:</strong> Student, Vehicle, Location, Third Party or Employee. The subject determines which fields you are asked for.</li>
+                        <li><strong>Step 1, Incident Details:</strong> The incident type, severity, description, when it happened, where, supporting photos and documents, and the people involved. Expand a person&rsquo;s row to record their role, severity, action taken and notes. Vehicle and Location incidents name an affected asset instead of people.</li>
+                        <li><strong>Step 2, Review &amp; Submit:</strong> Check the details, then submit. <strong>One incident record is created.</strong> Each person named on it carries their own workflow, so the response can differ per person while the incident stays a single record. The workflow is assigned automatically from incident type and severity.</li>
                       </ol>
                     </div>
 
