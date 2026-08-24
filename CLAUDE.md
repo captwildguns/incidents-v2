@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**IncidentsV2** — the V2 test fork of the Student Transportation Incident Tracker prototype. React + Vite + Tailwind CSS. It simulates an incident management system for school transportation (Tyler Technologies / Traversa branding). All data is hardcoded (no backend/API).
+**IncidentsV2** (repo/folder name only, kept so existing links keep working) is the preview fork of the Student Transportation Incident Tracker prototype. React + Vite + Tailwind CSS. It simulates an incident management system for school transportation (Tyler Technologies / Traversa branding). All data is hardcoded (no backend/API).
 
 This project exists to rework how incidents get created without disturbing the current site. Big changes land here first.
 
-- V2 test site (this project): `https://captwildguns.github.io/incidents-v2/` from repo `captwildguns/incidents-v2`
-- Current site (leave working): `https://captwildguns.github.io/incident-tracker/` from repo `captwildguns/incident-tracker`
+- Preview site (this project, covers all five incident subjects): `https://captwildguns.github.io/incidents-v2/` from repo `captwildguns/incidents-v2`
+- Baseline site (student incidents only, leave working): `https://captwildguns.github.io/incident-tracker/` from repo `captwildguns/incident-tracker`
 
 Forked from `captwildguns/incident-tracker` at commit `bc86d3e`, so full history before that point is shared. The two repos are independent from that commit forward; nothing syncs automatically between them.
 
@@ -82,3 +82,16 @@ Dashboard, Incidents (list + detail), Students, Drivers, Vehicles, Communication
 
 ## Deployment
 Currently deployed via Vercel CLI (`npx vercel`). The build output directory is `build/`.
+
+## Terminology
+
+Do not use "V1" and "V2" in anything a stakeholder reads. Ted raised in the
+Aug 21 launch meeting that they read as release versions, and that people would
+assume V1 means student incidents only. Describe scope instead:
+
+- **student incidents only** for what the application does today
+- **five incident subjects** for the expanded scope this fork specifies
+
+"V1" is reserved for what actually ships in November. The repo name, the Vite
+base `/incidents-v2/` and the GitHub Pages URL keep the old spelling on purpose,
+because QA and DEV already have that link; they are addresses, not labels.

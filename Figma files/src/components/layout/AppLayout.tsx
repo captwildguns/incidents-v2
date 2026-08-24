@@ -241,14 +241,14 @@ export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommu
           padding: 'var(--forge-spacing-small) var(--forge-spacing-large)',
           textAlign: 'center',
         }}>
-          &copy; 2025 Tyler Technologies Inc. V2 test build
+          &copy; 2025 Tyler Technologies Inc. Preview build
         </div>
       </aside>
     </forge-drawer>
 
       {/* App Bar */}
       <div slot="header">
-        <forge-app-bar elevation="raised" title-text="Incident Tracker V2">
+        <forge-app-bar elevation="raised" title-text="Incident Tracker">
           <forge-icon-button slot="start" aria-label="Menu"
             onClick={() => setIsDrawerOpen(!isDrawerOpen)}
             style={{ color: 'white' }}

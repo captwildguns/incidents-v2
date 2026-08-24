@@ -1,4 +1,11 @@
-# Incident Tracker V2 requirements
+# Incident Tracker requirements: five incident subjects
+
+Terminology note. This document deliberately avoids "V1" and "V2". Ted raised
+in the Aug 21 launch meeting that those labels read as release versions, and
+that people would assume V1 ships student incidents only. The two things being
+compared here are scope, not releases: **student incidents only**, which is what
+the application does today, and **five incident subjects**, which is what this
+document specifies. V1 refers only to what ships in November.
 
 For the November launch. Written for the Review Incident Issues group, so dev
 and QA can estimate without re-scoping every screen.
