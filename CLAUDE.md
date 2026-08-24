@@ -89,8 +89,12 @@ Do not use "V1" and "V2" in anything a stakeholder reads. Ted raised in the
 Aug 21 launch meeting that they read as release versions, and that people would
 assume V1 means student incidents only. Describe scope instead:
 
-- **student incidents only** for what the application does today
+- **student incidents only** for the narrower shape the module was originally scoped to
 - **five incident subjects** for the expanded scope this fork specifies
+
+Nothing has shipped, so never write about behaviour as if it exists "today".
+Where a gap has to be named, attribute it to **the prototype**, which is a real
+artifact people can open, not to "the application".
 
 "V1" is reserved for what actually ships in November. The repo name, the Vite
 base `/incidents-v2/` and the GitHub Pages URL keep the old spelling on purpose,

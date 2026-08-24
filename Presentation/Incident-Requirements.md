@@ -1,11 +1,13 @@
 # Incident Tracker requirements: five incident subjects
 
-Terminology note. This document deliberately avoids "V1" and "V2". Ted raised
-in the Aug 21 launch meeting that those labels read as release versions, and
-that people would assume V1 ships student incidents only. The two things being
-compared here are scope, not releases: **student incidents only**, which is what
-the application does today, and **five incident subjects**, which is what this
-document specifies. V1 refers only to what ships in November.
+Terminology note. This document avoids "V1" and "V2". Ted raised in the Aug 21
+launch meeting that those labels read as release versions, and that people would
+assume V1 means student incidents only. Nothing has shipped, so there is no
+earlier version to compare against: the software is being designed now and this
+document specifies part of it. Where scope has to be named, **student incidents
+only** describes the narrower shape the module was originally scoped to, and
+**five incident subjects** describes what is specified here. V1 refers only to
+what ships in November.
 
 For the November launch. Written for the Review Incident Issues group, so dev
 and QA can estimate without re-scoping every screen.
@@ -157,7 +159,8 @@ is assigned to whoever holds that role at the moment of creation. The owner does
 not change as the workflow advances, which is what makes an assigned-to-me view
 stable. A named person may override the role.
 
-**R4.4** The Workflows grid shows the owner. It currently has no owner concept.
+**R4.4** The Workflows grid shows the owner. The prototype grid has no owner
+concept yet, so this one is specified rather than demonstrated.
 
 **R4.5** Six of the forty-six steps require an approval. All forty-six use a
 manual trigger, so automation is opt-in.
@@ -210,7 +213,8 @@ to find a record when you do not know a person's name.
 Involved, Subject, Type, Severity, Status, Assigned To.
 
 **R7.3** The Involved column is subject-aware. A Location incident shows the
-location, a Vehicle incident the vehicle. It currently shows only students.
+location, a Vehicle incident the vehicle. The prototype shows only students in
+that column.
 
 **R7.4** Students, Employees, Locations and Vehicles each show an incident count
 that opens the incidents behind it.
@@ -223,8 +227,8 @@ sharing a surname must not return each other's incidents.
 ## R8. The record
 
 **R8.1** The record shows Subject, Type, Occurred as date and time, Term,
-Location, Severity, **Status**, Assigned To and Description. Status is on both
-grids today but on no record.
+Location, Severity, **Status**, Assigned To and Description. Status appears on
+both grids in the prototype but on no record, so the record has to carry it.
 
 **R8.2** Fields that do not apply to the subject are not shown, and fields with
 no value are not shown as empty labels.
@@ -269,7 +273,7 @@ not lost, and so nobody estimates them by accident.
 - **A TBD or tentative option for Role in Incident.** Seana. Reporters often do
   not know a role at filing, and the current set forces a definite answer.
 - **A campus-scoped view** so a school administrator sees incidents for their
-  own campus. There is no school filter anywhere today.
+  own campus. Nothing in this document specifies a school filter.
 - **State-reportable incidents**, weapons in particular. Whether tags can carry
   this and be reported on.
 - **Aides and monitors associated with a run.**
