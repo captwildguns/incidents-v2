@@ -6,6 +6,25 @@ OUT = os.path.join(os.path.dirname(SP), 'review-2026-08-25.html')
 live = json.load(io.open(os.path.join(SP, 'live-open.json'), encoding='utf-8'))
 issues = {i['number']: i for i in live}
 
+import subprocess
+
+# Our comments on a ticket, the ones posted as part of this work. Pulled live so
+# the panel shows what is actually on the ticket rather than a summary of it.
+CUTOFF = '2026-08-25'
+
+
+def our_comments(num):
+    out = subprocess.run(['gh', 'issue', 'view', str(num), '--repo',
+                          'tyler-technologies/transportation-incidents',
+                          '--json', 'comments'], capture_output=True,
+                         text=True, encoding='utf-8', errors='replace')
+    if out.returncode:
+        return []
+    data = json.loads(out.stdout).get('comments', [])
+    return [c['body'] for c in data
+            if c['author']['login'] == 'captwildguns' and c['createdAt'][:10] >= CUTOFF]
+
+
 NAMES = {'jonjj7': 'Jon Jungman', 'Justin-Smith': 'Justin Smith', 'captwildguns': 'Gabe Guzman',
          'kristenmichalski': 'Kristen Michalski', 'BKCrypto1': 'Bryan Krufchinski'}
 
@@ -141,13 +160,20 @@ ours = sorted(n for n in issues if n >= 191 and issues[n]['author']['login'] == 
 
 items = []
 
+def posted(num):
+    bodies = our_comments(num)
+    if not bodies:
+        return ''
+    return '<hr>'.join(md2html(b) for b in bodies)
+
+
 for n in targets:
     done = DONE.get(n, [])
     note = ('Posted. ' + ', '.join(str(d) for d in done) + ' closed into this.') if done            else 'Posted. Detail added, nothing of ours closed into it.'
     items.append({
       'g': 'Existing tickets, detail added', 'n': '#%d' % n, 't': issues[n]['title'],
       'st': 'Open', 'kind': 'Existing', 'owner': people(n) + ', opened by ' + author(n),
-      'closes': note, 'adds': md2html(ADDS[n]),
+      'closes': note, 'adds': posted(n) or md2html(ADDS[n]),
       'sum': first_line(n), 'body': '', 'ac': '', 'a': ''})
 
 for n in ours:
