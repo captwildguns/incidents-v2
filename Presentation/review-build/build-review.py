@@ -76,7 +76,7 @@ def first_line(num, n=300):
 
 # Already posted and closed, so the page stops calling them proposals.
 DONE = {108: [198], 75: [201, 194], 97: [205], 77: [199],
-        116: [203], 120: [203], 121: [203], 93: [203]}
+        116: [203], 120: [203], 121: [203], 93: [203], 139: [204]}
 
 # Proposals, not decisions. Each is ours -> the existing ticket that owns the topic.
 PROPOSED = {
@@ -126,9 +126,10 @@ A wrong term is corrected by editing the incident after the fact.""",
       "Photos and Documents carry counts.",
  121: "The other party on a conversation is derived from the incident rather than assumed to be a student's driver.\n"
       "A Subject filter on the conversation list.",
- 139: "The Help content moves to DocuSource.\n"
-      "It describes the five subjects, the two step form, the twenty types, the twelve workflows and the required owner, term on the record, and the difference between the incident date and the reported date.\n"
-      "One incident record is created and each person named on it carries their own workflow.",
+ 139: """The Help content moves to DocuSource. The module keeps no copy of the guide, so a wording fix is a documentation change.
+Help in the app opens the DocuSource content for incidents.
+The documentation covers the five subjects and choosing the subject first, the two step form, the 20 types, the 12 workflows and the required owner, the five roles, the difference between the incident date and the reported date, how the term is set, the twelve location types, and the grid filters.
+One incident record is created and each person named on it carries their own workflow.""",
 }
 
 targets = sorted(ADDS.keys())
