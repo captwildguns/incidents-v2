@@ -75,7 +75,8 @@ def first_line(num, n=300):
 
 
 # Already posted and closed, so the page stops calling them proposals.
-DONE = {108: [198], 75: [201, 194], 97: [205], 77: [199]}
+DONE = {108: [198], 75: [201, 194], 97: [205], 77: [199],
+        116: [203], 120: [203], 121: [203], 93: [203]}
 
 # Proposals, not decisions. Each is ours -> the existing ticket that owns the topic.
 PROPOSED = {
