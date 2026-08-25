@@ -5,7 +5,7 @@ incident ticket.
 
 To refresh it against live GitHub data:
 
-    gh issue list --repo captwildguns/incident-tracker --state open --limit 200 \
+    gh issue list --repo tyler-technologies/transportation-incidents --state open --limit 200 \
       --json number,title,body,author,assignees,labels > live-open.json
     python build-review.py
 

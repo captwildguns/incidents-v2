@@ -75,7 +75,7 @@ def first_line(num, n=300):
 
 
 # Already posted and closed, so the page stops calling them proposals.
-DONE = {108: [198], 75: [201, 194], 97: [205]}
+DONE = {108: [198], 75: [201, 194], 97: [205], 77: [199]}
 
 # Proposals, not decisions. Each is ours -> the existing ticket that owns the topic.
 PROPOSED = {
@@ -95,9 +95,12 @@ ADDS = {
      "A witness or third party is kept when they have either a name or a description.\n"
      "The affected asset is stored as a reference to the vehicle or location record, not typed text.\n"
      "Selecting a run or a vehicle fills the driver.",
- 77: "The incident carries the term it belongs to, taken from the signed-in user's term rather than picked by the reporter.\n"
-     "A student's history shows every year they have incidents in, grouped under a year heading, most recent first.\n"
-     "The incidents grid is not scoped to the default term.",
+ 77: """The incident carries the term it belongs to, taken from the default term rather than picked by the reporter.
+A student has a separate record each term. The incident attaches to the record for the default term, and the records are tied to one person so history is not limited.
+The incidents grid shows the default term, the same as every other grid in the product.
+Opening a student shows every incident they have, whatever term it happened in, grouped under a year heading, most recent first.
+An incident opened directly always opens, even when it belongs to an earlier term.
+A wrong term is corrected by editing the incident after the fact.""",
  89: "Notifications are raised in the Student Transportation notification center. Nothing goes out by email or SMS from the module.\n"
      "Five triggers per step, all off by default: step starts, step completes, assignee notified, approvers notified, named groups notified.\n"
      "Recipients are whoever holds the permission the step is assigned to, plus approver permissions selected on the step, plus named recipients. A permission nobody holds raises nothing and errors nothing.\n"
