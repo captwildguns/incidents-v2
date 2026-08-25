@@ -139,65 +139,77 @@ One incident record is created and each person named on it carries their own wor
 targets = sorted(ADDS.keys())
 ours = sorted(n for n in issues if n >= 191 and issues[n]['author']['login'] == 'captwildguns')
 
+# What the group still has to answer. Nothing here is written as a question in a
+# ticket; these are the things this morning left undecided.
+ASK = {
+ 93: "Which reports ship first. Four exist as tickets, Monthly Summary, Yearly Summary, High and Critical Incidents, and Open Incidents. This ticket asks for one or two to start with, and that choice has not been made.",
+ 197: "Confirm the assignment design against how a real district actually assigns incidents. One person handling the majority with one school routed to a dedicated person is the pattern this was built around, and it needs confirming before it is built.",
+}
+STANDALONE = [{
+ 'n': 'Flags', 't': 'Feature flag granularity',
+ 'sum': 'Five subject flags, or one flag per incident type.',
+ 'ask': "Flags are at feature function level, so the subject is the unit and there are five of them. One per incident type would be twenty. Twenty was raised this morning as worth considering, and the choice has not been made.",
+}]
+
 items = []
 
-closing = [n for n in ours if n in PROPOSED]
-keeping = [n for n in ours if n not in PROPOSED]
+for s in STANDALONE:
+    items.append({
+      'g': 'Needs an answer', 'n': s['n'], 't': s['t'], 'st': 'Open',
+      'kind': '', 'owner': '', 'closes': '', 'adds': '', 'sum': s['sum'],
+      'body': '', 'ac': '', 'a': s['ask']})
+
+for n in sorted(ASK):
+    inside = n in targets
+    items.append({
+      'g': 'Needs an answer', 'n': '#%d' % n, 't': issues[n]['title'], 'st': 'Open',
+      'kind': 'Existing' if inside else 'Ours',
+      'owner': people(n) + ', opened by ' + author(n),
+      'closes': ('Posted. ' + ', '.join(str(d) for d in DONE.get(n, [])) + ' closed into this.') if DONE.get(n) else '',
+      'adds': md2html(ADDS[n]) if inside else '',
+      'sum': first_line(n),
+      'body': '' if inside else md2html(issues[n]['body']),
+      'ac': '', 'a': ASK[n]})
 
 items.append({
  'g': 'Start here', 'n': 'Overview', 't': 'What this review covers', 'st': 'Read first',
  'kind': '', 'owner': '', 'closes': '', 'adds': '',
- 'sum': 'Everything here is live from GitHub. The consolidation is finished.',
- 'body': md2html('''Counts, as they stand right now.
+ 'sum': 'Everything here is live from GitHub. Existing tickets first, then the new ones.',
+ 'body': md2html("""Counts, as they stand right now.
 
-- %d of our tickets are open, and every one is new functionality with no existing ticket covering it.
+- %d existing tickets received new detail, every one of them with acceptance criteria.
 - 10 of ours were closed, with their requirements posted onto the ticket that already owned the topic.
-- %d existing tickets received that detail, each with acceptance criteria.
+- %d of ours stay open, each one new functionality with no existing ticket covering it.
 - Feature flags went onto the 44 tickets they gate rather than sitting on one ticket of their own.
 
-Nothing is proposed any more. Every closure below has happened.''' % (len(ours), len(targets))),
+Three things still need an answer and are at the top of this list.""" % (len(targets), len(ours))),
  'ac': '', 'a': ''})
 
-for n in keeping:
-    items.append({
-      'g': 'Ours, would stay open', 'n': '#%d' % n, 't': issues[n]['title'],
-      'st': 'Open', 'kind': 'Ours', 'owner': people(n), 'closes': '', 'adds': '',
-      'sum': first_line(n), 'body': md2html(issues[n]['body']), 'ac': '', 'a': ''})
-
-for n in closing:
-    tgt = PROPOSED[n]
-    if tgt is None:
-        note = 'Proposed: close this. The flag goes on each ticket it gates rather than one ticket listing them all.'
-    elif isinstance(tgt, list):
-        note = 'Proposed: close this, content splits onto ' + ', '.join(str(x) for x in tgt) + '.'
-    else:
-        note = 'Proposed: close this, content moves onto ' + str(tgt) + '.'
-    items.append({
-      'g': 'Ours, proposed to close', 'n': '#%d' % n, 't': issues[n]['title'],
-      'st': 'Open', 'kind': 'Proposal', 'owner': people(n), 'closes': note, 'adds': '',
-      'sum': first_line(n), 'body': md2html(issues[n]['body']), 'ac': '', 'a': ''})
-
 for n in targets:
+    if n in ASK:
+        continue
     done = DONE.get(n, [])
-    incoming = [str(k) for k, v in PROPOSED.items()
-                if (v == n or (isinstance(v, list) and n in v)) and k not in done]
-    if done:
-        note = 'Posted. ' + ', '.join(str(d) for d in done) + ' closed into this.'
-        if incoming:
-            note += ' Still proposed: ' + ', '.join(incoming) + '.'
-    else:
-        note = ('Proposed: receives ' + ', '.join(incoming) + '.') if incoming else 'Proposed: gains detail, nothing of ours closes into it.'
+    note = ('Posted. ' + ', '.join(str(d) for d in done) + ' closed into this.') if done            else 'Posted. Detail added, nothing of ours closed into it.'
     items.append({
-      'g': 'Existing, would receive detail', 'n': '#%d' % n, 't': issues[n]['title'],
+      'g': 'Existing tickets, detail added', 'n': '#%d' % n, 't': issues[n]['title'],
       'st': 'Open', 'kind': 'Existing', 'owner': people(n) + ', opened by ' + author(n),
       'closes': note, 'adds': md2html(ADDS[n]),
       'sum': first_line(n), 'body': '', 'ac': '', 'a': ''})
 
-GROUPS = ['Start here', 'Ours, would stay open', 'Ours, proposed to close', 'Existing, would receive detail']
+for n in ours:
+    if n in ASK:
+        continue
+    items.append({
+      'g': 'New tickets, still open', 'n': '#%d' % n, 't': issues[n]['title'],
+      'st': 'Open', 'kind': 'Ours', 'owner': people(n), 'closes': '', 'adds': '',
+      'sum': first_line(n), 'body': md2html(issues[n]['body']), 'ac': '', 'a': ''})
+
+GROUPS = ['Needs an answer', 'Start here', 'Existing tickets, detail added', 'New tickets, still open']
 
 tpl = io.open(os.path.join(SP, 'review-shell.html'), encoding='utf-8').read()
-tpl = tpl.replace('/*DATA*/', 'const items = ' + json.dumps(items, ensure_ascii=False) +
-                  ';\nconst groups = ' + json.dumps(GROUPS, ensure_ascii=False) + ';')
+data = 'const items = ' + json.dumps(items, ensure_ascii=False) + ';'
+data += chr(10) + 'const groups = ' + json.dumps(GROUPS, ensure_ascii=False) + ';'
+tpl = tpl.replace('/*DATA*/', data)
 io.open(OUT, 'w', encoding='utf-8', newline='').write(tpl)
-print('panels %d | ours open %d | proposed to close %d | staying %d | targets %d'
-      % (len(items), len(ours), len(closing), len(keeping), len(targets)))
+print('panels %d | needs an answer %d | existing %d | ours %d'
+      % (len(items), len(STANDALONE) + len(ASK), len(targets), len(ours)))

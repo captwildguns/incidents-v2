@@ -70,7 +70,7 @@ border-left:3px solid var(--amber);border-radius:4px}
 <div class="wrap">
   <nav class="side">
     <h1>Incidents review</h1>
-    <p class="sub">Open work, then new work, then decisions</p>
+    <p class="sub">Answers needed, then existing tickets, then new ones</p>
     <div id="nav"></div>
   </nav>
   <main class="main" id="pane"></main>
@@ -111,11 +111,11 @@ function show(i){
     (link ? '<p class="meta">' + link + '</p>' : '') +
     '<p class="lbl">In one line</p><p>' + it.sum + '</p>' +
     (it.owner ? '<p class="meta">' + it.owner + '</p>' : '') +
-    (it.closes ? '<div class="chg"><p class="lbl">Proposal</p><p>' + it.closes + '</p></div>' : '') +
+    (it.closes ? '<div class="chg"><p class="lbl">What changed</p><p>' + it.closes + '</p></div>' : '') +
     (it.adds ? '<p class="lbl">Requirements to add here</p><div class="ac">' + it.adds + '</div>' : '') +
     (it.body ? '<p class="lbl">The ticket as written</p><div class="body">' + it.body + '</div>' : '') +
     (it.ac ? '<p class="lbl">Acceptance criteria, what QA tests</p><div class="ac">' + it.ac + '</div>' : '') +
-    (it.a ? '<div class="ask"><p class="lbl">What is needed</p><p>' + it.a + '</p></div>' : '');
+    (it.a ? '<div class="ask"><p class="lbl">Needs an answer</p><p>' + it.a + '</p></div>' : '');
   window.scrollTo(0, 0);
 }
 show(0);
