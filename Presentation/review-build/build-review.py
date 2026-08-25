@@ -76,7 +76,7 @@ def first_line(num, n=300):
 
 # Already posted and closed, so the page stops calling them proposals.
 DONE = {108: [198], 75: [201, 194], 97: [205], 77: [199],
-        116: [203], 120: [203], 121: [203], 93: [203], 139: [204]}
+        116: [203], 120: [203], 121: [203], 93: [203], 139: [204], 90: [195]}
 
 # Proposals, not decisions. Each is ours -> the existing ticket that owns the topic.
 PROPOSED = {
@@ -106,8 +106,11 @@ A wrong term is corrected by editing the incident after the fact.""",
      "Five triggers per step, all off by default: step starts, step completes, assignee notified, approvers notified, named groups notified.\n"
      "Recipients are whoever holds the permission the step is assigned to, plus approver permissions selected on the step, plus named recipients. A permission nobody holds raises nothing and errors nothing.\n"
      "A notification carries the incident identifier, type, severity and step name.",
- 90: "An approval records who approved and when, separately from an ordinary step completion.\n"
-     "An approver can reject. Rejecting returns the step to in progress, keeps the work already recorded, and notifies the assignee.",
+ 90: """Approval is by role. A step that requires approval names which incident roles can approve it, and cannot be saved without at least one.
+An approval records who approved and when, separately from who completed the work.
+An approver can reject with a required reason. Rejecting returns the step to in progress, keeps the work already recorded, and notifies the assignee.
+A step waiting on approval is visibly distinct from one in progress, and a step rejected then approved keeps both events.
+Approvals behave the same way as approvals elsewhere in Student Transportation.""",
  93: "The exported record set uses the same Involved column as the incidents list, so a location or vehicle row names the depot or the bus rather than leaving the student column empty.",
  95: "Three templates, fixed text, no variable substitution: Action required, Approval needed, Parent contact required.\n"
      "Parent contact required only exists where a student is involved and never raises on an employee, vehicle, location or third party incident.",
