@@ -102,10 +102,10 @@ The incidents grid shows the default term, the same as every other grid in the p
 Opening a student shows every incident they have, whatever term it happened in, grouped under a year heading, most recent first.
 An incident opened directly always opens, even when it belongs to an earlier term.
 A wrong term is corrected by editing the incident after the fact.""",
- 89: "Notifications are raised in the Student Transportation notification center. Nothing goes out by email or SMS from the module.\n"
-     "Five triggers per step, all off by default: step starts, step completes, assignee notified, approvers notified, named groups notified.\n"
-     "Recipients are whoever holds the permission the step is assigned to, plus approver permissions selected on the step, plus named recipients. A permission nobody holds raises nothing and errors nothing.\n"
-     "A notification carries the incident identifier, type, severity and step name.",
+ 89: """Five triggers per step, all off by default: the step starts, the step completes, the assignee is notified, approvers are notified, named recipients are notified.
+Recipients are the people holding the role the step is assigned to, plus any approver roles selected on the step, plus any address typed into the recipient list. A role with nobody in it sends nothing rather than failing.
+A step with no notification configured sends nothing. A sending failure is visible somewhere a coordinator can see it.
+The copy each one sends is on 95.""",
  90: """Approval is by role. A step that requires approval names which incident roles can approve it, and cannot be saved without at least one.
 An approval records who approved and when, separately from who completed the work.
 An approver can reject with a required reason. Rejecting returns the step to in progress, keeps the work already recorded, and notifies the assignee.
