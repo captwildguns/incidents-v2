@@ -115,9 +115,7 @@ export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDi
     'Safety Coordinator',
     'Administrator',
     'Fleet Manager',
-    'Mechanic',
     'School Principal',
-    'Nurse',
   ];
 
   const handleSave = () => {

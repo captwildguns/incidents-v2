@@ -132,9 +132,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
     'Safety Coordinator',
     'Administrator',
     'Fleet Manager',
-    'Mechanic',
     'School Principal',
-    'Nurse',
   ];
 
   const addStep = () => {

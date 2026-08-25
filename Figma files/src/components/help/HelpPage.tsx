@@ -100,7 +100,7 @@ export function HelpPage() {
               <div>
                 <h3 className="mb-3" style={{ fontFamily: 'var(--forge-font-family)' }}>User Roles</h3>
                 <p className="text-foreground leading-relaxed" style={{ marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)' }}>
-                  The system supports seven role types, managed through Administration &rarr; User Roles:
+                  The system supports five incident roles, managed through Administration &rarr; User Roles:
                 </p>
                 <ul className="space-y-1 ml-5 text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                   <li><strong>Safety Coordinator</strong> &mdash; Primary user; manages incidents, communicates with drivers, runs reports</li>
@@ -108,8 +108,6 @@ export function HelpPage() {
                   <li><strong>School Principal</strong> &mdash; Reviews incidents involving their school&rsquo;s students, participates in disciplinary workflows</li>
                   <li><strong>Driver</strong> &mdash; Completes initial response workflow steps, receives communications</li>
                   <li><strong>Fleet Manager</strong> &mdash; Owns Vehicle incidents, assesses damage, and schedules repairs</li>
-                  <li><strong>Nurse</strong> &mdash; Provides medical assessment and first aid, and owns the Employee Injury workflow</li>
-                  <li><strong>Mechanic</strong> &mdash; Handles vehicle repair tasks within maintenance and breakdown workflows</li>
                 </ul>
               </div>
 
@@ -203,7 +201,7 @@ export function HelpPage() {
                       <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Administration</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      Manage user roles (7 types), 3 email notification templates with variable placeholders, and the 20 incident types with full CRUD operations.
+                      Manage the five incident roles, 3 email notification templates with variable placeholders, and the 20 incident types with full CRUD operations.
                     </p>
                   </div>
                 </div>
@@ -371,7 +369,7 @@ export function HelpPage() {
                         <li><strong>WF-005 Safety Violation Response</strong> &mdash; Safety Violation, owned by Safety Coordinator</li>
                         <li><strong>WF-006 Witness / Bystander Statement</strong> &mdash; Witness / Bystander Statement, owned by Safety Coordinator</li>
                         <li><strong>WF-007 Employee Conduct Review</strong> &mdash; Employee Altercation, Employee Misconduct, and Employee Substance Violation, owned by Administrator</li>
-                        <li><strong>WF-008 Employee Injury Report</strong> &mdash; Employee Injury, owned by Nurse</li>
+                        <li><strong>WF-008 Employee Injury Report</strong> &mdash; Employee Injury, owned by Administrator</li>
                         <li><strong>WF-009 Location Issue Response</strong> &mdash; Location Damage, Utility Failure, and Location Safety Hazard, owned by Administrator</li>
                         <li><strong>WF-010 Vehicle Damage and Mechanical Response</strong> &mdash; Vehicle Damage, Mechanical Failure, and Single Vehicle Collision, owned by Fleet Manager</li>
                         <li><strong>WF-011 Third Party Incident Response</strong> &mdash; Third Party Collision, Third Party Injury, and Third Party Conduct, owned by Safety Coordinator</li>
@@ -385,7 +383,7 @@ export function HelpPage() {
                         <strong>All step progression is manual.</strong> Users click &ldquo;Complete this step&rdquo; within the incident detail&rsquo;s Workflow tab &mdash; there are no automated triggers. Each step includes:
                       </p>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Assigned Role:</strong> Who is responsible, one of the seven incident roles (Driver, Safety Coordinator, Administrator, Fleet Manager, Mechanic, School Principal, Nurse)</li>
+                        <li><strong>Assigned Role:</strong> Who is responsible, one of the five incident roles (Driver, Safety Coordinator, Administrator, Fleet Manager, School Principal)</li>
                         <li><strong>Clear Instructions:</strong> Detailed description of what needs to be done</li>
                         <li><strong>Time Estimate:</strong> Expected completion timeframe</li>
                         <li><strong>Status Tracking:</strong> Not Started, In Progress, Completed, Pending Approval, Approved, Rejected</li>
@@ -636,7 +634,7 @@ export function HelpPage() {
                         <li><strong>User Table:</strong> Name, Email, Roles, Status, Last Login</li>
                         <li><strong>Search &amp; Filter:</strong> Search by name/email; filter by role</li>
                         <li><strong>Actions:</strong> Add new user, edit user, delete user</li>
-                        <li><strong>7 Roles:</strong> Driver, Safety Coordinator, Administrator, Fleet Manager, Mechanic, School Principal, Nurse</li>
+                        <li><strong>5 Roles:</strong> Driver, Safety Coordinator, Administrator, Fleet Manager, School Principal</li>
                       </ul>
                     </div>
 
@@ -928,7 +926,7 @@ export function HelpPage() {
                     <ul className="ml-5 space-y-1">
                       <li>View all users with their assigned roles, status, and last login</li>
                       <li>Click <strong>&ldquo;+ Add User&rdquo;</strong> to create a new user record</li>
-                      <li>Assign one or more of the 7 roles: Driver, Safety Coordinator, Administrator, Fleet Manager, Mechanic, School Principal, Nurse</li>
+                      <li>Assign one or more of the five incident roles: Driver, Safety Coordinator, Administrator, Fleet Manager, School Principal</li>
                       <li>Edit user details or toggle Active/Inactive status</li>
                       <li>Search by name/email and filter by role</li>
                     </ul>
@@ -978,8 +976,6 @@ export function HelpPage() {
                       <li><strong>School Principals:</strong> View and participate in incidents involving their students</li>
                       <li><strong>Drivers:</strong> View incidents involving their bus, receive communications</li>
                       <li><strong>Fleet Managers:</strong> Own Vehicle incidents, assess damage, and schedule repairs</li>
-                      <li><strong>Nurses:</strong> Provide medical assessment and first aid, and own the Employee Injury workflow</li>
-                      <li><strong>Mechanics:</strong> Handle repair-related workflow steps</li>
                     </ul>
                   </AccordionContent>
                 </AccordionItem>

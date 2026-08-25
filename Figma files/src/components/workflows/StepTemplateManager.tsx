@@ -83,9 +83,7 @@ const roleOptions = [
   'Administrator',
   'Fleet Manager',
   'Driver',
-  'Nurse',
   'School Principal',
-  'Mechanic',
 ];
 
 export function StepTemplateManager({

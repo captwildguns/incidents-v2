@@ -48,9 +48,10 @@ export interface Workflow {
   // would make the owner shift as the workflow advances and an "assigned to me"
   // view unstable.
   //
-  // The role, not a person, so a workflow keeps working when staff change: all
-  // medical workflows go to whoever holds Nurse. One of the seven members of
-  // IncidentRoleType.
+  // The role, not a person, so a workflow keeps working when staff change: an
+  // employee injury goes to whoever holds Administrator. One of the five roles
+  // #188 provisions: Administrator, Safety Coordinator, Driver, Fleet Manager,
+  // School Principal.
   ownerRole?: string;
   // A named person overriding the role, for the district that wants one
   // specific individual on one workflow. Takes precedence when set.
@@ -74,9 +75,7 @@ export const ROLE_HOLDERS: Record<string, string> = {
   'Administrator': 'Sarah Williams',
   'Safety Coordinator': 'Sarah Williams',
   'School Principal': 'Jane Doe',
-  'Nurse': 'Jane Doe',
   'Fleet Manager': 'Mike Chen',
-  'Mechanic': 'Mike Chen',
   'Driver': 'Mike Chen',
 };
 
@@ -668,7 +667,7 @@ export const workflows: Workflow[] = [
   {
     id: 'WF-008',
     name: 'Employee Injury Report',
-    ownerRole: 'Nurse',
+    ownerRole: 'Administrator',
     description: 'Workflow for an employee injured on duty. Covers first aid, incident reporting, and the workers compensation hand-off.',
     incidentTypes: ['Employee Injury'],
     severityLevels: ['Critical', 'High', 'Medium'],
@@ -681,7 +680,7 @@ export const workflows: Workflow[] = [
         id: 'step-1',
         name: 'First Aid and Medical Attention',
         description: 'Provide first aid and arrange medical evaluation. Record whether the employee declined treatment.',
-        assignedRole: 'Nurse',
+        assignedRole: 'Safety Coordinator',
         estimatedDuration: '30 minutes',
         required: true,
         order: 1,
@@ -808,7 +807,7 @@ export const workflows: Workflow[] = [
         id: 'step-2',
         name: 'Maintenance Inspection and Estimate',
         description: 'Inspect the vehicle, determine the cause where possible, and produce a repair estimate.',
-        assignedRole: 'Mechanic',
+        assignedRole: 'Fleet Manager',
         estimatedDuration: '1 business day',
         required: true,
         order: 2,
@@ -830,7 +829,7 @@ export const workflows: Workflow[] = [
         id: 'step-4',
         name: 'Repair and Return to Service',
         description: 'Complete the repair, pass inspection, and return the vehicle to service.',
-        assignedRole: 'Mechanic',
+        assignedRole: 'Fleet Manager',
         estimatedDuration: '3 business days',
         required: true,
         order: 4,
