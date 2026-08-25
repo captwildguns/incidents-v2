@@ -42,7 +42,7 @@ def author(num):
     return NAMES.get(it['author']['login'], it['author']['login']) if it else ''
 
 
-def md2html(md):
+def md2html(md, bullets=False):
     t = (md or '').replace('\r', '')
     t = re.sub(r'<img[^>]*>', '', t)
     t = re.sub(r'!\[[^\]]*\]\([^)]*\)', '', t)
@@ -63,7 +63,9 @@ def md2html(md):
     for raw in t.split('\n'):
         l = raw.rstrip()
         if not l.strip():
-            close(); continue
+            if not (bullets and mode == 'ul'):
+                close()
+            continue
         m = re.match(r'^#{1,6}\s+(.*)$', l)
         if m:
             close(); out.append('<h4>%s</h4>' % inline(m.group(1))); continue
@@ -77,7 +79,12 @@ def md2html(md):
             if mode != 'ol':
                 close(); out.append('<ol>'); mode = 'ol'
             out.append('<li>%s</li>' % inline(m.group(1))); continue
-        close(); out.append('<p>%s</p>' % inline(l.strip()))
+        s = l.strip()
+        if bullets and not s.endswith(':'):
+            if mode != 'ul':
+                close(); out.append('<ul>'); mode = 'ul'
+            out.append('<li>%s</li>' % inline(s)); continue
+        close(); out.append('<p>%s</p>' % inline(s))
     close()
     return '\n'.join(out)
 
@@ -160,11 +167,11 @@ ours = sorted(n for n in issues if n >= 191 and issues[n]['author']['login'] == 
 
 items = []
 
-def posted(num):
+def posted(num, bullets=False):
     bodies = our_comments(num)
     if not bodies:
         return ''
-    return '<hr>'.join(md2html(b) for b in bodies)
+    return '<hr>'.join(md2html(b, bullets) for b in bodies)
 
 
 for n in targets:
@@ -173,7 +180,7 @@ for n in targets:
     items.append({
       'g': 'Existing tickets, detail added', 'n': '#%d' % n, 't': issues[n]['title'],
       'st': 'Open', 'kind': 'Existing', 'owner': people(n) + ', opened by ' + author(n),
-      'closes': note, 'adds': posted(n) or md2html(ADDS[n]),
+      'closes': note, 'adds': posted(n, True) or md2html(ADDS[n], True),
       'sum': first_line(n), 'body': '', 'ac': '', 'a': ''})
 
 for n in ours:
