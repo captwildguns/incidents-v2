@@ -171,6 +171,8 @@ def posted(num, bullets=False):
     bodies = our_comments(num)
     if not bodies:
         return ''
+    # The requirements read first, the flag note last.
+    bodies.sort(key=lambda b: b.lstrip().startswith('Feature flag'))
     return '<hr>'.join(md2html(b, bullets) for b in bodies)
 
 
