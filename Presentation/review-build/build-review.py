@@ -81,8 +81,7 @@ DONE = {108: [198], 75: [201, 194], 97: [205], 77: [199],
 # Proposals, not decisions. Each is ours -> the existing ticket that owns the topic.
 PROPOSED = {
  194: 75, 195: 90, 198: 108, 199: 77, 201: 75,
- 203: [116, 120, 121, 93], 204: 139, 206: [89, 95], 208: None,
-}
+ 203: [116, 120, 121, 93], 204: 139, 206: [89, 95],}
 
 # What each existing ticket would gain. Written as requirements.
 ADDS = {
@@ -148,15 +147,15 @@ keeping = [n for n in ours if n not in PROPOSED]
 items.append({
  'g': 'Start here', 'n': 'Overview', 't': 'What this review covers', 'st': 'Read first',
  'kind': '', 'owner': '', 'closes': '', 'adds': '',
- 'sum': 'Everything here is live from GitHub. The closures are proposals, nothing has been closed yet.',
- 'body': md2html(
-   "Counts, as they stand right now.\n\n"
-   "- %d of our tickets are open.\n"
-   "- %d of those are proposed to close, with their content moving onto the ticket that already owns the topic.\n"
-   "- %d of ours would stay open, because nothing open covers them.\n"
-   "- %d existing tickets would receive detail. One of those, 70, gains detail with nothing of ours closing into it.\n\n"
-   "205 already closed into 97 the same way, which is the pattern the rest would follow."
-   % (len(ours), len(closing), len(keeping), len(targets))),
+ 'sum': 'Everything here is live from GitHub. The consolidation is finished.',
+ 'body': md2html('''Counts, as they stand right now.
+
+- %d of our tickets are open, and every one is new functionality with no existing ticket covering it.
+- 10 of ours were closed, with their requirements posted onto the ticket that already owned the topic.
+- %d existing tickets received that detail, each with acceptance criteria.
+- Feature flags went onto the 44 tickets they gate rather than sitting on one ticket of their own.
+
+Nothing is proposed any more. Every closure below has happened.''' % (len(ours), len(targets))),
  'ac': '', 'a': ''})
 
 for n in keeping:
