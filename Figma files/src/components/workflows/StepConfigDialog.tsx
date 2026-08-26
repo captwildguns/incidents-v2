@@ -42,9 +42,31 @@ interface StepConfigDialogProps {
 export function StepConfigDialog({ step, isOpen, onClose, onSave }: StepConfigDialogProps) {
   const dialogRef = useRef<HTMLElement>(null);
 
-  // Sync dialog open state
-  useEffect(() => { const el = dialogRef.current as any; if (!el) return; el.open = isOpen; }, [isOpen]);
-  useEffect(() => { const el = dialogRef.current as any; if (!el) return; const handler = () => onClose(); el.addEventListener('forge-dialog-close', handler); return () => el.removeEventListener('forge-dialog-close', handler); }, []);
+  // Kept in a ref so the effect below does not need onClose in its deps, which
+  // would tear the listener down and rebuild it on every parent render.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  // Sync open state and listen for the dialog closing itself.
+  //
+  // The listener has to be attached here rather than in a mount-only effect.
+  // Nothing is rendered until the dialog is opened for the first time, so a
+  // mount-only effect finds no element and never attaches. Without the
+  // listener, dismissing with Escape or a click outside closed the dialog
+  // without telling the page, which still thought it was open, so the next
+  // click on a step's settings changed nothing and the only way back was to
+  // leave the page.
+  useEffect(() => {
+    const el = dialogRef.current as any;
+    if (!el) return;
+    const handler = () => closeRef.current();
+    el.addEventListener('forge-dialog-close', handler);
+    // Property and attribute both, same as the navigation drawer.
+    el.open = isOpen;
+    if (isOpen) el.setAttribute('open', '');
+    else el.removeAttribute('open');
+    return () => el.removeEventListener('forge-dialog-close', handler);
+  }, [isOpen]);
 
   const [activeTab, setActiveTab] = useState<'general' | 'notifications' | 'approvals'>('general');
   
