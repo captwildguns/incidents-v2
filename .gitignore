@@ -14,3 +14,12 @@ Presentation/Incident-Module-Internal-Training-Agenda.*
 Presentation/build-training-agenda.py
 Presentation/review-*.html
 Presentation/review-build/
+
+# Only the app and the screenshots that tickets link to belong in the public repo.
+CLAUDE.md
+Presentation/
+scripts/
+Incident-Tracker-Seed-Catalog.xlsx
+gen_seed_catalog_xlsx.py
+issue-191-screenshots/*
+!issue-191-screenshots/aug24-*
