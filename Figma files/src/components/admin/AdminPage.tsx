@@ -432,16 +432,8 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
     subject: '',
     body: '',
     category: 'Notification',
-    variables: [],
   });
   const [expandedTemplateId, setExpandedTemplateId] = useState<string | null>(null);
-  const subjectInputRef = useRef<HTMLInputElement>(null);
-  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const [lastFocusedField, setLastFocusedField] = useState<'subject' | 'body'>('body');
-  const savedCursorRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
-  const [varPopoverOpen, setVarPopoverOpen] = useState(false);
-  const [varSearch, setVarSearch] = useState('');
-  const varPopoverRef = useRef<HTMLDivElement>(null);
 
   // ─── Incident Types State ───────────────────────────────────────────────────
   const [incidentTypes, setIncidentTypes] = useState<IncidentType[]>([...SEED_INCIDENT_TYPES]);
@@ -481,18 +473,6 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
   const previewDialogRef = useRef<HTMLElement>(null);
   const itDialogRef = useRef<HTMLElement>(null);
 
-  // Variable popover click-outside
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (varPopoverRef.current && !varPopoverRef.current.contains(e.target as Node)) {
-        setVarPopoverOpen(false);
-        setVarSearch('');
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
   // Template Dialog sync
   useEffect(() => { const el = templateDialogRef.current as any; if (!el) return; el.open = isTemplateDialogOpen; }, [isTemplateDialogOpen]);
   useEffect(() => { const el = templateDialogRef.current as any; if (!el) return; const handler = () => setIsTemplateDialogOpen(false); el.addEventListener('forge-dialog-close', handler); return () => el.removeEventListener('forge-dialog-close', handler); }, []);
@@ -518,7 +498,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
 
   const openAddTemplate = () => {
     setEditingTemplate(null);
-    setTemplateForm({ name: '', description: '', subject: '', body: '', category: 'Custom', variables: [] });
+    setTemplateForm({ name: '', description: '', subject: '', body: '', category: 'Notification' });
     setIsTemplateDialogOpen(true);
   };
 
@@ -530,7 +510,6 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
       subject: tpl.subject,
       body: tpl.body,
       category: tpl.category,
-      variables: [...tpl.variables],
     });
     setIsTemplateDialogOpen(true);
   };
@@ -568,28 +547,6 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
 
   const deleteTemplate = (id: string) => {
     setTemplates(templates.filter((t) => t.id !== id));
-  };
-
-  const saveCursor = (el: HTMLInputElement | HTMLTextAreaElement) => {
-    savedCursorRef.current = { start: el.selectionStart ?? el.value.length, end: el.selectionEnd ?? el.value.length };
-  };
-
-  const insertVariable = (token: string) => {
-    const tag = `{{${token}}}`;
-    const { start, end } = savedCursorRef.current;
-    if (lastFocusedField === 'subject' && subjectInputRef.current) {
-      const el = subjectInputRef.current;
-      const cur = el.value.length > 0 ? start : 0;
-      const newValue = el.value.slice(0, cur) + tag + el.value.slice(end);
-      setTemplateForm(f => ({ ...f, subject: newValue }));
-      setTimeout(() => { el.focus(); el.setSelectionRange(cur + tag.length, cur + tag.length); }, 0);
-    } else if (bodyTextareaRef.current) {
-      const el = bodyTextareaRef.current;
-      const cur = el.value.length > 0 ? start : 0;
-      const newValue = el.value.slice(0, cur) + tag + el.value.slice(end);
-      setTemplateForm(f => ({ ...f, body: newValue }));
-      setTimeout(() => { el.focus(); el.setSelectionRange(cur + tag.length, cur + tag.length); }, 0);
-    }
   };
 
   // ─── Incident Type Helpers ──────────────────────────────────────────────────
@@ -911,19 +868,6 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                   {/* Expanded Details */}
                   {isExpanded && (
                     <div style={{ marginTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', paddingTop: 'var(--forge-spacing-medium)' }}>
-                      {/* Variables */}
-                      <div style={{ marginBottom: 'var(--forge-spacing-medium)' }}>
-                        <div style={{ ...labelStyle, marginBottom: 'var(--forge-spacing-xsmall)' }}>Template Variables</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--forge-spacing-xxsmall)' }}>
-                          {tpl.variables.map((v) => (
-                            // @ts-ignore
-                            <forge-badge key={v} theme="default" style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-xs)', background: 'var(--input-background)' }}>
-                              {'{{' + v + '}}'}
-                            {/* @ts-ignore */}
-                            </forge-badge>
-                          ))}
-                        </div>
-                      </div>
                       {/* Body Preview */}
                       <div>
                         <div style={labelStyle}>Body Preview</div>
@@ -1027,153 +971,31 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
               {/* @ts-ignore */}
               <forge-text-field style={inputWrapperStyle}>
                 <input
-                  ref={subjectInputRef}
                   type="text"
                   value={templateForm.subject}
                   onChange={(e) => setTemplateForm({ ...templateForm, subject: e.target.value })}
-                  onFocus={(e) => { setLastFocusedField('subject'); saveCursor(e.target); }}
-                  onKeyUp={(e) => saveCursor(e.currentTarget)}
-                  onMouseUp={(e) => saveCursor(e.currentTarget)}
-                  onSelect={(e) => saveCursor(e.currentTarget)}
-                  placeholder="e.g., [Incident Tracker] Incident {{incident_id}}, Action Required"
+                  placeholder="The subject line recipients see"
                   style={{ fontFamily: 'var(--forge-font-family)' }}
                 />
               {/* @ts-ignore */}
               </forge-text-field>
             </div>
 
-            {/* Body + variable popover */}
-            {(() => {
-              const ALL_VARS = [
-                { group: 'Incident', vars: [
-                  { token: 'incident_id', label: 'Incident ID' },
-                  { token: 'incident_type', label: 'Incident Type' },
-                  { token: 'incident_date', label: 'Date' },
-                  { token: 'incident_time', label: 'Time' },
-                  { token: 'incident_severity', label: 'Severity' },
-                  { token: 'incident_location', label: 'Location' },
-                  { token: 'incident_address', label: 'Address' },
-                  { token: 'incident_description', label: 'Description' },
-                  { token: 'incident_status', label: 'Status' },
-                ]},
-                { group: 'Student', vars: [
-                  { token: 'student_name', label: 'Student Name' },
-                  { token: 'student_id', label: 'Student ID' },
-                  { token: 'student_grade', label: 'Grade' },
-                  { token: 'student_school', label: 'School' },
-                  { token: 'student_role', label: 'Role in Incident' },
-                  { token: 'parent_name', label: 'Parent/Guardian Name' },
-                  { token: 'parent_email', label: 'Parent/Guardian Email' },
-                ]},
-                { group: 'Vehicle & Run', vars: [
-                  { token: 'vehicle_number', label: 'Vehicle Number' },
-                  { token: 'route_name', label: 'Run Name' },
-                  { token: 'driver_name', label: 'Driver Name' },
-                ]},
-                { group: 'Workflow', vars: [
-                  { token: 'workflow_name', label: 'Workflow Name' },
-                  { token: 'step_name', label: 'Step Name' },
-                  { token: 'step_assignee', label: 'Step Assignee' },
-                  { token: 'due_date', label: 'Due Date' },
-                ]},
-                { group: 'Recipient', vars: [
-                  { token: 'recipient_name', label: 'Recipient Name' },
-                  { token: 'recipient_role', label: 'Recipient Role' },
-                  { token: 'district_name', label: 'District Name' },
-                  { token: 'reported_by', label: 'Reported By' },
-                ]},
-              ];
-              const q = varSearch.toLowerCase();
-              const filtered = q
-                ? ALL_VARS.map(g => ({ ...g, vars: g.vars.filter(v => v.label.toLowerCase().includes(q) || v.token.includes(q)) })).filter(g => g.vars.length > 0)
-                : ALL_VARS;
-              return (
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <Label style={labelStyle}>Email Body</Label>
-                    <div ref={varPopoverRef} style={{ position: 'relative' }}>
-                      <button
-                        type="button"
-                        onMouseDown={(e) => { e.preventDefault(); setVarPopoverOpen(o => !o); setVarSearch(''); }}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 5,
-                          padding: '3px 10px', borderRadius: '4px',
-                          border: '1px solid #C5D2E8',
-                          background: varPopoverOpen ? '#EEF2F8' : '#fff',
-                          fontFamily: 'var(--forge-font-family)', fontSize: '12px',
-                          color: '#4A6FA5', cursor: 'pointer', fontWeight: 500,
-                        }}
-                      >
-                        <span style={{ fontSize: 13 }}>{'{ }'}</span> Insert Variable
-                      </button>
-                      {varPopoverOpen && (
-                        <div style={{
-                          position: 'absolute', right: 0, top: 'calc(100% + 4px)', zIndex: 100,
-                          width: 320, maxHeight: 380, overflowY: 'auto',
-                          background: '#fff', border: '1px solid #C5D2E8',
-                          borderRadius: '6px', boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
-                        }}>
-                          {/* Search */}
-                          <div style={{ padding: '8px 10px', borderBottom: '1px solid #E2E8F0', position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
-                            <input
-                              type="text"
-                              autoFocus
-                              value={varSearch}
-                              onChange={e => setVarSearch(e.target.value)}
-                              placeholder="Search variables..."
-                              style={{ width: '100%', padding: '4px 8px', border: '1px solid #C5D2E8', borderRadius: 4, fontFamily: 'var(--forge-font-family)', fontSize: '12px', outline: 'none' }}
-                            />
-                          </div>
-                          {/* Groups */}
-                          <div style={{ padding: '6px 0' }}>
-                            {filtered.map(({ group, vars }) => (
-                              <div key={group}>
-                                <div style={{ padding: '4px 10px 2px', fontFamily: 'var(--forge-font-family)', fontSize: '10px', fontWeight: 700, color: '#9BAEC8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                                  {group}
-                                </div>
-                                {vars.map(({ token, label }) => (
-                                  <button
-                                    key={token}
-                                    type="button"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      insertVariable(token);
-                                      setVarPopoverOpen(false);
-                                      setVarSearch('');
-                                    }}
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '6px 10px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-                                    onMouseEnter={e => (e.currentTarget.style.background = '#F4F7FB')}
-                                    onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                                  >
-                                    <span style={{ fontFamily: 'var(--forge-font-family)', fontSize: '13px', color: '#1a1a2e' }}>{label}</span>
-                                    <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#9BAEC8', marginLeft: 8 }}>{'{{' + token + '}}'}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            ))}
-                            {filtered.length === 0 && (
-                              <div style={{ padding: '10px', fontFamily: 'var(--forge-font-family)', fontSize: '12px', color: '#9BAEC8', textAlign: 'center' }}>No variables match</div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <Textarea
-                    ref={bodyTextareaRef}
-                    value={templateForm.body}
-                    onChange={(e) => setTemplateForm({ ...templateForm, body: e.target.value })}
-                    onFocus={(e) => { setLastFocusedField('body'); saveCursor(e.target); }}
-                    onKeyUp={(e) => saveCursor(e.currentTarget)}
-                    onMouseUp={(e) => saveCursor(e.currentTarget)}
-                    onSelect={(e) => saveCursor(e.currentTarget)}
-                    placeholder="Compose the email body here. Use the Insert Variable button to add dynamic values."
-                    rows={12}
-                    style={{ ...inputWrapperStyle, fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-sm)' }}
-                  />
-                </div>
-              );
-            })()}
+            {/* Body. Plain text, edited as it sends: there is no placeholder
+                substitution, so nothing here is filled in later. */}
+            <div>
+              <Label style={labelStyle}>Email Body</Label>
+              <Textarea
+                value={templateForm.body}
+                onChange={(e) => setTemplateForm({ ...templateForm, body: e.target.value })}
+                placeholder="Write the message recipients receive. It sends exactly as written."
+                rows={12}
+                style={{ ...inputWrapperStyle, fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-sm)' }}
+              />
+              <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)', marginTop: 'var(--forge-spacing-xxsmall)' }}>
+                Every recipient gets this wording. Details about the incident stay out of the mail, so the reader signs in to see them.
+              </div>
+            </div>
           </div>
 
           {/* Footer */}
@@ -1234,11 +1056,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                   </div>
                   <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
                     <strong>Subject:</strong>{' '}
-                    {previewTemplate.subject
-                      .replace('{{step_name}}', 'Medical Assessment')
-                      .replace('{{incident_id}}', 'INC-2026-042')
-                      .replace('{{new_status}}', 'In Progress')
-                      .replace('{{subject_line}}', 'Custom Notification')}
+                    {previewTemplate.subject}
                   </div>
                 </div>
                 {/* Email body */}
@@ -1254,42 +1072,14 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                       lineHeight: '1.6',
                     }}
                   >
-                    {previewTemplate.body
-                      .replace(/\{\{recipient_name\}\}/g, 'Sarah Williams')
-                      .replace(/\{\{step_name\}\}/g, 'Medical Assessment')
-                      .replace(/\{\{incident_id\}\}/g, 'INC-2026-042')
-                      .replace(/\{\{action\}\}/g, 'started')
-                      .replace(/\{\{incident_type\}\}/g, 'Student Injury')
-                      .replace(/\{\{severity\}\}/g, 'High')
-                      .replace(/\{\{incident_date\}\}/g, 'March 17, 2026')
-                      .replace(/\{\{assigned_role\}\}/g, 'Safety Coordinator')
-                      .replace(/\{\{requested_by\}\}/g, 'James Rodriguez')
-                      .replace(/\{\{request_date\}\}/g, 'March 17, 2026')
-                      .replace(/\{\{step_description\}\}/g, 'Complete the medical assessment for the involved student.')
-                      .replace(/\{\{old_status\}\}/g, 'Open')
-                      .replace(/\{\{new_status\}\}/g, 'In Progress')
-                      .replace(/\{\{updated_by\}\}/g, 'Sarah Williams')
-                      .replace(/\{\{update_date\}\}/g, 'March 17, 2026')
-                      .replace(/\{\{total_steps\}\}/g, '5')
-                      .replace(/\{\{completed_by\}\}/g, 'Sarah Williams')
-                      .replace(/\{\{completion_date\}\}/g, 'March 17, 2026')
-                      .replace(/\{\{custom_body\}\}/g, 'This is a sample custom notification body.')
-                      .replace(/\{\{subject_line\}\}/g, 'Custom Notification')}
+                    {previewTemplate.body}
                   </pre>
                 </div>
               </div>
-              {/* Variables list */}
-              <div>
-                <div style={labelStyle}>Available Variables</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--forge-spacing-xxsmall)' }}>
-                  {previewTemplate.variables.map((v) => (
-                    // @ts-ignore
-                    <forge-badge key={v} theme="default" style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-xs)', background: 'var(--input-background)' }}>
-                      {'{{' + v + '}}'}
-                    {/* @ts-ignore */}
-                    </forge-badge>
-                  ))}
-                </div>
+              {/* This is the whole mail. Nothing gets filled in later, so the
+                  preview is exactly what a recipient receives. */}
+              <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>
+                This is what recipients receive, word for word.
               </div>
             </div>
           )}

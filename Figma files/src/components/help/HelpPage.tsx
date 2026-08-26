@@ -201,7 +201,7 @@ export function HelpPage() {
                       <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Administration</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      Manage the five incident roles, 3 email notification templates with variable placeholders, and the 20 incident types with full CRUD operations.
+                      Manage the five incident roles, 3 email notification templates with fixed wording, and the 20 incident types.
                     </p>
                   </div>
                 </div>
@@ -424,12 +424,12 @@ export function HelpPage() {
                         Each workflow step can be configured to send email notifications using one of the <strong>3 system email templates</strong>:
                       </p>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Urgent Action Required</strong> &mdash; High-priority alerts for critical steps</li>
-                        <li><strong>Approval Request</strong> &mdash; Sent to approvers when approval is needed</li>
-                        <li><strong>Parent/Guardian Notification</strong> &mdash; Tailored for parent communication about student incidents</li>
+                        <li><strong>Action Required</strong> &mdash; Sent to the people holding the step&rsquo;s role when a step needs attention</li>
+                        <li><strong>Approval Needed</strong> &mdash; Sent to the approver roles selected on the step</li>
+                        <li><strong>Parent or Guardian Notification</strong> &mdash; Sent to the guardians of a student named on the incident, and only where a student is involved</li>
                       </ul>
                       <p className="mt-2" style={{ fontStyle: 'italic', fontSize: 'var(--text-sm)' }}>
-                        Templates are managed in Administration &rarr; Email Templates. Each template supports {`{{variable}}`} placeholders that are populated at send time.
+                        Templates are managed in Administration &rarr; Email Templates. The wording is fixed: nothing is pulled from the incident, so every mail is a prompt to sign in and look rather than a carrier of detail.
                       </p>
                     </div>
                   </AccordionContent>
@@ -642,8 +642,8 @@ export function HelpPage() {
                       <h4 className="mb-2">Email Templates Tab</h4>
                       <p className="mb-2">Manage the 3 notification email templates used by workflow steps:</p>
                       <ul className="ml-5 space-y-1">
-                        <li><strong>Templates:</strong> Urgent Action Required, Approval Request, Parent/Guardian Notification, displayed as expandable cards</li>
-                        <li><strong>Variable Placeholders:</strong> Templates use {`{{variable_name}}`} syntax (e.g., {`{{recipient_name}}`}, {`{{incident_id}}`}, {`{{step_name}}`}) that are populated when emails are sent</li>
+                        <li><strong>Templates:</strong> Action Required, Approval Needed, Parent or Guardian Notification, displayed as expandable cards</li>
+                        <li><strong>Fixed wording:</strong> a template sends exactly the text it holds. Nothing is filled in from the incident, so the parent mail carries no student name, date, time, incident type or severity</li>
                         <li><strong>Actions per template:</strong> Edit, duplicate, preview, delete</li>
                         <li><strong>Workflow Integration:</strong> Templates selected here appear in the Configure Step &rarr; Notifications &rarr; Email Template dropdown when building workflows</li>
                       </ul>
@@ -893,11 +893,11 @@ export function HelpPage() {
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <p className="mb-2">Go to <strong>Admin &rarr; Email Templates</strong> tab:</p>
                     <ul className="ml-5 space-y-1">
-                      <li>The system includes <strong>3 templates</strong>: Urgent Action Required, Approval Request, and Parent/Guardian Notification</li>
-                      <li>Click any template card to expand and edit its subject, body, and variable placeholders</li>
+                      <li>The system includes <strong>3 templates</strong>: Action Required, Approval Needed, and Parent or Guardian Notification</li>
+                      <li>Click any template card to expand it, and use Edit to change the subject and the message</li>
                       <li>Use <strong>&ldquo;Duplicate&rdquo;</strong> to create a copy of an existing template for customization</li>
-                      <li>Click <strong>&ldquo;Preview&rdquo;</strong> to see how the template looks with sample data</li>
-                      <li>Templates use {`{{variable_name}}`} placeholders (e.g., {`{{recipient_name}}`}, {`{{incident_id}}`}) that are automatically replaced when emails are sent</li>
+                      <li>Click <strong>&ldquo;Preview&rdquo;</strong> to see the mail exactly as a recipient receives it</li>
+                      <li>The wording is fixed. Nothing is filled in from the incident, so what you write is what sends</li>
                     </ul>
                     <p className="mt-2">
                       Templates are immediately available in the Configure Step &rarr; Notifications &rarr; Email Template dropdown when building workflows.

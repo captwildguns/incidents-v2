@@ -448,8 +448,15 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                           }}
                         >
                           <td className="forge-table-cell">
-                            <div style={{ fontFamily: 'var(--forge-font-family)', fontWeight: 'var(--forge-font-weight-medium)', fontSize: 'var(--text-base)' }}>
-                              {workflow.name}
+                            {/* The identifier sits beside the name so a workflow
+                                referenced from Admin can be found here. */}
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--forge-spacing-xsmall)', fontFamily: 'var(--forge-font-family)' }}>
+                              <span style={{ fontWeight: 'var(--forge-font-weight-medium)', fontSize: 'var(--text-base)' }}>
+                                {workflow.name}
+                              </span>
+                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', whiteSpace: 'nowrap' }}>
+                                {workflow.id}
+                              </span>
                             </div>
                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', marginTop: '2px', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {workflow.description}

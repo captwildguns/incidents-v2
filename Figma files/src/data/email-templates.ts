@@ -1,4 +1,8 @@
-// Shared Email Template definitions used by Admin and Workflow configuration
+// Shared Email Template definitions used by Admin and Workflow configuration.
+//
+// The text is fixed. Nothing is pulled from the incident, so every mail is a
+// prompt to sign in and look rather than a carrier of detail. There is no
+// placeholder substitution anywhere: what is written here is what sends.
 
 export interface EmailTemplate {
   id: string;
@@ -7,7 +11,6 @@ export interface EmailTemplate {
   subject: string;
   body: string;
   category: 'Notification' | 'Approval';
-  variables: string[];
   lastModified: string;
   isDefault: boolean;
 }
@@ -17,34 +20,34 @@ export const INITIAL_EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     id: 'ET-001',
     name: 'Action Required',
-    description: 'General notification that a workflow step requires action by the assigned role. Suitable for routine and time-sensitive steps alike.',
-    subject: 'Action Required: {{step_name}} - {{incident_id}}',
-    body: 'Hello,\n\nA workflow step requires your attention:\n\nStep: {{step_name}}\nIncident: {{incident_id}}\nSeverity: {{severity}}\nAssigned To: {{assigned_role}}\n\nPlease log in to the Incident Tracker to review and complete this step.\n\nThank you,\nIncident Tracker System',
+    description: 'Sent to the people holding the step\u2019s role when a step needs attention.',
+    subject: 'Action required in the Incident Tracker',
+    body: 'A workflow step in the Incident Tracker is assigned to your role and needs attention.\n\nSign in to Incidents and open your assigned incidents to see what is waiting.',
     category: 'Notification',
-    variables: ['step_name', 'incident_id', 'severity', 'assigned_role'],
-    lastModified: '2026-06-19',
+    lastModified: '2026-08-26',
     isDefault: true,
   },
   {
     id: 'ET-002',
-    name: 'Approval Request',
-    description: 'Sent to designated approvers when a step requires approval before proceeding.',
-    subject: 'Approval needed for workflow step: {{step_name}} ({{incident_id}})',
-    body: 'Hello,\n\nYour approval is needed for the following workflow step:\n\nStep: {{step_name}}\nIncident: {{incident_id}}\nRequested By: {{requested_by}}\nDate: {{request_date}}\n\nDetails:\n{{step_description}}\n\nPlease log in to the Incident Tracker to review and approve or reject this step.\n\nThank you,\nIncident Tracker System',
+    name: 'Approval Needed',
+    description: 'Sent to the approver roles selected on the step.',
+    subject: 'Approval needed in the Incident Tracker',
+    body: 'A workflow step in the Incident Tracker is waiting for your approval.\n\nSign in to Incidents and open your assigned incidents to approve the step or send it back for revision.',
     category: 'Approval',
-    variables: ['step_name', 'incident_id', 'requested_by', 'request_date', 'step_description'],
-    lastModified: '2026-03-10',
+    lastModified: '2026-08-26',
     isDefault: true,
   },
   {
     id: 'ET-003',
-    name: 'Parent/Guardian Notification',
-    description: 'Sent to parents or guardians when their child is involved in a bus incident. Used across most student-related workflows.',
-    subject: 'Incident Involving Your Child - {{incident_type}} - {{incident_id}}',
-    body: 'Hello,\n\nWe are writing to inform you of an incident that occurred on {{incident_date}} involving your child, {{student_name}}, while riding {{bus_route}}.\n\nIncident Type: {{incident_type}}\nSeverity: {{severity}}\nLocation: {{incident_location}}\n\nSummary:\n{{incident_summary}}\n\nImmediate actions taken:\n{{actions_taken}}\n\nIf you have any questions or concerns, please contact INSERT NAME at PHONE# or EMAIL.\n\nSincerely,\n{{sender_name}}\n{{sender_title}}\nStudent Transportation Department',
+    name: 'Parent or Guardian Notification',
+    // No student name, date, time, incident type or severity. Mail is not a
+    // private channel and often lands on a shared account, so the specifics
+    // belong in the conversation that follows. Student incidents only.
+    description: 'Sent to the guardians of a student named on the incident. Student incidents only, and it carries no details about what happened.',
+    subject: 'Transportation incident involving your student',
+    body: 'Your student was involved in an incident.\n\nSomeone from the transportation team will contact you to go through what happened. If you would like to reach us first, please call the transportation office.',
     category: 'Notification',
-    variables: ['student_name', 'bus_route', 'incident_date', 'incident_type', 'severity', 'incident_location', 'incident_summary', 'actions_taken', 'sender_name', 'sender_title'],
-    lastModified: '2026-03-17',
+    lastModified: '2026-08-26',
     isDefault: true,
   },
 ];
