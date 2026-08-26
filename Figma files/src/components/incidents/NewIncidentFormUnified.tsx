@@ -875,7 +875,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               {/* The detail page renders Additional Notes per person, and
                   seeded incidents use it for coordinator context. Without an
                   input here it could only ever appear on seeded data. */}
-              <div className="sm:col-span-2">
+              <div>
                 <label style={labelStyle}>Additional notes</label>
                 {/* @ts-ignore */}
                 <forge-text-field>
