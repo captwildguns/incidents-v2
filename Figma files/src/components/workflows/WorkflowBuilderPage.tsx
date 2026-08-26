@@ -351,7 +351,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
               </div>
 
               <div>
-                <Label style={{ fontSize: 'var(--text-sm)' }}>Incident Owner *</Label>
+                <Label style={{ fontSize: 'var(--text-sm)' }}>Incident Assignee *</Label>
                 <select
                   value={ownerRole}
                   onChange={(e) => setOwnerRole(e.target.value)}
@@ -361,14 +361,14 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                     border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)',
                   }}
                 >
-                  <option value="">Select an owner...</option>
+                  <option value="">Select an assignee...</option>
                   {Object.keys(ROLE_HOLDERS).map(r => (
                     <option key={r} value={r}>{r}</option>
                   ))}
                 </select>
                 <div style={{ fontSize: 'var(--text-sm)', color: ownerRole ? 'var(--muted-foreground)' : 'var(--destructive)', marginTop: 'var(--forge-spacing-xxsmall)' }}>
                   {!ownerRole
-                    ? 'Required. Incidents cannot be assigned without an owner.'
+                    ? 'Required. Every incident on this workflow needs an assignee.'
                     : ownerName
                       ? 'Incidents on this workflow are assigned to ' + ownerName + ', regardless of who holds the role.'
                       : 'Incidents on this workflow are assigned to ' + (resolveWorkflowOwner({ ownerRole }) ?? ownerRole) + '.'}
@@ -376,7 +376,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
               </div>
 
               <div>
-                <Label style={{ fontSize: 'var(--text-sm)' }}>Assign to a specific person</Label>
+                <Label style={{ fontSize: 'var(--text-sm)' }}>Assign incident to specific person</Label>
                 <select
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
@@ -582,7 +582,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
           </div>
           {!ownerRole && (
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--destructive)', marginTop: 'var(--forge-spacing-small)' }}>
-              Choose an Incident Owner in Workflow Details before saving.
+              Choose an Incident Assignee in Workflow Details before saving.
             </div>
           )}
         </div>

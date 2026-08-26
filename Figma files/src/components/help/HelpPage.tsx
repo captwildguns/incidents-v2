@@ -191,7 +191,7 @@ export function HelpPage() {
                       <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Workflow System</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      12 delivered workflows containing 46 steps, selected automatically from incident type and severity. Every workflow names a required Incident Owner, so no incident is filed unassigned, and can name a specific person instead of a role. Manual step progression, approval gates, configurable email notifications, and a full audit trail.
+                      12 delivered workflows containing 46 steps, selected automatically from incident type and severity. Every workflow names a required Incident Assignee, so no incident is filed unassigned, and can name a specific person instead of a role. Manual step progression, approval gates, configurable email notifications, and a full audit trail.
                     </p>
                   </div>
 
@@ -355,7 +355,7 @@ export function HelpPage() {
                     <div>
                       <h4 className="mb-2">How Workflows Are Assigned</h4>
                       <p className="mb-2">
-                        When an incident is created, the system matches a workflow on incident type plus severity, so every incident gets the correct process immediately. The workflow names a required <strong>Incident Owner</strong>, and the incident is assigned to whoever holds that role at the moment it is created, or to a specific person if the workflow names one. Because the owner is required, no incident is filed unassigned. The person filing can also choose a different assignee for that one incident.
+                        When an incident is created, the system matches a workflow on incident type plus severity, so every incident gets the correct process immediately. The workflow names a required <strong>Incident Assignee</strong>, and the incident is assigned to whoever holds that role at the moment it is created, or to a specific person if the workflow names one. Because the owner is required, no incident is filed unassigned. The person filing can also choose a different assignee for that one incident.
                       </p>
                     </div>
 
@@ -411,7 +411,7 @@ export function HelpPage() {
                         <li>Enter workflow name and description</li>
                         <li>Select a <strong>specific incident type</strong> from the 20 available types</li>
                         <li>Choose a severity level</li>
-                        <li>Choose an <strong>Incident Owner</strong>. This is required, and the workflow cannot be saved without one. The resolved person is shown under the field, and you can name a specific person instead of a role</li>
+                        <li>Choose an <strong>Incident Assignee</strong>. This is required, and the workflow cannot be saved without one. The resolved person is shown under the field, and you can name a specific person instead of a role</li>
                         <li>Add steps from the step library (8 templates across 3 categories: Notification, Review &amp; Action, Close Out) or create custom steps</li>
                         <li>Configure each step&rsquo;s notifications and approvals using the gear icon</li>
                         <li>Save as draft or activate immediately</li>
@@ -776,7 +776,7 @@ export function HelpPage() {
                 <AccordionItem value="faq-assignee">
                   <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>Who is an incident assigned to when I file it?</AccordionTrigger>
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
-                    <p className="mb-2">To the owner of the workflow that the incident type and severity matched. Every workflow names a required Incident Owner, so nothing is filed unassigned.</p>
+                    <p className="mb-2">To the assignee named on the workflow that the incident type and severity matched. Every workflow names a required Incident Assignee, so nothing is filed unassigned.</p>
                     <ul className="ml-5 space-y-1">
                       <li>The owner is a <strong>role</strong>, and the incident goes to whoever holds that role when it is created</li>
                       <li>A workflow can name <strong>a specific person</strong> instead, which overrides the role so the assignment does not follow a change of staff</li>
@@ -835,7 +835,7 @@ export function HelpPage() {
                 <AccordionItem value="faq-5">
                   <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>How are workflows assigned to incidents?</AccordionTrigger>
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
-                    <p className="mb-2">When an incident is created, the system matches a workflow on <strong>incident type plus severity</strong>. The 12 delivered workflows cover all 20 types, so every incident is guaranteed a matching workflow automatically, and the workflow&rsquo;s required Incident Owner determines who it is assigned to. You can see both on the incident detail page&rsquo;s Overview and Workflow tabs.</p>
+                    <p className="mb-2">When an incident is created, the system matches a workflow on <strong>incident type plus severity</strong>. The 12 delivered workflows cover all 20 types, so every incident is guaranteed a matching workflow automatically, and the workflow&rsquo;s required Incident Assignee determines who it is assigned to. You can see both on the incident detail page&rsquo;s Overview and Workflow tabs.</p>
                   </AccordionContent>
                 </AccordionItem>
 
