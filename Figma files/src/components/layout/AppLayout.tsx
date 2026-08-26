@@ -129,8 +129,9 @@ IconRegistry.define([
 
 import { GlobalSearch } from './GlobalSearch';
 import { NotificationsDropdown } from './NotificationsDropdown';
-import { OrgSelector } from './OrgSelector';
-import { IS_MULTI_DISTRICT_SITE } from '../../data/organizations';
+// Organization selector, parked. See the note in the drawer below.
+// import { OrgSelector } from './OrgSelector';
+// import { IS_MULTI_DISTRICT_SITE } from '../../data/organizations';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -200,15 +201,17 @@ export function AppLayout({ children, currentPage, onNavigate, onNavigateToCommu
         backgroundColor: 'var(--forge-theme-surface)', color: 'var(--forge-theme-text-high)',
         overflowX: 'hidden',
       }}>
-        {/* The organization selector, only on a multi-district site. It sits
-            above navigation because the scope governs every page below it. With
-            IsMultiDistrictSite off there is no tree and no org filtering. */}
+        {/* Organization selector, parked. The drawer is navigation only again.
+            The control and its org data are still in the project if it comes
+            back, so putting it in front of anyone is uncommenting this block.
+
         {IS_MULTI_DISTRICT_SITE && (
           <>
             <OrgSelector />
             <forge-divider></forge-divider>
           </>
         )}
+        */}
 
         {/* Navigation Items */}
         <forge-list className="drawer-nav-scroll" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
