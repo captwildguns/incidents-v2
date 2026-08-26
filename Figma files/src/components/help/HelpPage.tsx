@@ -960,7 +960,7 @@ export function HelpPage() {
                   <AccordionTrigger style={{ fontFamily: 'var(--forge-font-family)' }}>How do I specify where the incident occurred?</AccordionTrigger>
                   <AccordionContent className="text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <p className="mb-2">Two things record where it happened, and they answer different questions.</p>
-                    <p className="mb-2"><strong>Location Type</strong> says what kind of place it was, chosen from 12 options: At Vehicle Stop, Fuel Station, Garage, Layover Location, Loading/Unloading, Maintenance Bay, On Vehicle, Parking Lot, School Campus, Wash Bay, Yard, and Other.</p>
+                    <p className="mb-2"><strong>Location Type</strong> says what kind of place it was, chosen from 12 options: Fuel Station, Garage, Layover Location, Loading/Unloading, Maintenance Bay, Parking Lot, School, Vehicle (on board), Vehicle Stop, Wash Bay, Yard, and Other.</p>
                     <p className="mb-2"><strong>Incident Location Pin</strong> records the actual spot on a map, set from your current location, by clicking the map, or by searching an address.</p>
                     <p className="mt-2">For a Vehicle or Location incident, the affected asset is separate and required, because with no people named it is the only thing identifying the record. Vehicle Number, Driver, and Run are optional where they apply, and are not shown where they do not.</p>
                   </AccordionContent>

@@ -91,8 +91,8 @@ const SEVERITIES = ['Low', 'Medium', 'High', 'Critical'];
 // Flat and alphabetical. Category headers added rows to scan without narrowing
 // anything down.
 const LOCATION_TYPES = [
-  'At Vehicle Stop', 'Fuel Station', 'Garage', 'Layover Location', 'Loading/Unloading',
-  'Maintenance Bay', 'On Vehicle', 'Other', 'Parking Lot', 'School Campus', 'Wash Bay', 'Yard',
+  'Fuel Station', 'Garage', 'Layover Location', 'Loading/Unloading', 'Maintenance Bay',
+  'Other', 'Parking Lot', 'School', 'Vehicle (on board)', 'Vehicle Stop', 'Wash Bay', 'Yard',
 ];
 
 const RUNS = [

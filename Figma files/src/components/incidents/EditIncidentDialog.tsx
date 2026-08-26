@@ -16,12 +16,12 @@ import { toast } from 'sonner';
 
 const LOCATION_OPTIONS = [
   { category: 'ON ROUTE', items: [
-    { value: 'on-bus', label: 'On Vehicle' },
-    { value: 'bus-stop', label: 'At Vehicle Stop' },
+    { value: 'on-bus', label: 'Vehicle (on board)' },
+    { value: 'bus-stop', label: 'Vehicle Stop' },
     { value: 'loading', label: 'Loading/Unloading' },
   ]},
   { category: 'SCHOOL/LOCATION', items: [
-    { value: 'school-campus', label: 'School Campus' },
+    { value: 'school-campus', label: 'School' },
     { value: 'parking-lot', label: 'Parking Lot' },
     { value: 'layover-location', label: 'Layover Location' },
   ]},

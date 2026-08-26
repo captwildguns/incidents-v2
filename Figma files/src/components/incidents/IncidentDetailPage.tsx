@@ -308,10 +308,10 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
   };
 
   const INCIDENT_LOCATION_LABELS: Record<string, string> = {
-    'on-bus': 'On Vehicle',
-    'bus-stop': 'At Vehicle Stop',
+    'on-bus': 'Vehicle (on board)',
+    'bus-stop': 'Vehicle Stop',
     'loading': 'Loading/Unloading',
-    'school-campus': 'School Campus',
+    'school-campus': 'School',
     'parking-lot': 'Parking Lot',
     'layover-location': 'Layover Location',
     'garage': 'Garage',
