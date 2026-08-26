@@ -166,8 +166,11 @@ const contactSummary = (c: PersonContact) => c.name.trim() || c.description.trim
 function ContactSummaryRow({
   contact, onEdit, onRemove,
 }: { contact: PersonContact; onEdit: () => void; onRemove: () => void }) {
-  const detail = [contact.phone.trim(), contact.email.trim()].filter(Boolean).join(' · ');
+  const contactLine = [contact.phone.trim(), contact.email.trim()].filter(Boolean).join(' · ');
   const unnamed = !contact.name.trim();
+  // The description only repeats the line above when there is no name to show,
+  // so it is listed separately whenever a name was given.
+  const describedToo = !unnamed && !!contact.description.trim();
   return (
     <div
       className="flex items-center"
@@ -185,14 +188,23 @@ function ContactSummaryRow({
             fontSize: 'var(--text-base)',
             fontWeight: unnamed ? 'var(--forge-font-weight-regular)' : 'var(--forge-font-weight-medium)',
             fontStyle: unnamed ? 'italic' : 'normal',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            // A name is one line and clips; a description of an unnamed person
+            // is a sentence and has to be readable in full.
+            overflow: unnamed ? undefined : 'hidden',
+            textOverflow: unnamed ? undefined : 'ellipsis',
+            whiteSpace: unnamed ? 'normal' : 'nowrap',
           }}
         >
           {contactSummary(contact)}
         </div>
-        {detail && (
+        {contactLine && (
           <div style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
-            {detail}
+            {contactLine}
+          </div>
+        )}
+        {describedToo && (
+          <div style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+            {contact.description.trim()}
           </div>
         )}
       </div>
