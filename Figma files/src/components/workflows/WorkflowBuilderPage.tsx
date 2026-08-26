@@ -403,7 +403,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                     checked={workflowActive}
                     onChange={(e) => setWorkflowActive(e.target.checked)}
                   />
-                  <span style={{ fontSize: 'var(--text-sm)' }}>Active, available for assignment to new incidents</span>
+                  <span style={{ fontSize: 'var(--text-sm)' }}>Active</span>
                 </label>
               </div>
             </div>
