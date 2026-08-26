@@ -659,7 +659,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           {peopleRequired && <Req />}
         </label>
         <p style={{ margin: '0 0 8px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
-          Name each {roster.noun} involved, then expand a row to record their role and what was done.
+          Name each {roster.noun} involved. Expanding a row opens their role and what was done, below Severity.
         </p>
         <div className="flex" style={{ gap: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-small)' }}>
           <div style={{ flex: 1 }}>
@@ -725,74 +725,168 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 <span style={{ fontWeight: 500 }}>{person.name}</span>
                 {person.role && <forge-badge theme="default">{person.role}</forge-badge>}
                 {person.severity && <forge-badge theme="info">{person.severity}</forge-badge>}
+                {expanded.has(person.id) && (
+                  <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+                    details below
+                  </span>
+                )}
               </button>
               {/* @ts-ignore */}
               <forge-button variant="flat" onClick={() => removePerson(person.id)}>Remove</forge-button>
             </div>
-
-            {/* Per-person detail, inline. This is what lets all five subjects
-                run the same two steps instead of three needing a third. */}
-            {expanded.has(person.id) && (
-              <div style={{ padding: '0 var(--forge-spacing-small) var(--forge-spacing-small)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', paddingTop: 'var(--forge-spacing-small)' }}>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label style={labelStyle}>Role</label>
-                    {/* @ts-ignore */}
-                    <forge-text-field>
-                      <select value={person.role} onChange={(e) => updatePerson(person.id, { role: e.target.value })} style={selectStyle}>
-                        <option value="">Select role...</option>
-                        {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                      </select>
-                    </forge-text-field>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Severity for this person</label>
-                    {/* @ts-ignore */}
-                    <forge-text-field>
-                      <select value={person.severity} onChange={(e) => updatePerson(person.id, { severity: e.target.value })} style={selectStyle}>
-                        <option value="">Same as incident{severity ? ` (${severity})` : ''}</option>
-                        {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </forge-text-field>
-                  </div>
-                  {subject === 'student' && (
-                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                      <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={person.parentNotified} onChange={(e) => updatePerson(person.id, { parentNotified: e.target.checked })} />
-                        Parent notified
-                      </label>
-                    </div>
-                  )}
-                </div>
-                {/* No per-person description. Decided with Jon on Aug 20 (#75):
-                    Additional Notes already covers what is specific to a person,
-                    so a second free-text field is not worth an
-                    IncidentEventStudent column. */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
-                  <div>
-                    <label style={labelStyle}>Action taken</label>
-                    {/* @ts-ignore */}
-                    <forge-text-field>
-                      <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                    </forge-text-field>
-                  </div>
-                  {/* The detail page renders Additional Notes per person, and
-                      seeded incidents use it for coordinator context. Without an
-                      input here it could only ever appear on seeded data. */}
-                  <div className="sm:col-span-2">
-                    <label style={labelStyle}>Additional notes</label>
-                    {/* @ts-ignore */}
-                    <forge-text-field>
-                      <textarea rows={2} value={person.notes} onChange={(e) => updatePerson(person.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                    </forge-text-field>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         ))}
       </div>
       ) : null;
+
+  // Incident Type and Severity. Held here so the subjects with people to
+  // name can place them between the roster and the per-person detail, and
+  // the two without people can keep them in the packed run of fields.
+  const typeField = (
+        <>
+          <label style={labelStyle}>Incident Type<Req /></label>
+          {/* @ts-ignore */}
+          <forge-text-field>
+            <select
+              value={incidentType}
+              onChange={(e) => {
+                const label = e.target.value;
+                setIncidentType(label);
+                // Every type in the catalogue carries a defaultSeverity, so
+                // picking one sets severity rather than leaving the
+                // reporter to guess. Overridable below.
+                const picked = typeOptions.find(ty => ty.label === label);
+                if (picked) {
+                  setSeverity(picked.defaultSeverity);
+                  setSeverityFromType(true);
+                }
+              }}
+              style={selectStyle}
+            >
+              <option value="">Select type...</option>
+              {typeOptions.map(ty => (
+                <option key={ty.id} value={ty.label} title={ty.description}>{ty.label}</option>
+              ))}
+            </select>
+          </forge-text-field>
+        </>
+  );
+
+  const severityField = (
+        <>
+          <label style={labelStyle}>
+            Severity<Req />
+            {severityFromType && (
+              <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)' }}>
+                {'  '}set from incident type, change if needed
+              </span>
+            )}
+          </label>
+          <div className="flex flex-wrap" style={{ gap: '8px', paddingTop: '2px' }}>
+            {SEVERITIES.map(s => (
+              <label
+                key={s}
+                className="flex items-center"
+                style={{
+                  gap: '6px',
+                  padding: '7px 12px',
+                  border: `1px solid ${severity === s ? 'var(--forge-theme-primary)' : 'var(--forge-theme-outline, rgba(0,0,0,0.12))'}`,
+                  borderRadius: 'var(--forge-shape-medium)',
+                  background: severity === s ? 'var(--forge-theme-primary-container-minimum)' : 'transparent',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--forge-font-family)',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="severity"
+                  value={s}
+                  checked={severity === s}
+                  onChange={() => { setSeverity(s); setSeverityFromType(false); }}
+                />
+                <forge-badge theme={s === 'Critical' ? 'danger' : s === 'High' ? 'error' : s === 'Medium' ? 'warning' : 'info'}>
+                  {s}
+                </forge-badge>
+              </label>
+            ))}
+          </div>
+        </>
+  );
+
+  // Per-person detail, lifted out of each name row so it sits below Incident
+  // Type and Severity. A person's severity offers "Same as incident", which
+  // means nothing until the incident's own severity has been set, and the
+  // reporter thinks who, then what, then what each person's part in it was.
+  const personDetailsSection =
+    roster && people.some(pn => expanded.has(pn.id)) ? (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-small)' }}>
+        {people.filter(pn => expanded.has(pn.id)).map(person => (
+          <div
+            key={person.id}
+            style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-small)' }}
+          >
+            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)' }}>
+              <span style={{ fontWeight: 500 }}>{person.name}</span>
+              {/* @ts-ignore */}
+              <forge-button variant="flat" onClick={() => toggleExpanded(person.id)}>Collapse</forge-button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label style={labelStyle}>Role</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <select value={person.role} onChange={(e) => updatePerson(person.id, { role: e.target.value })} style={selectStyle}>
+                    <option value="">Select role...</option>
+                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </forge-text-field>
+              </div>
+              <div>
+                <label style={labelStyle}>Severity for this person</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <select value={person.severity} onChange={(e) => updatePerson(person.id, { severity: e.target.value })} style={selectStyle}>
+                    <option value="">Same as incident{severity ? ` (${severity})` : ''}</option>
+                    {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </forge-text-field>
+              </div>
+              {subject === 'student' && (
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={person.parentNotified} onChange={(e) => updatePerson(person.id, { parentNotified: e.target.checked })} />
+                    Parent notified
+                  </label>
+                </div>
+              )}
+            </div>
+            {/* No per-person description. Decided with Jon on Aug 20 (#75):
+                Additional Notes already covers what is specific to a person,
+                so a second free-text field is not worth an
+                IncidentEventStudent column. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
+              <div>
+                <label style={labelStyle}>Action taken</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+                </forge-text-field>
+              </div>
+              {/* The detail page renders Additional Notes per person, and
+                  seeded incidents use it for coordinator context. Without an
+                  input here it could only ever appear on seeded data. */}
+              <div className="sm:col-span-2">
+                <label style={labelStyle}>Additional notes</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <textarea rows={2} value={person.notes} onChange={(e) => updatePerson(person.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+                </forge-text-field>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : null;
 
   const detailsStep = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-medium)' }}>
@@ -807,6 +901,20 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           close up, so the grid is always fully packed. */}
 
       {rosterSection}
+
+      {/* Incident Type and Severity sit between the people named and the detail
+          for each of them, because a person's severity offers "same as
+          incident" and that means nothing until the incident's own severity is
+          set. On Vehicle and Location there is nobody to name, so both stay in
+          the run of fields below. */}
+      {roster && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>{typeField}</div>
+          <div className="sm:col-span-2">{severityField}</div>
+        </div>
+      )}
+
+      {personDetailsSection}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
@@ -832,87 +940,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             ),
           },
 
-          // WHAT
-          {
-            key: 'type',
-            node: (
-              <>
-                <label style={labelStyle}>Incident Type<Req /></label>
-                {/* @ts-ignore */}
-                <forge-text-field>
-                  <select
-                    value={incidentType}
-                    onChange={(e) => {
-                      const label = e.target.value;
-                      setIncidentType(label);
-                      // Every type in the catalogue carries a defaultSeverity, so
-                      // picking one sets severity rather than leaving the
-                      // reporter to guess. Overridable below.
-                      const picked = typeOptions.find(ty => ty.label === label);
-                      if (picked) {
-                        setSeverity(picked.defaultSeverity);
-                        setSeverityFromType(true);
-                      }
-                    }}
-                    style={selectStyle}
-                  >
-                    <option value="">Select type...</option>
-                    {typeOptions.map(ty => (
-                      <option key={ty.id} value={ty.label} title={ty.description}>{ty.label}</option>
-                    ))}
-                  </select>
-                </forge-text-field>
-              </>
-            ),
-          },
-          {
-            key: 'severity',
-            // Spans the rest of the row so all four options are visible at once.
-            // A radio group rather than a select because the value is usually
-            // already correct from the type, and a closed select hides both what
-            // it is and that it can be changed.
-            spanTwo: true,
-            node: (
-              <>
-                <label style={labelStyle}>
-                  Severity<Req />
-                  {severityFromType && (
-                    <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)' }}>
-                      {'  '}set from incident type, change if needed
-                    </span>
-                  )}
-                </label>
-                <div className="flex flex-wrap" style={{ gap: '8px', paddingTop: '2px' }}>
-                  {SEVERITIES.map(s => (
-                    <label
-                      key={s}
-                      className="flex items-center"
-                      style={{
-                        gap: '6px',
-                        padding: '7px 12px',
-                        border: `1px solid ${severity === s ? 'var(--forge-theme-primary)' : 'var(--forge-theme-outline, rgba(0,0,0,0.12))'}`,
-                        borderRadius: 'var(--forge-shape-medium)',
-                        background: severity === s ? 'var(--forge-theme-primary-container-minimum)' : 'transparent',
-                        cursor: 'pointer',
-                        fontFamily: 'var(--forge-font-family)',
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="severity"
-                        value={s}
-                        checked={severity === s}
-                        onChange={() => { setSeverity(s); setSeverityFromType(false); }}
-                      />
-                      <forge-badge theme={s === 'Critical' ? 'danger' : s === 'High' ? 'error' : s === 'Medium' ? 'warning' : 'info'}>
-                        {s}
-                      </forge-badge>
-                    </label>
-                  ))}
-                </div>
-              </>
-            ),
-          },
+          // WHAT. Only here on Vehicle and Location, which have no roster to
+          // sit above them. See typeField and severityField.
+          !roster && { key: 'type', node: typeField },
+          !roster && { key: 'severity', spanTwo: true, node: severityField },
           {
             key: 'description',
             // Spans the row in place rather than sitting in its own block, so it
