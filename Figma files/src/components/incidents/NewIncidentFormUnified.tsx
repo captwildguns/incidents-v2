@@ -671,7 +671,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           {peopleRequired && <Req />}
         </label>
         <p style={{ margin: '0 0 8px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
-          Name each {roster.noun} involved. Expanding a row opens their role and what was done, below Severity.
+          Name each {roster.noun} involved. Expanding a row opens their role and what was done, below this list.
         </p>
         <div className="flex" style={{ gap: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-small)' }}>
           <div style={{ flex: 1 }}>
@@ -906,25 +906,25 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       {/* One continuous set of fields, sequenced who, then what, then when and
           where. The order is about the order a reporter thinks in, not about
           carving the form into labelled sections, so there are no section
-          headings: the roster leads because it is who the incident is about,
-          then the account of what happened, then the operational context.
+          headings: what happened leads, then who it was about, then the
+          operational context.
 
           A field the subject does not need is not rendered and the ones after it
           close up, so the grid is always fully packed. */}
 
-      {rosterSection}
-
-      {/* Incident Type and Severity sit between the people named and the detail
-          for each of them, because a person's severity offers "same as
-          incident" and that means nothing until the incident's own severity is
+      {/* Incident Type and Severity lead, because what happened frames every
+          answer after it, and because a person's severity offers "same as
+          incident", which means nothing until the incident's own severity is
           set. On Vehicle and Location there is nobody to name, so both stay in
-          the run of fields below. */}
+          the run of fields below rather than opening the form. */}
       {roster && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>{typeField}</div>
           <div className="sm:col-span-2">{severityField}</div>
         </div>
       )}
+
+      {rosterSection}
 
       {personDetailsSection}
 
