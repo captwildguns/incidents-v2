@@ -154,9 +154,59 @@ function SectionHeading({ children, hint }: { children: any; hint?: string }) {
   );
 }
 
+// A contact counts as filled in once it carries either a name or a description,
+// which is the same rule the record uses. Done on an untouched card discards it
+// rather than leaving a blank line behind.
+const contactIsEmpty = (c: PersonContact) => !c.name.trim() && !c.description.trim();
+
+// What a finished contact reads as on its one line. The description stands in
+// for the name when nobody could give one.
+const contactSummary = (c: PersonContact) => c.name.trim() || c.description.trim();
+
+function ContactSummaryRow({
+  contact, onEdit, onRemove,
+}: { contact: PersonContact; onEdit: () => void; onRemove: () => void }) {
+  const detail = [contact.phone.trim(), contact.email.trim()].filter(Boolean).join(' · ');
+  const unnamed = !contact.name.trim();
+  return (
+    <div
+      className="flex items-center"
+      style={{
+        gap: 'var(--forge-spacing-small)',
+        padding: 'var(--forge-spacing-small)',
+        border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))',
+        borderRadius: 'var(--forge-shape-medium)',
+        marginBottom: 'var(--forge-spacing-xsmall)',
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 0, fontFamily: 'var(--forge-font-family)' }}>
+        <div
+          style={{
+            fontSize: 'var(--text-base)',
+            fontWeight: unnamed ? 'var(--forge-font-weight-regular)' : 'var(--forge-font-weight-medium)',
+            fontStyle: unnamed ? 'italic' : 'normal',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}
+        >
+          {contactSummary(contact)}
+        </div>
+        {detail && (
+          <div style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+            {detail}
+          </div>
+        )}
+      </div>
+      {/* @ts-ignore */}
+      <forge-button variant="outlined" onClick={onEdit}>Edit</forge-button>
+      {/* @ts-ignore */}
+      <forge-button variant="outlined" onClick={onRemove}>Remove</forge-button>
+    </div>
+  );
+}
+
 function ContactFields({
-  contact, onChange, onRemove, noun,
-}: { contact: PersonContact; onChange: (c: PersonContact) => void; onRemove: () => void; noun: string }) {
+  contact, onChange, onRemove, onDone, noun,
+}: { contact: PersonContact; onChange: (c: PersonContact) => void; onRemove: () => void; onDone: () => void; noun: string }) {
   return (
     <div
       className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end"
@@ -195,12 +245,78 @@ function ContactFields({
           />
         </forge-text-field>
       </div>
-      <div>
+      <div className="flex" style={{ gap: 'var(--forge-spacing-xsmall)' }}>
         {/* @ts-ignore */}
-        <forge-button variant="outlined" onClick={onRemove} style={{ width: '100%' }}>
+        <forge-button variant="raised" onClick={onDone} style={{ flex: 1 }}>
+          Done
+        </forge-button>
+        {/* @ts-ignore */}
+        <forge-button variant="outlined" onClick={onRemove} style={{ flex: 1 }}>
           Remove
         </forge-button>
       </div>
+    </div>
+  );
+}
+
+// One list of people: each entry is either open for editing or collapsed to a
+// line. Used for witnesses and for third parties, which behave identically.
+function ContactList({
+  contacts, setContacts, editing, setEditing, noun, addLabel,
+}: {
+  contacts: PersonContact[];
+  setContacts: (fn: (cs: PersonContact[]) => PersonContact[]) => void;
+  editing: boolean[];
+  setEditing: (fn: (es: boolean[]) => boolean[]) => void;
+  noun: string;
+  addLabel: string;
+}) {
+  const removeAt = (i: number) => {
+    setContacts(cs => cs.filter((_, j) => j !== i));
+    setEditing(es => es.filter((_, j) => j !== i));
+  };
+
+  const doneAt = (i: number) => {
+    if (contactIsEmpty(contacts[i])) {
+      removeAt(i);
+      return;
+    }
+    setEditing(es => es.map((e, j) => (j === i ? false : e)));
+  };
+
+  return (
+    <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
+      {contacts.map((c, i) =>
+        editing[i] === false ? (
+          <ContactSummaryRow
+            key={i}
+            contact={c}
+            onEdit={() => setEditing(es => es.map((e, j) => (j === i ? true : e)))}
+            onRemove={() => removeAt(i)}
+          />
+        ) : (
+          <ContactFields
+            key={i}
+            contact={c}
+            noun={noun}
+            onChange={(next) => setContacts(cs => cs.map((x, j) => (j === i ? next : x)))}
+            onRemove={() => removeAt(i)}
+            onDone={() => doneAt(i)}
+          />
+        ),
+      )}
+      {/* @ts-ignore */}
+      <forge-button
+        variant="outlined"
+        onClick={() => {
+          setContacts(cs => [...cs, emptyContact()]);
+          setEditing(es => [...es, true]);
+        }}
+      >
+        {/* @ts-ignore */}
+        <forge-icon slot="start" name="add"></forge-icon>
+        {addLabel}
+      </forge-button>
     </div>
   );
 }
@@ -232,8 +348,12 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const [tagDraft, setTagDraft] = useState('');
   const [witnessPresent, setWitnessPresent] = useState(false);
   const [witnesses, setWitnesses] = useState<PersonContact[]>([]);
+  // Runs alongside the list above: true while that entry is open for editing,
+  // false once Done has collapsed it to a line.
+  const [witnessEditing, setWitnessEditing] = useState<boolean[]>([]);
   const [thirdPartyPresent, setThirdPartyPresent] = useState(false);
   const [thirdParties, setThirdParties] = useState<PersonContact[]>([]);
+  const [thirdPartyEditing, setThirdPartyEditing] = useState<boolean[]>([]);
   const [uploadedPhotos, setUploadedPhotos] = useState<Array<{ id: string; name: string; url: string; size: string }>>([]);
   const [uploadedDocuments, setUploadedDocuments] = useState<Array<{ id: string; name: string; size: string; type: string }>>([]);
   const [locationCoordinates, setLocationCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -944,7 +1064,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 onChange={(e) => {
                   const on = e.target.value === 'yes';
                   setWitnessPresent(on);
-                  if (on && witnesses.length === 0) setWitnesses([emptyContact()]);
+                  if (on && witnesses.length === 0) {
+                    setWitnesses([emptyContact()]);
+                    setWitnessEditing([true]);
+                  }
                 }}
                 style={selectStyle}
               >
@@ -963,7 +1086,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 onChange={(e) => {
                   const on = e.target.value === 'yes';
                   setThirdPartyPresent(on);
-                  if (on && thirdParties.length === 0) setThirdParties([emptyContact()]);
+                  if (on && thirdParties.length === 0) {
+                    setThirdParties([emptyContact()]);
+                    setThirdPartyEditing([true]);
+                  }
                 }}
                 style={selectStyle}
               >
@@ -976,41 +1102,25 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         </div>
 
         {witnessPresent && (
-          <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
-            {witnesses.map((w, i) => (
-              <ContactFields
-                key={i}
-                contact={w}
-                noun="Witness"
-                onChange={(c) => setWitnesses(ws => ws.map((x, j) => (j === i ? c : x)))}
-                onRemove={() => setWitnesses(ws => ws.filter((_, j) => j !== i))}
-              />
-            ))}
-            {/* @ts-ignore */}
-            <forge-button variant="outlined" onClick={() => setWitnesses(ws => [...ws, emptyContact()])}>
-              <forge-icon slot="start" name="add"></forge-icon>
-              Add witness
-            </forge-button>
-          </div>
+          <ContactList
+            contacts={witnesses}
+            setContacts={setWitnesses}
+            editing={witnessEditing}
+            setEditing={setWitnessEditing}
+            noun="Witness"
+            addLabel="Add witness"
+          />
         )}
 
         {thirdPartyPresent && (
-          <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
-            {thirdParties.map((t, i) => (
-              <ContactFields
-                key={i}
-                contact={t}
-                noun="Third party"
-                onChange={(c) => setThirdParties(ts => ts.map((x, j) => (j === i ? c : x)))}
-                onRemove={() => setThirdParties(ts => ts.filter((_, j) => j !== i))}
-              />
-            ))}
-            {/* @ts-ignore */}
-            <forge-button variant="outlined" onClick={() => setThirdParties(ts => [...ts, emptyContact()])}>
-              <forge-icon slot="start" name="add"></forge-icon>
-              Add third party
-            </forge-button>
-          </div>
+          <ContactList
+            contacts={thirdParties}
+            setContacts={setThirdParties}
+            editing={thirdPartyEditing}
+            setEditing={setThirdPartyEditing}
+            noun="Third party"
+            addLabel="Add third party"
+          />
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
