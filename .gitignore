@@ -12,3 +12,5 @@ install-gh.ps1
 HANDOFF-*.md
 Presentation/Incident-Module-Internal-Training-Agenda.*
 Presentation/build-training-agenda.py
+Presentation/review-*.html
+Presentation/review-build/
