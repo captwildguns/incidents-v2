@@ -925,10 +925,12 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       {/* Still the same run of fields, just the optional ones. */}
       <div>
 
-        {/* Witnesses, third parties and tags share one row. Each of the three is
-            small on its own, and tags on its own line pushed the evidence
-            buttons below the fold for no reason. */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
+        {/* Witnesses and third parties share a row, and the fields for whichever
+            one you turn on appear directly beneath that row. They used to sit in
+            a three-across row with tags, which pushed their fields below
+            Assigned To, so turning on witnesses made fields appear a long way
+            from the thing that asked for them. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
           {/* Label above a bordered control, the same shape as every other
               field. As bare inline checkboxes these two sat at a different
               height to their neighbours and had no field box, which made the
@@ -971,6 +973,47 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             </forge-text-field>
           </div>
 
+        </div>
+
+        {witnessPresent && (
+          <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
+            {witnesses.map((w, i) => (
+              <ContactFields
+                key={i}
+                contact={w}
+                noun="Witness"
+                onChange={(c) => setWitnesses(ws => ws.map((x, j) => (j === i ? c : x)))}
+                onRemove={() => setWitnesses(ws => ws.filter((_, j) => j !== i))}
+              />
+            ))}
+            {/* @ts-ignore */}
+            <forge-button variant="outlined" onClick={() => setWitnesses(ws => [...ws, emptyContact()])}>
+              <forge-icon slot="start" name="add"></forge-icon>
+              Add witness
+            </forge-button>
+          </div>
+        )}
+
+        {thirdPartyPresent && (
+          <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
+            {thirdParties.map((t, i) => (
+              <ContactFields
+                key={i}
+                contact={t}
+                noun="Third party"
+                onChange={(c) => setThirdParties(ts => ts.map((x, j) => (j === i ? c : x)))}
+                onRemove={() => setThirdParties(ts => ts.filter((_, j) => j !== i))}
+              />
+            ))}
+            {/* @ts-ignore */}
+            <forge-button variant="outlined" onClick={() => setThirdParties(ts => [...ts, emptyContact()])}>
+              <forge-icon slot="start" name="add"></forge-icon>
+              Add third party
+            </forge-button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
           <div>
               <label style={labelStyle}>Tags</label>
             <div className="flex flex-wrap items-center" style={{ gap: '6px' }}>
@@ -1028,44 +1071,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             </div>
           </div>
         </div>
-
-        {witnessPresent && (
-          <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
-            {witnesses.map((w, i) => (
-              <ContactFields
-                key={i}
-                contact={w}
-                noun="Witness"
-                onChange={(c) => setWitnesses(ws => ws.map((x, j) => (j === i ? c : x)))}
-                onRemove={() => setWitnesses(ws => ws.filter((_, j) => j !== i))}
-              />
-            ))}
-            {/* @ts-ignore */}
-            <forge-button variant="outlined" onClick={() => setWitnesses(ws => [...ws, emptyContact()])}>
-              <forge-icon slot="start" name="add"></forge-icon>
-              Add witness
-            </forge-button>
-          </div>
-        )}
-
-        {thirdPartyPresent && (
-          <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
-            {thirdParties.map((t, i) => (
-              <ContactFields
-                key={i}
-                contact={t}
-                noun="Third party"
-                onChange={(c) => setThirdParties(ts => ts.map((x, j) => (j === i ? c : x)))}
-                onRemove={() => setThirdParties(ts => ts.filter((_, j) => j !== i))}
-              />
-            ))}
-            {/* @ts-ignore */}
-            <forge-button variant="outlined" onClick={() => setThirdParties(ts => [...ts, emptyContact()])}>
-              <forge-icon slot="start" name="add"></forge-icon>
-              Add third party
-            </forge-button>
-          </div>
-        )}
 
 
         {/* Both uploads share a row, since each is only a button until
