@@ -395,15 +395,34 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   );
 
   const resetSubjectSpecific = () => {
-    // Changing subject clears only what is subject-specific: the type, the
-    // people, and the asset. Date, time, description, location and evidence are
-    // kept, because they are true regardless of what the incident turns out to
-    // be about.
+    // Changing subject starts the report over. Carrying the shared answers
+    // across a switch was descoped on Aug 25, so nothing survives it.
     setIncidentType('');
+    setSeverity('');
     setSeverityFromType(false);
     setAssetRef('');
     setPeople([]);
     setExpanded(new Set());
+    setDescription('');
+    setIncidentDate(new Date().toISOString().slice(0, 10));
+    setIncidentTime('');
+    setLocationType('');
+    setLocationCoordinates(null);
+    setLocationAddress('');
+    setVehicleNumber('');
+    setDriver('');
+    setRun('');
+    setTags([]);
+    setTagDraft('');
+    setAssignee('');
+    setWitnessPresent(false);
+    setWitnesses([]);
+    setWitnessEditing([]);
+    setThirdPartyPresent(false);
+    setThirdParties([]);
+    setThirdPartyEditing([]);
+    setUploadedPhotos([]);
+    setUploadedDocuments([]);
   };
 
   const chooseSubject = (next: IncidentSubject) => {
@@ -413,9 +432,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       setPendingSubject(null);
       return;
     }
-    // Warn before clearing, per #191, confirmed in place rather than in a
-    // browser dialog. Only when there is something to lose.
-    if (subject && (incidentType || assetRef || people.length > 0)) {
+    // Warn before clearing, confirmed in place rather than in a browser
+    // dialog. Only when there is something to lose.
+    if (subject && anythingEntered) {
       setPendingSubject(next);
       return;
     }
@@ -479,15 +498,15 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       return next;
     });
 
-  const clearedBySwitch = (() => {
-    const parts: string[] = [];
-    if (incidentType) parts.push('the incident type');
-    if (assetRef) parts.push('the affected asset');
-    if (people.length === 1) parts.push('the person named');
-    else if (people.length > 1) parts.push(`the ${people.length} people named`);
-    if (parts.length <= 1) return parts[0] ?? 'nothing';
-    return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
-  })();
+  // Anything at all typed, chosen or attached. Used to decide whether a switch
+  // needs warning about, now that a switch discards the whole report.
+  const anythingEntered =
+    !!incidentType || !!severity || !!assetRef || people.length > 0 ||
+    !!description.trim() || !!incidentTime || !!locationType ||
+    !!locationCoordinates || !!locationAddress.trim() ||
+    !!vehicleNumber || !!driver || !!run || tags.length > 0 || !!assignee ||
+    witnessPresent || thirdPartyPresent ||
+    uploadedPhotos.length > 0 || uploadedDocuments.length > 0;
 
   // Workflow selection already keys off type and severity, so as soon as both
   // are set the routing is known. Showing it on review means the reporter sees
@@ -553,8 +572,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           >
             <forge-icon name="warning" style={{ fontSize: '18px', flexShrink: 0, color: 'var(--forge-theme-warning, #b45309)' }}></forge-icon>
             <span style={{ fontSize: 'var(--forge-font-size-sm)', flex: 1 }}>
-              Switching to {getSubjectLabel(pendingSubject)} clears {clearedBySwitch}. Date,
-              time, description, location and evidence are kept.
+              Switching to {getSubjectLabel(pendingSubject)} starts the report over.
+              Everything entered so far is cleared.
             </span>
             {/* @ts-ignore */}
             <forge-button variant="flat" onClick={() => setPendingSubject(null)}>Keep {getSubjectLabel(subject!)}</forge-button>
