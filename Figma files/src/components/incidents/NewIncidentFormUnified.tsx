@@ -85,7 +85,10 @@ interface Person {
   parentNotified: boolean;
 }
 
-const ROLES = ['Participant', 'Witness', 'Reporter', 'Injured', 'Instigator', 'Victim', 'Bystander'];
+// The five roles a person can hold in an incident, decided Aug 27. One list
+// for every subject. Reporter came out because whoever filed it is already
+// recorded, and Bystander merged into Witness.
+const ROLES = ['Participant', 'Witness', 'Victim', 'Instigator', 'Injured'];
 const SEVERITIES = ['Low', 'Medium', 'High', 'Critical'];
 
 // Flat and alphabetical. Category headers added rows to scan without narrowing

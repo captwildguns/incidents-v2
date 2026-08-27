@@ -58,7 +58,9 @@ const TYPES = [
   { label: 'Witness / Bystander Statement', desc: 'record a helper or witness, no fault assigned', def: 'low' },
 ];
 
-const ROLES = ['instigator', 'participant', 'victim', 'bystander'] as const;
+// Same five values the web form uses. Rendered lowercase to match the rest of
+// the tablet, but the value stored is the canonical one.
+const ROLES = ['Participant', 'Witness', 'Victim', 'Instigator', 'Injured'] as const;
 const SEVS = ['low', 'medium', 'high', 'critical'] as const;
 const sevColor: Record<string, string> = { low: '#3a5a3f', medium: '#7a5a1e', high: '#CC504F', critical: C.redDark };
 
@@ -476,7 +478,7 @@ export function TabletView({ onExit }: TabletViewProps) {
                     const on = d?.role === r;
                     const tint = r === 'instigator' ? '#ffd0d0' : r === 'victim' ? '#cfe0ff' : '#fff';
                     const tcol = r === 'instigator' ? '#7a1010' : r === 'victim' ? '#0b2a66' : '#13203a';
-                    return (<button key={r} onClick={() => setRole(s.id, r)} style={{ ...st.role, background: on ? tint : 'transparent', color: on ? tcol : '#cdd6e4', borderColor: on ? tint : '#46506a', fontWeight: on ? 600 : 400 }}>{r}</button>);
+                    return (<button key={r} onClick={() => setRole(s.id, r)} style={{ ...st.role, background: on ? tint : 'transparent', color: on ? tcol : '#cdd6e4', borderColor: on ? tint : '#46506a', fontWeight: on ? 600 : 400, textTransform: 'lowercase' }}>{r}</button>);
                   })}
                 </div>
               </div>

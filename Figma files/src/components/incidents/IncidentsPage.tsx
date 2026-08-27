@@ -219,7 +219,7 @@ const rawIncidents = [
     involvedStudents: [
       { studentId: 'STU-7561', name: 'Brianna Cooper', role: 'Instigator', severity: 'High', parentNotified: true, description: 'Struck Andrew Rogers across the shoulder with her backpack after an argument over seating. Action appeared intentional based on driver\'s account.', actionTaken: 'Removed from bus pending review. Parent contacted same day. 3-day bus suspension issued.', notes: 'No prior incidents on record. Parent cooperative during contact.' },
       { studentId: 'STU-2016', name: 'Andrew Rogers', role: 'Victim', severity: 'Medium', parentNotified: true, incidentTypeOverride: 'Safety Violation', description: 'Struck on shoulder and upper back by Brianna\'s backpack. Reported minor pain but declined nurse referral.', actionTaken: 'Parent contacted and informed of incident. Offered seat change on return route.', notes: 'Student indicated incident was unprovoked.' },
-      { studentId: 'STU-3890', name: 'Chris Park', role: 'Bystander', severity: 'Low', parentNotified: false, noWorkflow: true, description: 'Seated nearby when the altercation occurred. Did not participate. Appeared visibly unsettled after the incident.', actionTaken: 'Check-in conversation with driver. Offered seat reassignment for return route.', notes: 'Student mentioned feeling nervous. Counselor follow-up suggested.' },
+      { studentId: 'STU-3890', name: 'Chris Park', role: 'Witness', severity: 'Low', parentNotified: false, noWorkflow: true, description: 'Seated nearby when the altercation occurred. Did not participate. Appeared visibly unsettled after the incident.', actionTaken: 'Check-in conversation with driver. Offered seat reassignment for return route.', notes: 'Student mentioned feeling nervous. Counselor follow-up suggested.' },
     ],
     photos: [
       {
@@ -400,7 +400,7 @@ const rawIncidents = [
     involvedStudents: [
       { studentId: 'STU-1905', name: 'Hannah Morris', role: 'Instigator', severity: 'Medium', parentNotified: true, description: 'Repeatedly made comments mocking Samantha\'s clothing and lunch items over multiple route days. Driver confirmed pattern of behavior.', actionTaken: 'Verbal warning issued. Parent notified by phone.', notes: 'Pattern of repeated behavior noted. Monitor closely.' },
       { studentId: 'STU-3127', name: 'Samantha Reed', role: 'Victim', severity: 'Low', parentNotified: true, description: 'Recipient of repeated mocking comments from Hannah. Did not engage or retaliate. Appeared withdrawn during final incidents.', actionTaken: 'Counselor referral suggested. Parent notified.', notes: 'Parent expressed concern about ongoing nature; requested follow-up.' },
-      { studentId: 'STU-6450', name: 'Dylan Bell', role: 'Bystander', severity: 'Low', parentNotified: false, description: 'Present during multiple incidents but did not participate. Did not intervene or report.', actionTaken: 'No formal action taken. Bystander awareness discussion encouraged.', notes: '' },
+      { studentId: 'STU-6450', name: 'Dylan Bell', role: 'Witness', severity: 'Low', parentNotified: false, description: 'Present during multiple incidents but did not participate. Did not intervene or report.', actionTaken: 'No formal action taken. Bystander awareness discussion encouraged.', notes: '' },
     ],
   },
   {
