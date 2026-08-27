@@ -24,6 +24,8 @@ const LOCATION_OPTIONS = [
     { value: 'school-campus', label: 'School' },
     { value: 'parking-lot', label: 'Parking Lot' },
     { value: 'layover-location', label: 'Layover Location' },
+    { value: 'garage', label: 'Garage' },
+    { value: 'yard', label: 'Yard' },
   ]},
   { category: 'OTHER', items: [{ value: 'other', label: 'Other' }] },
 ];

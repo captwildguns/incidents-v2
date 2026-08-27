@@ -91,11 +91,12 @@ interface Person {
 const ROLES = ['Participant', 'Witness', 'Victim', 'Instigator', 'Injured'];
 const SEVERITIES = ['Low', 'Medium', 'High', 'Critical'];
 
-// Flat and alphabetical. Category headers added rows to scan without narrowing
-// anything down.
+// Nine, ordered from where a route runs out to where a bus is kept, with Other
+// last. Says where the incident happened, not which site: the site is already on
+// the record, so a bay or a fuel island inside a garage earns nothing.
 const LOCATION_TYPES = [
-  'Fuel Station', 'Garage', 'Layover Location', 'Loading/Unloading', 'Maintenance Bay',
-  'Other', 'Parking Lot', 'School', 'Vehicle (on board)', 'Vehicle Stop', 'Wash Bay', 'Yard',
+  'Vehicle (on board)', 'Vehicle Stop', 'Loading/Unloading', 'School', 'Parking Lot',
+  'Layover Location', 'Garage', 'Yard', 'Other',
 ];
 
 const RUNS = [

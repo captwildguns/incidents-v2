@@ -316,9 +316,6 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
     'layover-location': 'Layover Location',
     'garage': 'Garage',
     'yard': 'Yard',
-    'maintenance-bay': 'Maintenance Bay',
-    'fuel-station': 'Fuel Station',
-    'wash-bay': 'Wash Bay',
     'other': 'Other',
   };
   const getLocationLabel = (val: string) => INCIDENT_LOCATION_LABELS[val] ?? val;
