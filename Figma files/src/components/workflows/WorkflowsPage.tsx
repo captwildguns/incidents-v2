@@ -491,6 +491,15 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                                   {workflow.ownerName ? 'Named on this workflow' : workflow.ownerRole}
                                 </div>
                               </>
+                            ) : workflow.ownerRole ? (
+                              <>
+                                <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--text-base)' }}>
+                                  {workflow.ownerRole}
+                                </div>
+                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', fontFamily: 'var(--forge-font-family)', marginTop: '2px' }}>
+                                  Whoever holds the role
+                                </div>
+                              </>
                             ) : (
                               <span style={{ fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)' }}>
                                 Unassigned

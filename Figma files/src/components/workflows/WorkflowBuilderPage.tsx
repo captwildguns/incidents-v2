@@ -10,7 +10,7 @@ import { Badge } from '../ui/badge';
 import { Textarea } from '../ui/textarea';
 import { StepConfigDialog } from './StepConfigDialog';
 import { WorkflowStepLibrary, WorkflowStepTemplate } from './WorkflowStepLibrary';
-import { ROLE_HOLDERS, INCIDENT_ROLE_HOLDERS, roleHolderLabel, resolveWorkflowOwner } from '../../data/workflows';
+import { ROLE_HOLDERS, holdersOfRole, resolveWorkflowOwner } from '../../data/workflows';
 import {
   Plus,
   Trash2,
@@ -354,7 +354,7 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                 <Label style={{ fontSize: 'var(--text-sm)' }}>Incident Assignee *</Label>
                 <select
                   value={ownerRole}
-                  onChange={(e) => setOwnerRole(e.target.value)}
+                  onChange={(e) => { setOwnerRole(e.target.value); setOwnerName(''); }}
                   style={{
                     width: '100%', marginTop: 'var(--forge-spacing-xsmall)',
                     padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)',
@@ -371,7 +371,10 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                     ? 'Required. Every incident on this workflow needs an assignee.'
                     : ownerName
                       ? 'Incidents on this workflow are assigned to ' + ownerName + ', regardless of who holds the role.'
-                      : 'Incidents on this workflow are assigned to ' + (resolveWorkflowOwner({ ownerRole }) ?? ownerRole) + '.'}
+                      : 'Incidents on this workflow are assigned to ' + ownerRole
+                        + (holdersOfRole(ownerRole).length > 1
+                            ? ', which ' + holdersOfRole(ownerRole).length + ' people hold.'
+                            : '.')}
                 </div>
               </div>
 
@@ -387,8 +390,8 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
                   }}
                 >
                   <option value="">Whoever holds the role</option>
-                  {INCIDENT_ROLE_HOLDERS.map(h => (
-                    <option key={h.name} value={h.name}>{roleHolderLabel(h)}</option>
+                  {holdersOfRole(ownerRole).map(n => (
+                    <option key={n} value={n}>{n}</option>
                   ))}
                 </select>
                 <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)', marginTop: 'var(--forge-spacing-xxsmall)' }}>

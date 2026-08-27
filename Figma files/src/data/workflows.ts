@@ -66,18 +66,22 @@ export interface Workflow {
 
 // Who currently holds each incident role.
 //
-// A stand-in for EmployeeIncidentRole, which is how the product attaches roles
-// to real Student Transportation employees. Mapped onto the three coordinators
-// the seeded incidents already assign to rather than inventing staff, so every
-// resolved owner is a name that appears elsewhere in the app. Replacing this
-// with a real lookup is the only change needed when roles are seeded for real.
-export const ROLE_HOLDERS: Record<string, string> = {
-  'Administrator': 'Sarah Williams',
-  'Safety Coordinator': 'Sarah Williams',
-  'School Principal': 'Jane Doe',
-  'Fleet Manager': 'Mike Chen',
-  'Driver': 'Mike Chen',
+// Several people hold a role, which is the real shape: a district has more than
+// one principal, and naming a role does not name a person. Every name here is
+// invented. Replacing this with a real lookup is the only change needed when
+// roles are attached to staff for real.
+export const ROLE_HOLDERS: Record<string, string[]> = {
+  'Administrator': ['Sarah Williams', 'Karen Taylor'],
+  'Safety Coordinator': ['Sarah Williams', 'Grace Whitfield'],
+  'School Principal': ['Jane Doe', 'Alan Reyes', 'Denise Ruiz'],
+  'Fleet Manager': ['Mike Chen', 'Terrance Boyle'],
+  'Driver': ['Lisa Anderson', 'David Park', 'John Chen'],
 };
+
+// The people holding one role, in the order they would be listed.
+export function holdersOfRole(role: string | null | undefined): string[] {
+  return role ? (ROLE_HOLDERS[role] ?? []) : [];
+}
 
 // The people who hold an incident role, and can therefore be assigned an
 // incident. Inverted from ROLE_HOLDERS rather than listed by hand, so the
@@ -89,10 +93,12 @@ export interface IncidentRoleHolder {
 }
 
 export const INCIDENT_ROLE_HOLDERS: IncidentRoleHolder[] = Object.entries(ROLE_HOLDERS)
-  .reduce<IncidentRoleHolder[]>((acc, [role, name]) => {
-    const existing = acc.find(h => h.name === name);
-    if (existing) existing.roles.push(role);
-    else acc.push({ name, roles: [role] });
+  .reduce<IncidentRoleHolder[]>((acc, [role, names]) => {
+    names.forEach(name => {
+      const existing = acc.find(h => h.name === name);
+      if (existing) existing.roles.push(role);
+      else acc.push({ name, roles: [role] });
+    });
     return acc;
   }, [])
   .sort((a, b) => a.name.localeCompare(b.name));
@@ -109,8 +115,11 @@ export function roleHolderLabel(holder: IncidentRoleHolder): string {
 export function resolveWorkflowOwner(workflow: Pick<Workflow, 'ownerRole' | 'ownerName'> | null | undefined): string | null {
   if (!workflow) return null;
   if (workflow.ownerName) return workflow.ownerName;
-  if (workflow.ownerRole) return ROLE_HOLDERS[workflow.ownerRole] ?? null;
-  return null;
+  // A role with exactly one holder resolves to that person. A role several
+  // people hold does not resolve to anybody, and callers show the role instead
+  // of picking a name that nothing entitles them to pick.
+  const holders = holdersOfRole(workflow.ownerRole);
+  return holders.length === 1 ? holders[0] : null;
 }
 
 // Pre-configured workflows for different incident types

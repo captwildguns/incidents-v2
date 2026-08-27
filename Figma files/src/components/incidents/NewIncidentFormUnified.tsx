@@ -27,7 +27,7 @@ import { mockVehicles } from '../vehicles/VehiclesPage';
 import { mockDrivers, allEmployees } from '../../data/employees';
 import { mockStudents } from '../students/StudentsPage';
 import { IncidentLocationMap } from './IncidentLocationMap';
-import { assignWorkflowToIncident, resolveWorkflowOwner, INCIDENT_ROLE_HOLDERS, roleHolderLabel } from '../../data/workflows';
+import { assignWorkflowToIncident, resolveWorkflowOwner, ROLE_HOLDERS, holdersOfRole } from '../../data/workflows';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The container form.
@@ -358,8 +358,11 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const [driver, setDriver] = useState('');
   const [run, setRun] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-  // Empty means follow the workflow owner. Set means this incident goes to a
-  // named person regardless of what the workflow routes to.
+  // Empty means follow the role the workflow assigns. Set means this incident
+  // goes to that role instead.
+  const [assigneeRole, setAssigneeRole] = useState('');
+  // Empty means whoever holds the role. Set means this one person owns the
+  // incident, overriding whatever the workflow would have done.
   const [assignee, setAssignee] = useState('');
   const [tagDraft, setTagDraft] = useState('');
   const [witnessPresent, setWitnessPresent] = useState(false);
@@ -521,6 +524,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     if (!wf) return null;
     return { workflow: wf.name, owner: resolveWorkflowOwner(wf), ownerRole: wf.ownerRole };
   }, [incidentType, severity]);
+
+  // The role the incident is heading to: whatever was chosen, otherwise whatever
+  // the matched workflow assigns. Drives which employees can be named.
+  const effectiveAssigneeRole = assigneeRole || routed?.ownerRole || '';
 
   const peopleRequired = subject ? subjectRequiresParties(subject) : false;
 
@@ -1221,29 +1228,57 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             </forge-text-field>
           </div>
 
+          {/* Assignment in two parts. The role is what the workflow decides and
+              can be redirected. Naming a person is the override: several people
+              hold a role, so a role on its own does not name anybody. */}
           <div>
             <label style={labelStyle}>Assigned To</label>
+            {/* @ts-ignore */}
+            <forge-text-field>
+              <select
+                value={assigneeRole}
+                onChange={(e) => { setAssigneeRole(e.target.value); setAssignee(''); }}
+                style={selectStyle}
+              >
+                <option value="">
+                  {routed?.ownerRole ? `Workflow default (${routed.ownerRole})` : 'Workflow default'}
+                </option>
+                {Object.keys(ROLE_HOLDERS).map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </forge-text-field>
+            <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', marginTop: '4px' }}>
+              {assigneeRole
+                ? 'Sends this incident to ' + assigneeRole + ' instead of the workflow.'
+                : routed
+                  ? 'Follows the ' + routed.workflow + ' workflow.'
+                  : 'Set by the workflow once incident type and severity are chosen.'}
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Assign to a specific employee</label>
             {/* @ts-ignore */}
             <forge-text-field>
               <select
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
                 style={selectStyle}
+                disabled={effectiveAssigneeRole === ''}
               >
-                <option value="">
-                  {routed?.owner ? `Workflow default (${routed.owner})` : 'Workflow default'}
-                </option>
-                {INCIDENT_ROLE_HOLDERS.map(h => (
-                  <option key={h.name} value={h.name}>{roleHolderLabel(h)}</option>
+                <option value="">Whoever holds the role</option>
+                {holdersOfRole(effectiveAssigneeRole).map(n => (
+                  <option key={n} value={n}>{n}</option>
                 ))}
               </select>
             </forge-text-field>
             <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', marginTop: '4px' }}>
               {assignee
-                ? 'Overrides the workflow for this incident only.'
-                : routed
-                  ? 'Follows the ' + routed.workflow + ' workflow.'
-                  : 'Set by the workflow once incident type and severity are chosen.'}
+                ? assignee + ' owns this incident, whatever the workflow would have done.'
+                : effectiveAssigneeRole
+                  ? holdersOfRole(effectiveAssigneeRole).length + ' people hold ' + effectiveAssigneeRole + '. Optional, and only for this incident.'
+                  : 'Available once the incident type and severity pick a workflow.'}
             </div>
           </div>
         </div>
@@ -1349,12 +1384,16 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     // Unassigned is a real outcome per #197: a workflow with no owner creates
     // the incident unassigned and it lands in the triage queue.
     ['Assigned to', assignee
-      ? `${assignee}, chosen on this incident`
-      : routed
-        ? (routed.owner
-            ? `${routed.owner}${routed.ownerRole ? ` (${routed.ownerRole})` : ''}`
-            : 'Unassigned, goes to triage')
-        : '-'],
+      ? `${assignee}${effectiveAssigneeRole ? ` (${effectiveAssigneeRole})` : ''}, chosen on this incident`
+      : assigneeRole
+        ? `${assigneeRole}, chosen on this incident`
+        : routed
+          ? (routed.owner
+              ? `${routed.owner}${routed.ownerRole ? ` (${routed.ownerRole})` : ''}`
+              : routed.ownerRole
+                ? `${routed.ownerRole}, whoever holds it`
+                : 'Unassigned, goes to triage')
+          : '-'],
     ['Photos', uploadedPhotos.length ? `${uploadedPhotos.length} attached` : '-'],
     ['Documents', uploadedDocuments.length ? `${uploadedDocuments.length} attached` : '-'],
     ['Location pin', locationAddress || (locationCoordinates ? `${locationCoordinates.lat.toFixed(4)}, ${locationCoordinates.lng.toFixed(4)}` : '-')],
