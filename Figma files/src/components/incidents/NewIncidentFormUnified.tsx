@@ -21,6 +21,9 @@ import {
   subjectHasField,
   PersonContact,
   emptyContact,
+  InvolvedVehicle,
+  VEHICLE_ROLES,
+  VEHICLE_DAMAGE_LEVELS,
 } from './IncidentTypes';
 import { mockLocations } from '../../data/locations';
 import { mockVehicles } from '../vehicles/VehiclesPage';
@@ -380,11 +383,15 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const photoInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
 
-  // The one subject-specific field
+  // The one subject-specific field. Location only now: a vehicle incident takes
+  // a list of vehicles rather than a single one, so it uses the list below.
   const [assetRef, setAssetRef] = useState('');
   // The one subject-specific section
   const [people, setPeople] = useState<Person[]>([]);
   const [personDraft, setPersonDraft] = useState('');
+  // Vehicles named on a vehicle incident. More than one, because two of our own
+  // buses striking each other is a single event and belongs on one record.
+  const [involvedVehicles, setInvolvedVehicles] = useState<InvolvedVehicle[]>([]);
   // Subject the reporter picked while subject-specific answers were already filled
   const [pendingSubject, setPendingSubject] = useState<IncidentSubject | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -409,6 +416,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     setSeverityFromType(false);
     setAssetRef('');
     setPeople([]);
+    setInvolvedVehicles([]);
     setExpanded(new Set());
     setDescription('');
     setIncidentDate(new Date().toISOString().slice(0, 10));
@@ -477,6 +485,26 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
   const removePerson = (id: string) => setPeople(p => p.filter(x => x.id !== id));
 
+  // Adding a vehicle fills its driver from the vehicle record, the same courtesy
+  // the single Driver field used to do, only now per vehicle so a two bus
+  // collision carries both drivers instead of one of them.
+  const addVehicle = (sourceId: string, name: string) => {
+    if (!name) return;
+    const known: any = mockVehicles.find((v: any) => v.id === sourceId);
+    const id = `veh-${sourceId}-${involvedVehicles.length}`;
+    setInvolvedVehicles(v => [...v, {
+      id, sourceId, name,
+      role: '', driver: known?.driver ?? '', damage: '', notes: '',
+    }]);
+    setExpanded(e => new Set([...e, id]));
+  };
+
+  const updateVehicle = (id: string, patch: Partial<InvolvedVehicle>) =>
+    setInvolvedVehicles(v => v.map(x => (x.id === id ? { ...x, ...patch } : x)));
+
+  const removeVehicle = (id: string) =>
+    setInvolvedVehicles(v => v.filter(x => x.id !== id));
+
   const readableSize = (bytes: number) =>
     bytes > 1048576 ? `${(bytes / 1048576).toFixed(2)} MB` : `${(bytes / 1024).toFixed(1)} KB`;
 
@@ -508,7 +536,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // Anything at all typed, chosen or attached. Used to decide whether a switch
   // needs warning about, now that a switch discards the whole report.
   const anythingEntered =
-    !!incidentType || !!severity || !!assetRef || people.length > 0 ||
+    !!incidentType || !!severity || !!assetRef ||
+    people.length > 0 || involvedVehicles.length > 0 ||
     !!description.trim() || !!incidentTime || !!locationType ||
     !!locationCoordinates || !!locationAddress.trim() ||
     !!vehicleNumber || !!driver || !!run || tags.length > 0 || !!assignee ||
@@ -530,6 +559,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const effectiveAssigneeRole = assigneeRole || routed?.ownerRole || '';
 
   const peopleRequired = subject ? subjectRequiresParties(subject) : false;
+  // A vehicle incident needs at least one vehicle named, the same way the people
+  // subjects need at least one person.
+  const vehiclesRequired = subject === 'vehicle';
 
   const detailsComplete =
     !!subject &&
@@ -539,7 +571,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     !!severity &&
     !!description.trim() &&
     !!locationType &&
-    (!assetKind || !!assetRef) &&
+    (assetKind !== 'location' || !!assetRef) &&
+    (!vehiclesRequired || involvedVehicles.length > 0) &&
     (!peopleRequired || people.length > 0);
 
   // ── Success ───────────────────────────────────────────────────────────────
@@ -553,6 +586,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         <p style={{ color: 'var(--forge-theme-text-medium)' }}>
           {getSubjectLabel(subject!)} incident, {incidentType}
           {people.length > 0 && `, ${people.length} ${people.length === 1 ? 'person' : 'people'} named`}
+          {involvedVehicles.length > 0 && `, ${involvedVehicles.map(v => v.name).join(' and ')}`}
           {assetRef && `, ${assetRef}`}
         </p>
         {/* @ts-ignore */}
@@ -567,7 +601,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   if (!subject || choosing) {
     return (
       <div style={{ fontFamily: 'var(--forge-font-family)' }}>
-        <SectionHeading hint="Choose the subject of the incident. This determines which details you are asked for.">
+        <SectionHeading hint="Choose the type of incident. This determines which details you are asked for.">
           What kind of incident is this?
         </SectionHeading>
         {pendingSubject && (
@@ -654,7 +688,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     <>
       <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-medium)' }}>
         <span style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
-          Subject:
+          Type:
         </span>
         <forge-badge theme="warning">{getSubjectLabel(subject)}</forge-badge>
         {/* @ts-ignore */}
@@ -700,9 +734,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           {roster.label}
           {peopleRequired && <Req />}
         </label>
-        <p style={{ margin: '0 0 8px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
-          Name each {roster.noun} involved. Expanding a row opens their role and what was done, below this list.
-        </p>
         <div className="flex" style={{ gap: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-small)' }}>
           <div style={{ flex: 1 }}>
             {/* @ts-ignore */}
@@ -786,7 +817,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // the two without people can keep them in the packed run of fields.
   const typeField = (
         <>
-          <label style={labelStyle}>Incident Type<Req /></label>
+          <label style={labelStyle}>Event<Req /></label>
           {/* @ts-ignore */}
           <forge-text-field>
             <select
@@ -930,6 +961,143 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       </div>
     ) : null;
 
+  // Involved Vehicles, the vehicle subject's answer to the roster. Same shape as
+  // the people list on purpose: add as many as were in it, each row collapses to
+  // a line, and expanding one opens its detail below the list.
+  const vehicleRosterSection = subject === 'vehicle' ? (
+    <div>
+      <label style={labelStyle}>
+        Involved Vehicles<Req />
+      </label>
+      <div className="flex" style={{ gap: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-small)' }}>
+        <div style={{ flex: 1 }}>
+          {/* @ts-ignore */}
+          <forge-text-field>
+            <forge-icon slot="start" name="search"></forge-icon>
+            <select
+              value=""
+              onChange={(e) => {
+                if (!e.target.value) return;
+                const [id, ...rest] = e.target.value.split('|');
+                addVehicle(id, rest.join('|'));
+              }}
+              style={selectStyle}
+            >
+              <option value="">Search by vehicle number...</option>
+              {mockVehicles
+                .filter((v: any) => !involvedVehicles.some(iv => iv.sourceId === v.id))
+                .map((v: any) => (
+                  <option key={v.id} value={`${v.id}|${v.name}`}>
+                    {v.name} ({v.id})
+                  </option>
+                ))}
+            </select>
+          </forge-text-field>
+        </div>
+      </div>
+
+      {involvedVehicles.length === 0 && (
+        <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: 0 }}>
+          No vehicles added yet.
+        </p>
+      )}
+
+      {involvedVehicles.map(v => (
+        <div
+          key={v.id}
+          style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
+        >
+          <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)', padding: 'var(--forge-spacing-small)' }}>
+            <button
+              onClick={() => toggleExpanded(v.id)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', flex: 1, textAlign: 'left', fontFamily: 'var(--forge-font-family)' }}
+            >
+              <forge-icon name={expanded.has(v.id) ? 'expand_less' : 'expand_more'} style={{ fontSize: '18px' }}></forge-icon>
+              <span style={{ fontWeight: 500 }}>{v.name}</span>
+              {v.role && <forge-badge theme="default">{v.role}</forge-badge>}
+              {v.damage && <forge-badge theme={v.damage === 'Severe' ? 'error' : v.damage === 'None' ? 'info' : 'warning'}>{v.damage} damage</forge-badge>}
+              {v.driver && (
+                <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+                  {v.driver}
+                </span>
+              )}
+            </button>
+            {/* @ts-ignore */}
+            <forge-button variant="flat" onClick={() => removeVehicle(v.id)}>Remove</forge-button>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : null;
+
+  // Per-vehicle detail, below the list, matching how per-person detail works.
+  const vehicleDetailsSection =
+    subject === 'vehicle' && involvedVehicles.some(v => expanded.has(v.id)) ? (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-small)' }}>
+        {involvedVehicles.filter(v => expanded.has(v.id)).map(v => (
+          <div
+            key={v.id}
+            style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-small)' }}
+          >
+            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)' }}>
+              <span style={{ fontWeight: 500 }}>{v.name}</span>
+              {/* @ts-ignore */}
+              <forge-button variant="flat" onClick={() => toggleExpanded(v.id)}>Collapse</forge-button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label style={labelStyle}>Part in the incident</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <select value={v.role} onChange={(e) => updateVehicle(v.id, { role: e.target.value })} style={selectStyle}>
+                    <option value="">Select...</option>
+                    {VEHICLE_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </forge-text-field>
+              </div>
+              <div>
+                <label style={labelStyle}>Driver</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <select value={v.driver} onChange={(e) => updateVehicle(v.id, { driver: e.target.value })} style={selectStyle}>
+                    <option value="">Nobody aboard</option>
+                    {mockDrivers
+                      .filter(d => d.status === 'Active')
+                      .sort((a, b) => a.fullName.localeCompare(b.fullName))
+                      .map(d => <option key={d.id} value={d.fullName}>{d.fullName}</option>)}
+                  </select>
+                </forge-text-field>
+              </div>
+              <div>
+                <label style={labelStyle}>Damage</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <select value={v.damage} onChange={(e) => updateVehicle(v.id, { damage: e.target.value })} style={selectStyle}>
+                    <option value="">Not assessed</option>
+                    {VEHICLE_DAMAGE_LEVELS.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </forge-text-field>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
+              <div>
+                <label style={labelStyle}>Notes for this vehicle</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <textarea rows={2} value={v.notes} onChange={(e) => updateVehicle(v.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+                </forge-text-field>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : null;
+
+  // Both the people subjects and the vehicle subject now lead with a list, so
+  // Incident Type and Severity sit above it. Location is the only subject left
+  // that keeps them in the packed run of fields.
+  const hasPartyList = !!roster || subject === 'vehicle';
+
   const detailsStep = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-medium)' }}>
 
@@ -947,7 +1115,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           incident", which means nothing until the incident's own severity is
           set. On Vehicle and Location there is nobody to name, so both stay in
           the run of fields below rather than opening the form. */}
-      {roster && (
+      {hasPartyList && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>{typeField}</div>
           <div className="sm:col-span-2">{severityField}</div>
@@ -958,34 +1126,34 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
       {personDetailsSection}
 
+      {vehicleRosterSection}
+
+      {vehicleDetailsSection}
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          // WHO, on the two subjects with no people to name. The roster above is
-          // the same slot for the three that have them.
-          assetKind && {
+          // WHO, on Location, the one subject with neither people nor vehicles
+          // to name. The lists above are the same slot for the other four.
+          assetKind === 'location' && {
             key: 'asset',
             node: (
               <>
-                <label style={labelStyle}>
-                  {assetKind === 'location' ? 'Affected Location' : 'Affected Vehicle'}<Req />
-                </label>
+                <label style={labelStyle}>Affected Location<Req /></label>
                 {/* @ts-ignore */}
                 <forge-text-field>
                   <select value={assetRef} onChange={(e) => setAssetRef(e.target.value)} style={selectStyle}>
-                    <option value="">{assetKind === 'location' ? 'Select location...' : 'Select vehicle...'}</option>
-                    {assetKind === 'location'
-                      ? mockLocations.map(l => <option key={l.id} value={l.name}>{l.name}</option>)
-                      : mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
+                    <option value="">Select location...</option>
+                    {mockLocations.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
                   </select>
                 </forge-text-field>
               </>
             ),
           },
 
-          // WHAT. Only here on Vehicle and Location, which have no roster to
-          // sit above them. See typeField and severityField.
-          !roster && { key: 'type', node: typeField },
-          !roster && { key: 'severity', spanTwo: true, node: severityField },
+          // WHAT. Only here on Location, which has no list to sit above it.
+          // See typeField and severityField.
+          !hasPartyList && { key: 'type', node: typeField },
+          !hasPartyList && { key: 'severity', spanTwo: true, node: severityField },
           {
             key: 'description',
             // Spans the row in place rather than sitting in its own block, so it
@@ -1366,16 +1534,33 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
   // ── Step 2: Review ────────────────────────────────────────────────────────
   const reviewRows: Array<[string, string]> = [
-    ['Subject', getSubjectLabel(subject)],
-    ['Incident Type', incidentType || '-'],
+    ['Type', getSubjectLabel(subject)],
+    ['Event', incidentType || '-'],
     ['Date', incidentDate || '-'],
     ['Time', incidentTime || '-'],
     ['Severity', severity || '-'],
     ['Location Type', locationType || '-'],
-    ...(assetKind ? [[assetKind === 'location' ? 'Affected Location' : 'Affected Vehicle', assetRef || '-'] as [string, string]] : []),
-    ['Vehicle Number', (assetKind === 'vehicle' ? assetRef : vehicleNumber) || '-'],
-    ['Driver', driver || '-'],
-    ['Run', run || '-'],
+    ...(assetKind === 'location' ? [['Affected Location', assetRef || '-'] as [string, string]] : []),
+    // Every vehicle named, each with its driver and what it came away with, so
+    // a two bus collision reviews as two lines rather than collapsing to one.
+    ...(subject === 'vehicle'
+      ? [[
+          involvedVehicles.length === 1 ? 'Involved Vehicle' : 'Involved Vehicles',
+          involvedVehicles.length
+            ? involvedVehicles
+                .map(v => {
+                  const bits = [v.role, v.driver || 'nobody aboard', v.damage ? `${v.damage.toLowerCase()} damage` : null]
+                    .filter(Boolean)
+                    .join(', ');
+                  return bits ? `${v.name} (${bits})` : v.name;
+                })
+                .join('  |  ')
+            : '-',
+        ] as [string, string]]
+      : []),
+    ...(subjectHasField(subject, 'vehicleNumber') ? [['Vehicle Number', vehicleNumber || '-'] as [string, string]] : []),
+    ...(subjectHasField(subject, 'driver') ? [['Driver', driver || '-'] as [string, string]] : []),
+    ...(subjectHasField(subject, 'run') ? [['Run', run || '-'] as [string, string]] : []),
     ...(roster ? [[roster.label, people.length ? people.map(p => p.name).join(', ') : '-'] as [string, string]] : []),
     ['Witnesses', witnesses.filter(w => w.name.trim() || w.description.trim()).map(w => w.name.trim() || w.description.trim()).join(', ') || '-'],
     ['Third parties', thirdParties.filter(t => t.name.trim() || t.description.trim()).map(t => t.name.trim() || t.description.trim()).join(', ') || '-'],
@@ -1439,7 +1624,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
               {peopleRequired && people.length === 0
                 ? `Add at least one ${roster?.noun ?? 'person'} to continue`
-                : 'Complete the required fields to continue'}
+                : vehiclesRequired && involvedVehicles.length === 0
+                  ? 'Add at least one vehicle to continue'
+                  : 'Complete the required fields to continue'}
             </span>
           )}
           {/* @ts-ignore */}

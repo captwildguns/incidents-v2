@@ -1155,6 +1155,38 @@ const rawIncidents = [
     tags: ['facilities', 'out-of-service'],
   },
   {
+    // The case that had nowhere to go before: two of our own buses, one event.
+    // Logged once, worked once, and it shows on both vehicle records.
+    id: 'INC-2025-0072',
+    date: '2025-03-18',
+    time: '15:10',
+    subject: 'vehicle',
+    type: 'Multi Vehicle Collision',
+    description: 'Bus 12 was backing out of the loading lane at Jefferson Middle and made contact with the front nearside of Bus 18, which was queued behind it waiting to pull forward. No students aboard either bus. Both drivers exchanged details with the site supervisor and yard camera footage has been pulled.',
+    bus: 'Bus 12',
+    route: 'N/A',
+    severity: 'High',
+    status: 'Open',
+    createdBy: 'Mike Chen',
+    assignedTo: 'Mike Chen',
+    location: 'school',
+    witnessPresent: true,
+    witnessNames: ['Site supervisor, Jefferson Middle'],
+    tags: ['collision', 'camera-review'],
+    involvedVehicles: [
+      {
+        id: 'veh-0', sourceId: 'VEH-012', name: 'Bus 12',
+        role: 'At fault', driver: 'Maria Santos', damage: 'Minor',
+        notes: 'Rear bumper scuffed. Driver reported not seeing Bus 18 in the offside mirror while reversing.',
+      },
+      {
+        id: 'veh-1', sourceId: 'VEH-015', name: 'Bus 18',
+        role: 'Struck', driver: 'David Park', damage: 'Moderate',
+        notes: 'Front nearside panel pushed in and the marker light housing broken. Tagged out pending a body shop estimate.',
+      },
+    ],
+  },
+  {
     id: 'INC-2025-0067',
     date: '2025-03-09',
     time: '06:05',
@@ -1357,6 +1389,14 @@ export function getIncidentSubjectLabel(incident: any): string {
   if (parties && parties.length > 0) {
     if (parties.length === 1) return parties[0].name;
     return `${parties[0].name} +${parties.length - 1}`;
+  }
+
+  // A vehicle incident can name more than one vehicle, so it reads the same way
+  // a multi-person incident does rather than showing only the first bus.
+  const vehicles = incident?.involvedVehicles;
+  if (Array.isArray(vehicles) && vehicles.length > 0) {
+    if (vehicles.length === 1) return vehicles[0].name;
+    return `${vehicles[0].name} +${vehicles.length - 1}`;
   }
 
   // location and vehicle incidents may have no people at all
@@ -1593,7 +1633,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       // Create CSV content
       // "Involved" rather than "Student", since a row may be a location or a
       // vehicle. Subject is exported so the two are distinguishable downstream.
-      const headers = ['Incident ID', 'Date', 'Time', 'Subject', 'Involved', 'Student ID', 'Type', 'Vehicle', 'Run', 'Driver', 'Severity', 'Status', 'Description'];
+      const headers = ['Incident ID', 'Date', 'Time', 'Type', 'Involved', 'Student ID', 'Event', 'Vehicle', 'Run', 'Driver', 'Severity', 'Status', 'Description'];
       const rows = filteredIncidents.map(inc => [
         inc.id,
         inc.date,
@@ -1881,7 +1921,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       onClick={() => handleSort('subject')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
                     >
-                      Subject
+                      Type
                       {sortField === 'subject' && sortDirection === 'desc' && <forge-icon name="arrow_downward" style={{ fontSize: '14px' }}></forge-icon>}
                       {sortField === 'subject' && sortDirection === 'asc' && <forge-icon name="arrow_upward" style={{ fontSize: '14px' }}></forge-icon>}
                       {sortField !== 'subject' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
@@ -1892,7 +1932,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                       onClick={() => handleSort('type')}
                       className="flex items-center gap-1 hover:text-primary transition-colors"
                     >
-                      Type
+                      Event
                       {sortField === 'type' && sortDirection === 'desc' && <forge-icon name="arrow_downward" style={{ fontSize: '14px' }}></forge-icon>}
                       {sortField === 'type' && sortDirection === 'asc' && <forge-icon name="arrow_upward" style={{ fontSize: '14px' }}></forge-icon>}
                       {sortField !== 'type' && <forge-icon name="unfold_more" style={{ fontSize: '14px', opacity: 0.3 }}></forge-icon>}
@@ -1952,7 +1992,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect
-                      placeholder="Filter Subject..."
+                      placeholder="Filter Type..."
                       options={INCIDENT_SUBJECTS.map(s => s.label)}
                       selected={subjectFilter}
                       onChange={setSubjectFilter}
@@ -1960,7 +2000,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect
-                      placeholder="Filter Type..."
+                      placeholder="Filter Event..."
                       options={typeFilterOptions}
                       selected={typeFilter}
                       onChange={setTypeFilter}
@@ -2075,7 +2115,13 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                         <forge-badge theme="default">{incident.type}</forge-badge>
                       </td>
                       <td className="forge-table-cell">
-                        <div>{incident.bus}</div>
+                        {/* Every vehicle named, not just the first, so a two bus
+                            collision does not read as involving one bus. */}
+                        <div>
+                          {Array.isArray(incident.involvedVehicles) && incident.involvedVehicles.length > 0
+                            ? incident.involvedVehicles.map((v: any) => v.name).join(', ')
+                            : incident.bus}
+                        </div>
                         <div style={{ fontSize: 'calc(var(--forge-font-size-sm) - 2px)', color: 'var(--forge-theme-text-low)' }}>
                           {incident.route}
                         </div>

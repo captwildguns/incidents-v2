@@ -219,6 +219,14 @@ export const INCIDENT_TYPES: IncidentType[] = [
     defaultSeverity: 'Medium',
     applicableTo: 'vehicle',
   },
+  {
+    id: 'vehicle-multi-party-collision',
+    label: 'Multi Vehicle Collision',
+    category: INCIDENT_CATEGORIES.COLLISION,
+    description: 'Two or more district vehicles strike each other, such as one bus backing into another in the yard or a contact while queued at a school',
+    defaultSeverity: 'High',
+    applicableTo: 'vehicle',
+  },
 
   // ─── Location ──────────────────────────────────────────────────────────────
   {
@@ -316,6 +324,66 @@ export const normalizeContacts = (value: any): PersonContact[] => {
     .filter((c: PersonContact) => c.name.trim().length > 0 || c.description.trim().length > 0);
 };
 
+// ─── Involved vehicles ───────────────────────────────────────────────────────
+
+// One vehicle named on a vehicle incident.
+//
+// A vehicle incident used to carry exactly one bus, which meant two of our own
+// buses striking each other had nowhere to be recorded. Logged once and the
+// second bus's history is blank; logged twice and the same collision is counted
+// twice and worked twice. So the vehicle subject now takes a list, the same way
+// the three people subjects already do.
+//
+// driver sits per vehicle rather than once on the incident, because two buses
+// in a collision have two drivers. Picking a vehicle fills its driver from the
+// vehicle record, and it stays editable for the day somebody was covering.
+export interface InvolvedVehicle {
+  id: string;
+  sourceId?: string;
+  name: string;
+  role: string;
+  driver: string;
+  damage: string;
+  outOfService: boolean;
+  notes: string;
+}
+
+// What part this vehicle played. Deliberately not the five people roles, which
+// do not read sensibly against a bus.
+export const VEHICLE_ROLES = ['At fault', 'Struck', 'Also involved', 'Unattended'];
+
+// Damage to this vehicle. Fleet cares about this per vehicle, not per incident,
+// since one bus can be undriveable and the other barely marked.
+export const VEHICLE_DAMAGE_LEVELS = ['None', 'Minor', 'Moderate', 'Severe'];
+
+// Reads either shape: the list the form now produces, or an older vehicle
+// incident that carried one vehicle in assetRef with the driver alongside it.
+// Lives here rather than in the form because the detail page and the list read
+// it too, so a single vehicle record keeps rendering exactly as it did.
+export const normalizeInvolvedVehicles = (incident: any): InvolvedVehicle[] => {
+  if (Array.isArray(incident?.involvedVehicles) && incident.involvedVehicles.length > 0) {
+    return incident.involvedVehicles.map((v: any, i: number) => ({
+      id: v?.id ?? `veh-${i}`,
+      sourceId: v?.sourceId,
+      name: v?.name ?? '',
+      role: v?.role ?? '',
+      driver: v?.driver ?? '',
+      damage: v?.damage ?? '',
+      outOfService: !!v?.outOfService,
+      notes: v?.notes ?? '',
+    })).filter((v: InvolvedVehicle) => v.name.trim().length > 0);
+  }
+  const single = incident?.assetRef ?? incident?.bus;
+  if (incident?.subject === 'vehicle' && single && single !== 'N/A') {
+    return [{
+      id: 'veh-0', name: single, role: '',
+      driver: incident?.driver && incident.driver !== 'N/A' ? incident.driver : '',
+      damage: '', outOfService: false, notes: '',
+    }];
+  }
+  return [];
+};
+
 // ─── Terms ───────────────────────────────────────────────────────────────────
 
 // The school year an incident falls in, which is what Student Transportation
@@ -364,9 +432,12 @@ export const SUBJECT_FIELDS: Record<IncidentSubject, SubjectFieldMap> = {
   employee: { vehicleNumber: true, driver: true, run: true },
   // A collision or a parent at a stop: same context as a student incident.
   thirdParty: { vehicleNumber: true, driver: true, run: true },
-  // Affected Vehicle already names the bus, so a separate Vehicle Number just
-  // invites the two to disagree. Nobody is aboard, so there is no run.
-  vehicle: { vehicleNumber: false, driver: true, run: false },
+  // Involved Vehicles already names the buses, so a separate Vehicle Number
+  // just invites the two to disagree. Nobody is aboard, so there is no run.
+  // Driver is off here because it moved onto each involved vehicle: a collision
+  // between two buses has two drivers, and one field on the incident can only
+  // ever hold one of them.
+  vehicle: { vehicleNumber: false, driver: false, run: false },
   // A depot, garage or yard problem has no bus, driver or run.
   location: { vehicleNumber: false, driver: false, run: false },
 };

@@ -121,7 +121,9 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
       filterSeverities.length === 0 || filterSeverities.includes(workflow.severity);
 
     return matchesSearch && matchesCategory && matchesActive && matchesSeverity;
-  });
+  })
+    // Rows read alphabetically by name rather than in seeded order.
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   // Pagination state
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -702,7 +704,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                     }}
                   >
                     <option value="">-- Select an incident type --</option>
-                    <optgroup label="Student Incident Types">
+                    <optgroup label="Student Events">
                       {studentIncidentTypes.map((t) => {
                         const isLinked = linkedIncidentTypeLabels.has(t.label) || linkedIncidentTypeLabels.has(t.id);
                         return (
@@ -712,7 +714,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                         );
                       })}
                     </optgroup>
-                    <optgroup label="Non-Student Incident Types">
+                    <optgroup label="Non-Student Events">
                       {nonStudentIncidentTypes.map((t) => {
                         const isLinked = linkedIncidentTypeLabels.has(t.label) || linkedIncidentTypeLabels.has(t.id);
                         return (

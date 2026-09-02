@@ -18,7 +18,7 @@ import { CurrentStepActionCard } from './CurrentStepActionCard';
 import { DocumentsViewer } from './DocumentsViewer';
 import { PhotosViewer } from './PhotosViewer';
 import { buildMapUrl } from './IncidentLocationMap';
-import { getSubjectLabel, getSubjectMeta, normalizeContacts, termForDate, subjectHasField } from './IncidentTypes';
+import { getSubjectLabel, getSubjectMeta, normalizeContacts, termForDate, subjectHasField, normalizeInvolvedVehicles } from './IncidentTypes';
 
 interface IncidentDetailPageProps {
   incident: any;
@@ -1093,7 +1093,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                                 <div style={valueStyle}>{p.name}</div>
                               </div>
                               <div>
-                                <div style={labelStyle}>Type</div>
+                                <div style={labelStyle}>Event</div>
                                 <div style={valueStyle}>
                                   {/* @ts-ignore */}
                                   <forge-badge theme="default">
@@ -1149,18 +1149,67 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                 );
               })()}
 
-              {/* Affected asset. Location and vehicle incidents may carry no
-                  people at all, so the asset is what identifies the record. */}
-              {incident.assetRef && !incident.involvedStudents?.length && !incident.involvedParties?.length && (
+              {/* Involved vehicles. A vehicle incident can now name more than
+                  one, because two of our own buses striking each other is a
+                  single event and has to show on both vehicle records. Each one
+                  carries its own driver and damage, since one bus can be towed
+                  out while the other is barely marked. Older records that held a
+                  single vehicle read through the same normalizer, so they render
+                  exactly as before. */}
+              {(() => {
+                if (incident.subject !== 'vehicle') return null;
+                const vehicles = normalizeInvolvedVehicles(incident);
+                if (vehicles.length === 0) return null;
+                return (
+                  <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
+                    <div style={{ padding: 'var(--forge-spacing-medium)' }}>
+                      <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-weight-semibold)' }}>
+                        {vehicles.length === 1 ? 'Involved Vehicle' : `Involved Vehicles (${vehicles.length})`}
+                      </h3>
+                      {vehicles.length > 1 && (
+                        <p style={{ margin: '4px 0 0', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
+                          One incident, counted once and worked once. It shows on each of these vehicle records.
+                        </p>
+                      )}
+                    </div>
+                    <div style={{ marginTop: 'var(--forge-spacing-small)', display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-small)' }}>
+                      {vehicles.map(v => (
+                        <div
+                          key={v.id}
+                          style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-small)' }}
+                        >
+                          <div className="flex items-center" style={{ gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 'var(--font-weight-semibold)' }}>{v.name}</span>
+                            {v.role && <forge-badge theme="default">{v.role}</forge-badge>}
+                            {v.damage && <forge-badge theme={v.damage === 'Severe' ? 'error' : v.damage === 'None' ? 'info' : 'warning'}>{v.damage} damage</forge-badge>}
+                          </div>
+                          <div style={{ marginTop: '6px', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
+                            {v.driver ? `Driver: ${v.driver}` : 'Nobody aboard'}
+                          </div>
+                          {v.notes && (
+                            <p style={{ margin: '6px 0 0', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', lineHeight: '1.6', fontStyle: 'italic', color: 'var(--muted-foreground)' }}>
+                              {v.notes}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </ForgeCard>
+                );
+              })()}
+
+              {/* Affected location. Location incidents may carry no people at
+                  all, so the location is what identifies the record. */}
+              {incident.subject === 'location' && incident.assetRef && !incident.involvedStudents?.length && !incident.involvedParties?.length && (
                 <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
                   <div style={{ padding: 'var(--forge-spacing-medium)' }}>
                     <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-weight-semibold)' }}>
-                      {incident.subject === 'location' ? 'Affected Location' : 'Affected Vehicle'}
+                      Affected Location
                     </h3>
                   </div>
                   <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      {incident.subject === 'location' ? 'Location' : 'Vehicle'}
+                      Location
                     </div>
                     <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>{incident.assetRef}</div>
                     <p style={{ margin: 0, marginTop: 'var(--forge-spacing-small)', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>

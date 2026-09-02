@@ -578,7 +578,7 @@ export function ReportsPage({ onNavigate }: ReportsPageProps) {
                       <th className="forge-table-cell forge-table-cell--header">Incident ID</th>
                       <th className="forge-table-cell forge-table-cell--header">Date</th>
                       <th className="forge-table-cell forge-table-cell--header">Involved</th>
-                      <th className="forge-table-cell forge-table-cell--header">Type</th>
+                      <th className="forge-table-cell forge-table-cell--header">Event</th>
                       <th className="forge-table-cell forge-table-cell--header">Vehicle</th>
                       <th className="forge-table-cell forge-table-cell--header">Driver</th>
                       <th className="forge-table-cell forge-table-cell--header">Severity</th>

@@ -929,11 +929,11 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
               the Type pie's seven-entry legend overflows its card, so 3 across.
           Hence the 1800px cutoff rather than Tailwind's 2xl at 1536. */}
       <div className="dashboard-chart-grid" style={{ marginBottom: 'var(--forge-spacing-large)' }}>
-        {/* Incidents by Subject. First, because it is the question a district
+        {/* Incidents by Type. First, because it is the question a district
             that has just started tracking more than students asks first. */}
         <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
           <div style={{ padding: 'var(--forge-spacing-medium)', paddingBottom: 'var(--forge-spacing-small)' }}>
-            <h3 className="forge-typography--heading4" style={{ fontSize: '1rem' }}>Incidents by Subject</h3>
+            <h3 className="forge-typography--heading4" style={{ fontSize: '1rem' }}>Incidents by Type</h3>
           </div>
           <div style={{ paddingTop: 0 }}>
             <CustomPieChart data={incidentSubjectData} />
@@ -943,7 +943,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
         {/* Incident Type Distribution */}
         <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
           <div style={{ padding: 'var(--forge-spacing-medium)', paddingBottom: 'var(--forge-spacing-small)' }}>
-            <h3 className="forge-typography--heading4" style={{ fontSize: '1rem' }}>Incidents by Type</h3>
+            <h3 className="forge-typography--heading4" style={{ fontSize: '1rem' }}>Incidents by Event</h3>
           </div>
           <div style={{ paddingTop: 0 }}>
             <CustomPieChart data={incidentTypeData} />
@@ -1000,8 +1000,8 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
                     </span>
                   </th>
                   <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>Involved</th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '120px' }}>Subject</th>
-                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>Type</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '120px' }}>Type</th>
+                  <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '180px' }}>Event</th>
                   <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '220px' }}>Vehicle/Run</th>
                   <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '110px' }}>Severity</th>
                   <th className="forge-table-cell forge-table-cell--header" style={{ minWidth: '130px' }}>Status</th>
@@ -1125,7 +1125,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
                   </forge-badge>
                 </div>
                 <div>
-                  <div className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>Incident Type</div>
+                  <div className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>Event</div>
                   <forge-badge theme="default">{selectedTriageItem.type}</forge-badge>
                 </div>
                 <div>

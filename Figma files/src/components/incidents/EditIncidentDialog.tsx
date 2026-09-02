@@ -252,7 +252,7 @@ export function EditIncidentDialog({ incident, onClose, onSave }: EditIncidentDi
               </div>
             </div>
             <div>
-              <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Subject</div>
+              <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Type</div>
               <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>
                 {getSubjectLabel(incident.subject ?? 'student')}
                 {(incident.subject ?? 'student') === 'student' && !isMulti && incident.studentId && (
@@ -261,7 +261,7 @@ export function EditIncidentDialog({ incident, onClose, onSave }: EditIncidentDi
               </div>
             </div>
             <div>
-              <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Incident Type</div>
+              <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xs)', color: 'var(--forge-theme-text-medium)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Event</div>
               <div style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)' }}>{incident.type}</div>
             </div>
             <div>

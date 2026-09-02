@@ -1431,7 +1431,7 @@ export function CommunicationsPage({ initialIncidentId, initialIncidentData }: C
       <div className="mb-6">
         <h1 className="text-gray-900 mb-2">Communications</h1>
         <p className="text-muted-foreground">
-          Message the person handling an incident, whoever that is for the subject
+          Message the person handling an incident, whoever that is for the type
         </p>
       </div>
 

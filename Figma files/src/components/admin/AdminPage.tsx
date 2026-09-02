@@ -164,7 +164,7 @@ const ALL_AREAS: { id: string; label: string }[] = [
   { id: 'messages',            label: 'Messages' },
   { id: 'notifications',       label: 'Notifications' },
   { id: 'users-admin',         label: 'Users' },
-  { id: 'incident-types',      label: 'Incident Types' },
+  { id: 'incident-types',      label: 'Events' },
   { id: 'workflow-templates',  label: 'Workflow Templates' },
   { id: 'email-templates',     label: 'Email Templates' },
   { id: 'permission-groups',   label: 'Permission Groups' },
@@ -801,7 +801,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
         {/* @ts-ignore */}
         <forge-tab onClick={() => setActiveSection('incidentTypes')}>
           <forge-icon name="warning" slot="leading"></forge-icon>
-          Incident Types
+          Events
         {/* @ts-ignore */}
         </forge-tab>
         {/* @ts-ignore */}
@@ -1120,7 +1120,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
             </div>
             <ForgeButton onClick={openAddIt} style={{ fontFamily: 'var(--forge-font-family)' }}>
               <Plus size={16} style={{ marginRight: 'var(--forge-spacing-xxsmall)' }} />
-              Add Incident Type
+              Add Event
             </ForgeButton>
           </div>
 
@@ -1234,7 +1234,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
         <div style={{ maxHeight: '90vh', overflow: 'auto', fontFamily: 'var(--forge-font-family)', padding: 'var(--forge-spacing-large)' }}>
           <div style={{ marginBottom: 'var(--forge-spacing-medium)' }}>
             <h2 style={{ fontSize: 'var(--text-xl)', fontFamily: 'var(--forge-font-family)', fontWeight: 'var(--forge-font-weight-medium)', margin: 0 }}>
-              {editingIt ? 'Edit Incident Type' : 'Add Incident Type'}
+              {editingIt ? 'Edit Event' : 'Add Event'}
             </h2>
             <p style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)', color: 'var(--muted-foreground)', margin: 'var(--forge-spacing-xxsmall) 0 0 0' }}>
               {editingIt ? 'Update the details for this incident type.' : 'Define a new incident type for the system.'}
