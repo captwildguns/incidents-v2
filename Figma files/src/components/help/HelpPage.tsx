@@ -191,7 +191,7 @@ export function HelpPage() {
                       <h4 className="m-0" style={{ fontFamily: 'var(--forge-font-family)' }}>Workflow System</h4>
                     </div>
                     <p className="text-muted-foreground" style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--forge-font-family)' }}>
-                      13 delivered workflows containing 52 steps, selected automatically from event and severity. Every workflow names the role its incidents go to, so no incident is filed unassigned, and a specific individual holding that role can be named as well. Manual step progression, approval gates, configurable email notifications, and a full audit trail.
+                      21 delivered workflows containing 90 steps, one workflow per event, selected automatically from the event. Every workflow names the role its incidents go to, so no incident is filed unassigned, and a specific individual holding that role can be named as well. Manual step progression, approval gates, configurable email notifications, and a full audit trail.
                     </p>
                   </div>
 
@@ -349,13 +349,13 @@ export function HelpPage() {
                   </AccordionTrigger>
                   <AccordionContent className="space-y-4 text-foreground" style={{ fontFamily: 'var(--forge-font-family)' }}>
                     <p>
-                      The Workflow System provides structured, multi-step incident response processes. <strong>13 delivered workflows containing 52 steps</strong> cover all 21 events across the five types, and are automatically assigned when an incident is created.
+                      The Workflow System provides structured, multi-step incident response processes. <strong>21 delivered workflows containing 90 steps</strong> cover all 21 events across the five types, one workflow per event, and are automatically assigned when an incident is created.
                     </p>
 
                     <div>
                       <h4 className="mb-2">How Workflows Are Assigned</h4>
                       <p className="mb-2">
-                        When an incident is created, the system matches a workflow on incident type plus severity, so every incident gets the correct process immediately. The workflow names a required <strong>Incident Assignee</strong>, and the incident is assigned to whoever holds that role at the moment it is created, or to a specific person if the workflow names one. Because the owner is required, no incident is filed unassigned. The person filing can also choose a different assignee for that one incident.
+                        When an incident is created, the system matches a workflow on the event, so every incident gets the correct process immediately. Every event has its own workflow, and severity is recorded on the incident without changing which workflow runs. The workflow names a required <strong>Incident Assignee</strong>, and the incident is assigned to whoever holds that role at the moment it is created, or to a specific person if the workflow names one. Because the owner is required, no incident is filed unassigned. The person filing can also choose a different assignee for that one incident.
                       </p>
                     </div>
 
@@ -368,12 +368,21 @@ export function HelpPage() {
                         <li><strong>WF-004 Property Damage Investigation</strong> &mdash; Property Damage, owned by Administrator</li>
                         <li><strong>WF-005 Safety Violation Response</strong> &mdash; Safety Violation, owned by Safety Coordinator</li>
                         <li><strong>WF-006 Witness / Bystander Statement</strong> &mdash; Witness / Bystander Statement, owned by Safety Coordinator</li>
-                        <li><strong>WF-007 Employee Conduct Review</strong> &mdash; Employee Altercation, Employee Misconduct, and Employee Substance Violation, owned by Administrator</li>
+                        <li><strong>WF-007 Employee Altercation Response</strong> &mdash; Employee Altercation, owned by Administrator</li>
                         <li><strong>WF-008 Employee Injury Report</strong> &mdash; Employee Injury, owned by Administrator</li>
-                        <li><strong>WF-009 Location Issue Response</strong> &mdash; Location Damage, Utility Failure, and Location Safety Hazard, owned by Administrator</li>
-                        <li><strong>WF-010 Vehicle Damage and Mechanical Response</strong> &mdash; Vehicle Damage, Mechanical Failure, and Single Vehicle Collision, owned by Fleet Manager</li>
-                        <li><strong>WF-011 Third Party Incident Response</strong> &mdash; Third Party Collision, Third Party Injury, and Third Party Conduct, owned by Safety Coordinator</li>
+                        <li><strong>WF-009 Location Damage Response</strong> &mdash; Location Damage, owned by Administrator</li>
+                        <li><strong>WF-010 Vehicle Damage Response</strong> &mdash; Vehicle Damage, owned by Fleet Manager</li>
+                        <li><strong>WF-011 Third Party Collision Response</strong> &mdash; Third Party Collision, owned by Safety Coordinator</li>
                         <li><strong>WF-012 Public Complaint Review</strong> &mdash; Public Complaint, owned by Safety Coordinator</li>
+                        <li><strong>WF-013 Multi Vehicle Collision Response</strong> &mdash; Multi Vehicle Collision, owned by Fleet Manager</li>
+                        <li><strong>WF-014 Employee Misconduct Review</strong> &mdash; Employee Misconduct, owned by Administrator</li>
+                        <li><strong>WF-015 Employee Substance Violation Response</strong> &mdash; Employee Substance Violation, owned by Administrator</li>
+                        <li><strong>WF-016 Utility Failure Response</strong> &mdash; Utility Failure, owned by Administrator</li>
+                        <li><strong>WF-017 Location Safety Hazard Response</strong> &mdash; Location Safety Hazard, owned by Administrator</li>
+                        <li><strong>WF-018 Mechanical Failure Response</strong> &mdash; Mechanical Failure, owned by Fleet Manager</li>
+                        <li><strong>WF-019 Single Vehicle Collision Response</strong> &mdash; Single Vehicle Collision, owned by Fleet Manager</li>
+                        <li><strong>WF-020 Third Party Injury Response</strong> &mdash; Third Party Injury, owned by Safety Coordinator</li>
+                        <li><strong>WF-021 Third Party Conduct Response</strong> &mdash; Third Party Conduct, owned by Safety Coordinator</li>
                       </ul>
                     </div>
 

@@ -39,12 +39,18 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
   // Custom step templates
   const [customStepTemplates, setCustomStepTemplates] = useState<WorkflowStepTemplate[]>([]);
   
+  // A workflow covers exactly one event, so the category shown here is that
+  // event's category. Category describes what happened, so it belongs to the
+  // event and is never chosen separately on the workflow.
+  const categoryOfEvent = (eventRef?: string) =>
+    INCIDENT_TYPES.find((t) => t.label === eventRef || t.id === eventRef)?.category ?? '';
+
   // Convert imported workflows to match local format
   const convertedWorkflows: any[] = importedWorkflows.map((w) => ({
     id: w.id,
     name: w.name,
     description: w.description,
-    category: 'Safety', // Default category
+    category: categoryOfEvent(w.incidentTypes?.[0]),
     severity: w.severityLevels?.[0] || 'Medium',
     ownerRole: w.ownerRole,
     ownerName: w.ownerName,
@@ -83,13 +89,12 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
   const [newWorkflow, setNewWorkflow] = useState({
     name: '',
     description: '',
-    category: 'Safety',
     severity: '',
     incidentTypes: [] as string[],
     associatedIncidentType: '',
   });
 
-  const categories = ['Safety', 'Discipline', 'Maintenance', 'Administrative'];
+  const categories = Object.values(INCIDENT_CATEGORIES);
   const severityLevels = ['Critical', 'High', 'Medium', 'Low'];
 
   // Group incident types by category for the selector
@@ -159,7 +164,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
       id: Date.now().toString(),
       name: newWorkflow.name,
       description: newWorkflow.description,
-      category: newWorkflow.category,
+      category: categoryOfEvent(selectedType?.label),
       severity: newWorkflow.severity,
       incidentTypes: selectedType ? [selectedType.id] : newWorkflow.incidentTypes,
       steps: [],
@@ -176,7 +181,6 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
     setNewWorkflow({
       name: '',
       description: '',
-      category: 'Safety',
       severity: '',
       incidentTypes: [],
       associatedIncidentType: '',
@@ -612,29 +616,6 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                     rows={3}
                     style={{ marginTop: 'var(--forge-spacing-xsmall)' }}
                   />
-                </div>
-
-                <div>
-                  <Label style={{ fontSize: 'var(--text-sm)' }}>Category</Label>
-                  <select
-                    value={newWorkflow.category}
-                    onChange={(e) => setNewWorkflow({ ...newWorkflow, category: e.target.value })}
-                    style={{
-                      width: '100%',
-                      marginTop: 'var(--forge-spacing-xsmall)',
-                      padding: 'var(--forge-spacing-small)',
-                      borderRadius: 'var(--forge-shape-medium)',
-                      border: '1px solid var(--border)',
-                      fontSize: 'var(--text-base)',
-                      background: 'var(--input-background)',
-                    }}
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 <div>
