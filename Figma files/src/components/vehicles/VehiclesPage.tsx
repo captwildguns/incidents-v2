@@ -112,6 +112,7 @@ export const mockVehicles = [
     year: 2020,
     vin: '1BABNBYA2LF456789',
     licensePlate: 'SCH-1012',
+    contractorName: 'Durham School Services',
     capacity: 72,
     status: 'Active',
     driver: 'John Chen',
@@ -164,6 +165,7 @@ export const mockVehicles = [
     year: 2019,
     vin: '1BABLCYA1KF234567',
     licensePlate: 'SCH-1008',
+    contractorName: 'First Student',
     capacity: 72,
     status: 'Active',
     driver: 'Lisa Anderson',
@@ -685,7 +687,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
     const matchesGarage = garageFilter.length === 0 || garageFilter.includes(vehicle.defaultGarage);
 
     const matchesId = !idFilter.trim() || String(vehicle.id).toLowerCase().includes(idFilter.trim().toLowerCase());
-    const matchesDriverText = !driverFilter.trim() || String(vehicle.assignedDriver ?? '').toLowerCase().includes(driverFilter.trim().toLowerCase());
+    const matchesDriverText = !driverFilter.trim() || String(vehicle.driver ?? '').toLowerCase().includes(driverFilter.trim().toLowerCase());
     const matchesGarageText = !garageTextFilter.trim() || String(vehicle.defaultGarage ?? '').toLowerCase().includes(garageTextFilter.trim().toLowerCase());
 
     return matchesSearch && matchesStatus && matchesMaintenance && matchesGarage
@@ -831,10 +833,10 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
     } as any);
 
     setTimeout(() => {
-      const headers = ['Vehicle ID', 'Name', 'Make', 'Model', 'Year', 'Driver', 'Primary Run', 'Status', 'Maintenance', 'Incidents', 'Mileage', 'Last Inspection'];
+      const headers = ['Vehicle ID', 'Name', 'Make', 'Model', 'Year', 'Default Driver', 'Contractor Name', 'Status', 'Maintenance', 'Incidents', 'Odometer', 'Last Inspection'];
       const rows = filteredVehicles.map(v => [
         v.id, v.name, v.make, v.model, v.year, `"${v.driver}"`,
-        `"${v.primaryRoute}"`, v.status, v.maintenanceStatus,
+        `"${v.contractorName ?? ''}"`, v.status, v.maintenanceStatus,
         incidentsFor(v), v.mileage, v.lastInspection
       ].join(','));
 
@@ -948,7 +950,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                 ]}
                 selected={mileageRangeFilter}
                 onChange={setMileageRangeFilter}
-                placeholder="Mileage Range"
+                placeholder="Odometer Range"
                 allLabel="All Ranges"
                 width="220px"
               />
@@ -1008,7 +1010,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                       onClick={() => handleSort('driver')}
                       className="flex items-center hover:text-primary transition-colors cursor-pointer"
                     >
-                      Driver
+                      Default Driver
                       <SortIcon column="driver" />
                     </button>
                   </th>
@@ -1026,7 +1028,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                       onClick={() => handleSort('mileage')}
                       className="flex items-center hover:text-primary transition-colors cursor-pointer"
                     >
-                      Mileage
+                      Odometer
                       <SortIcon column="mileage" />
                     </button>
                   </th>
@@ -1056,7 +1058,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                   </th>
                   <th className="forge-table-cell forge-table-cell--header"></th>
                   <th className="forge-table-cell forge-table-cell--header">
-                    <input value={driverFilter} onChange={(e) => setDriverFilter(e.target.value)} placeholder="Filter Driver..." style={colFilterStyle} />
+                    <input value={driverFilter} onChange={(e) => setDriverFilter(e.target.value)} placeholder="Filter Default Driver..." style={colFilterStyle} />
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <input value={garageTextFilter} onChange={(e) => setGarageTextFilter(e.target.value)} placeholder="Filter Default Garage..." style={colFilterStyle} />
@@ -1180,7 +1182,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
           </div>
           {selectedVehicle && (
             <div className="space-y-6">
-              {/* VIN, Capacity, Current Mileage, Vehicle Incident Count */}
+              {/* VIN, Maximum Capacity, Odometer, Vehicle Incident Count */}
               <div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -1188,11 +1190,11 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                     <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.vin}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Capacity</div>
+                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Maximum Capacity</div>
                     <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.capacity} passengers</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Current Mileage</div>
+                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Odometer</div>
                     <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.mileage.toLocaleString()} miles</div>
                   </div>
                   <div>
@@ -1213,30 +1215,13 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                     <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.gpsHardwareId}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>TYD AVL Integration</div>
+                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Use TYD AVL</div>
                     <div className="flex items-center gap-2" style={{ marginTop: 'var(--forge-spacing-xxsmall)' }}>
                       <div
                         className={`w-3 h-3 rounded-full ${selectedVehicle.useTydAvl ? 'bg-green-500' : 'bg-gray-300'}`}
                       />
                       <span style={{ fontFamily: 'var(--forge-font-family)' }}>{selectedVehicle.useTydAvl ? 'Enabled' : 'Disabled'}</span>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Garage Assignments */}
-              <div className="border-t pt-4">
-                <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)' }}>
-                  Garage Assignments
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Default Garage</div>
-                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.defaultGarage}</div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Mid-Day Garage</div>
-                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.midDayGarage}</div>
                   </div>
                 </div>
               </div>
@@ -1248,18 +1233,19 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Assigned Driver</div>
+                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Default Garage</div>
+                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.defaultGarage}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Default Driver</div>
                     <div className="flex items-center gap-2" style={{ marginTop: 'var(--forge-spacing-xxsmall)' }}>
                       <forge-icon name="person" style={{ fontSize: '16px', color: 'var(--forge-theme-text-medium)' }}></forge-icon>
                       <span style={{ fontWeight: 500, fontFamily: 'var(--forge-font-family)' }}>{selectedVehicle.driver}</span>
                     </div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Primary Run</div>
-                    <div className="flex items-center gap-2" style={{ marginTop: 'var(--forge-spacing-xxsmall)' }}>
-                      <forge-icon name="location_on" style={{ fontSize: '16px', color: 'var(--forge-theme-text-medium)' }}></forge-icon>
-                      <span style={{ fontFamily: 'var(--forge-font-family)' }}>{selectedVehicle.primaryRoute || 'None'}</span>
-                    </div>
+                    <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Contractor Name</div>
+                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.contractorName || '-'}</div>
                   </div>
                 </div>
               </div>

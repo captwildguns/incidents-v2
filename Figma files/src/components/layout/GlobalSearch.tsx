@@ -87,7 +87,7 @@ export function GlobalSearch({ onNavigate, onNavigateToIncidentDetail, onNavigat
     }
 
     for (const v of mockVehicles as any[]) {
-      if (match(q, v.id, v.name, v.make, v.model, v.licensePlate, v.vin, v.driver, v.primaryRoute)) {
+      if (match(q, v.id, v.name, v.make, v.model, v.licensePlate, v.vin, v.driver, v.contractorName)) {
         out.push({
           id: v.id,
           category: 'Vehicles',
