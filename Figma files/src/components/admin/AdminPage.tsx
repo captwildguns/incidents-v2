@@ -648,7 +648,6 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
           name: newWorkflowName,
           description: newWorkflowDesc || `Workflow for ${label}`,
           incidentTypes: [label],
-          severityLevels: [itForm.defaultSeverity],
           steps: [
             {
               id: `step-${Date.now()}-1`,

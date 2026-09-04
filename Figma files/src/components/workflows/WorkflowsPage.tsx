@@ -45,13 +45,20 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
   const categoryOfEvent = (eventRef?: string) =>
     INCIDENT_TYPES.find((t) => t.label === eventRef || t.id === eventRef)?.category ?? '';
 
+  // Severity belongs to the incident, not to the workflow. What the grid shows
+  // is the default severity of the event this workflow covers, which is the
+  // value that fills in on the form and stays editable there. Severity takes no
+  // part in choosing a workflow.
+  const defaultSeverityOfEvent = (eventRef?: string) =>
+    INCIDENT_TYPES.find((t) => t.label === eventRef || t.id === eventRef)?.defaultSeverity ?? '';
+
   // Convert imported workflows to match local format
   const convertedWorkflows: any[] = importedWorkflows.map((w) => ({
     id: w.id,
     name: w.name,
     description: w.description,
     category: categoryOfEvent(w.incidentTypes?.[0]),
-    severity: w.severityLevels?.[0] || 'Medium',
+    severity: defaultSeverityOfEvent(w.incidentTypes?.[0]),
     ownerRole: w.ownerRole,
     ownerName: w.ownerName,
     owner: resolveWorkflowOwner(w),
@@ -379,12 +386,12 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                   <thead>
                     <tr>
                       {/* Column names and order copied from the Forge build:
-                          Name, Category, Severity, Status. Incident Assignee is
-                          ours and sits after Status, and Actions has no header
-                          text there either. */}
+                          Name, Category, Default Severity, Status. Incident
+                          Assignee is ours and sits after Status, and Actions has
+                          no header text there either. */}
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Name</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Category</th>
-                      <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Severity</th>
+                      <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Default Severity</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Status</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ whiteSpace: 'nowrap' }}>Incident Assignee</th>
                       <th className="forge-table-cell forge-table-cell--header" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>Steps</th>
@@ -392,8 +399,8 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                       <th className="forge-table-cell forge-table-cell--header" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}></th>
                     </tr>
                   {/* Filter row, matching the Forge build: text on Name,
-                      selects on Category, Severity and Status, nothing on the
-                      derived or action columns. */}
+                      selects on Category, Default Severity and Status, nothing
+                      on the derived or action columns. */}
                   <tr>
                     <th className="forge-table-cell forge-table-cell--header">
                       <input
@@ -414,7 +421,7 @@ export function WorkflowsPage({ onNavigate, onNavigateToWorkflowBuilder }: Workf
                     </th>
                     <th className="forge-table-cell forge-table-cell--header">
                       <ColumnSelect
-                        placeholder="Filter Severity..."
+                        placeholder="Filter Default Severity..."
                         options={severityLevels}
                         selected={filterSeverities}
                         onChange={setFilterSeverities}
