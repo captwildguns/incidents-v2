@@ -1191,15 +1191,15 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
                   </div>
                   <div>
                     <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Maximum Capacity</div>
-                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.capacity} passengers</div>
+                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.capacity} {selectedVehicle.capacity === 1 ? 'passenger' : 'passengers'}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Odometer</div>
-                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.mileage.toLocaleString()} miles</div>
+                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{selectedVehicle.mileage.toLocaleString()} {selectedVehicle.mileage === 1 ? 'mile' : 'miles'}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground" style={{ fontSize: 'var(--forge-font-size-sm)', fontFamily: 'var(--forge-font-family)' }}>Vehicle Incident Count</div>
-                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{incidentsFor(selectedVehicle)} incidents this year</div>
+                    <div style={{ fontFamily: 'var(--forge-font-family)', marginTop: 'var(--forge-spacing-xxsmall)' }}>{incidentsFor(selectedVehicle)} {incidentsFor(selectedVehicle) === 1 ? 'incident' : 'incidents'} in the last 12 months</div>
                   </div>
                 </div>
               </div>
