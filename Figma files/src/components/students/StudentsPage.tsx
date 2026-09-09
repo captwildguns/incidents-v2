@@ -1624,7 +1624,8 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                   const activeIncidents = incidentsFor(student).filter((incident: any) => incident.status !== 'Closed');
                   const hasActiveIncidents = activeIncidents.length > 0;
                   const highestActiveSeverity = hasActiveIncidents
-                    ? (activeIncidents.some((i: any) => i.severity === 'High') ? 'High'
+                    ? (activeIncidents.some((i: any) => i.severity === 'Critical') ? 'Critical'
+                      : activeIncidents.some((i: any) => i.severity === 'High') ? 'High'
                       : activeIncidents.some((i: any) => i.severity === 'Medium') ? 'Medium'
                       : 'Low')
                     : null;
@@ -1649,7 +1650,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                             {hasActiveIncidents && (
                               <div className="flex items-center gap-1 mt-0.5">
                                 <forge-badge
-                                  theme={highestActiveSeverity === 'High' ? 'error' : highestActiveSeverity === 'Medium' ? 'warning' : 'default'}
+                                  theme={highestActiveSeverity === 'Critical' ? 'danger' : highestActiveSeverity === 'High' ? 'error' : highestActiveSeverity === 'Medium' ? 'warning' : 'info'}
                                   strong
                                 >
                                   Active Incident
@@ -1773,10 +1774,10 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
                       );
                     })
                     .map((incident: any, idx: number, list: any[]) => {
-                      const borderColor = incident.severity === 'Critical' ? '#dc2626'
-                        : incident.severity === 'High' ? '#ea580c'
-                        : incident.severity === 'Medium' ? '#f59e0b'
-                        : '#94a3b8';
+                      const borderColor = incident.severity === 'Critical' ? 'var(--forge-theme-critical)'
+                        : incident.severity === 'High' ? 'var(--forge-theme-error)'
+                        : incident.severity === 'Medium' ? 'var(--forge-theme-warning)'
+                        : 'var(--forge-theme-info)';
                       // Year divider, same rule as the incidents grid: the list
                       // is newest first, so a heading appears each time the year
                       // changes. This is where a district actually reads a
