@@ -11,6 +11,7 @@ import { Textarea } from '../ui/textarea';
 import { StepConfigDialog } from './StepConfigDialog';
 import { WorkflowStepLibrary, WorkflowStepTemplate } from './WorkflowStepLibrary';
 import { ROLE_HOLDERS, holdersOfRole, resolveWorkflowOwner } from '../../data/workflows';
+import { INCIDENT_TYPES } from '../incidents/IncidentTypes';
 import {
   Plus,
   Trash2,
@@ -65,10 +66,19 @@ interface WorkflowBuilderPageProps {
 export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBuilderPageProps) {
   const [workflowName, setWorkflowName] = useState(selectedWorkflow?.name || 'Bus Accident Response');
   const [workflowDescription, setWorkflowDescription] = useState(selectedWorkflow?.description || '');
-  const [workflowCategory, setWorkflowCategory] = useState(selectedWorkflow?.category || 'Safety');
+  // Category belongs to the event, not the workflow, so it is derived here rather
+  // than stored or chosen. A workflow covers exactly one event, and every workflow
+  // linked to that event carries that event's category. Deriving it in the builder
+  // keeps it correct whichever screen opened it: the workflows list arrives with the
+  // value already mapped, the admin events page passes the raw workflow record.
+  const eventOfWorkflow = selectedWorkflow?.incidentTypes?.[0];
+  const workflowCategory =
+    INCIDENT_TYPES.find((t) => t.label === eventOfWorkflow || t.id === eventOfWorkflow)?.category ??
+    selectedWorkflow?.category ??
+    '';
   const [workflowSeverity, setWorkflowSeverity] = useState(selectedWorkflow?.severity || 'Medium');
   const [workflowActive, setWorkflowActive] = useState(selectedWorkflow?.active ?? true);
-  // Required: a workflow that names no owner would file its incidents unassigned.
+  // Required: a workflow that names no owner would leave its incidents unassigned.
   const [ownerRole, setOwnerRole] = useState<string>(selectedWorkflow?.ownerRole || '');
   // Optional: names one person instead of whoever holds the role.
   const [ownerName, setOwnerName] = useState<string>(selectedWorkflow?.ownerName || '');
@@ -318,19 +328,13 @@ export function WorkflowBuilderPage({ onNavigate, selectedWorkflow }: WorkflowBu
 
               <div>
                 <Label style={{ fontSize: 'var(--text-sm)' }}>Category</Label>
-                <select
-                  value={workflowCategory}
-                  onChange={(e) => setWorkflowCategory(e.target.value)}
-                  style={{
-                    width: '100%', marginTop: 'var(--forge-spacing-xsmall)',
-                    padding: 'var(--forge-spacing-small)', borderRadius: 'var(--forge-shape-medium)',
-                    border: '1px solid var(--border)', fontSize: 'var(--text-base)', background: 'var(--input-background)',
-                  }}
-                >
-                  {['Safety', 'Behavioral', 'Medical', 'Administrative', 'Communication', 'Investigation', 'Follow-up'].map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                <p style={{
+                  margin: 'var(--forge-spacing-xsmall) 0 0 0',
+                  padding: 'var(--forge-spacing-small) 0',
+                  fontSize: 'var(--text-base)',
+                }}>
+                  {workflowCategory || '-'}
+                </p>
               </div>
 
               <div>

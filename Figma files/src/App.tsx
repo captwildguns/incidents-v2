@@ -255,7 +255,7 @@ export default function App() {
       case 'workflow-builder':
         return <WorkflowBuilderPage onNavigate={navigateToPage} selectedWorkflow={selectedWorkflow} />;
       case 'admin':
-        return <AdminPage onNavigate={navigateToPage} />;
+        return <AdminPage onNavigate={navigateToPage} onNavigateToWorkflowBuilder={navigateToWorkflowBuilder} />;
       case 'help':
         return <HelpPage />;
       default:

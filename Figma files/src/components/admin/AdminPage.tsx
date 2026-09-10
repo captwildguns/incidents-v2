@@ -412,9 +412,10 @@ function PermToggle({ checked, onChange }: { checked: boolean; onChange: () => v
 
 interface AdminPageProps {
   onNavigate: (page: string) => void;
+  onNavigateToWorkflowBuilder: (workflow: Workflow) => void;
 }
 
-export function AdminPage({ onNavigate }: AdminPageProps) {
+export function AdminPage({ onNavigate, onNavigateToWorkflowBuilder }: AdminPageProps) {
   // ─── Tab State ──────────────────────────────────────────────────────────────
   const [activeSection, setActiveSection] = useState<'templates' | 'incidentTypes' | 'permissions'>('templates');
 
@@ -1171,7 +1172,7 @@ export function AdminPage({ onNavigate }: AdminPageProps) {
                           const linked = findLinkedWorkflow(it.label);
                           return linked ? (
                             <button
-                              onClick={() => onNavigate('workflow-builder')}
+                              onClick={() => onNavigateToWorkflowBuilder(linked)}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
