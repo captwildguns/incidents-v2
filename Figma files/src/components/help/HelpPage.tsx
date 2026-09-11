@@ -308,7 +308,7 @@ export function HelpPage() {
                         <li><strong>Per-column filters:</strong> A filter sits under each column header and applies as you type or choose</li>
                         <li><strong>Involved:</strong> Who or what the incident is about, whether that is a student, an employee, a vehicle, or a location</li>
                         <li><strong>Type:</strong> Student, Vehicle, Location, Third Party, or Employee</li>
-                        <li><strong>Status:</strong> Open, In Progress, Closed, Cancelled</li>
+                        <li><strong>Status:</strong> Open, In Progress, Pending Approval, Resolved</li>
                         <li><strong>Severity:</strong> Critical, High, Medium, Low</li>
                         <li><strong>Event:</strong> Any of the 21 events</li>
                         <li><strong>Assigned To:</strong> Filter by the person the incident is assigned to</li>
@@ -730,7 +730,7 @@ export function HelpPage() {
                     <ol className="ml-5 space-y-1">
                       <li>Click the incident row to open its detail page</li>
                       <li>Click the &ldquo;Edit&rdquo; button</li>
-                      <li>Change the status dropdown (Open, In Progress, Closed, Cancelled)</li>
+                      <li>Change the status dropdown (Open, In Progress, Pending Approval, Resolved)</li>
                       <li>Add notes about the change</li>
                       <li>Click &ldquo;Save Changes&rdquo;</li>
                     </ol>
@@ -815,10 +815,10 @@ export function HelpPage() {
                     <ul className="ml-5 space-y-1">
                       <li><strong>Open:</strong> Newly created, awaiting action.</li>
                       <li><strong>In Progress:</strong> Actively being worked, workflow steps are underway.</li>
-                      <li><strong>Closed:</strong> Fully resolved with no further action needed. Still searchable for historical analysis.</li>
-                      <li><strong>Cancelled:</strong> Incident was voided or entered in error.</li>
+                      <li><strong>Pending Approval:</strong> Waiting on an approver before the next workflow step can run.</li>
+                      <li><strong>Resolved:</strong> Finished with no further action needed. Still searchable for historical analysis.</li>
                     </ul>
-                    <p className="mt-2">Typical flow: Open &rarr; In Progress &rarr; Closed</p>
+                    <p className="mt-2">Typical flow: Open &rarr; In Progress &rarr; Resolved</p>
                   </AccordionContent>
                 </AccordionItem>
 

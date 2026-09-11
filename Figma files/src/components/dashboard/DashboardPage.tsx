@@ -281,7 +281,7 @@ function CustomVerticalBarChart({ data }: { data: { day: string; incidents: numb
 }
 
 const activeIncidents = (mockIncidents as any[])
-  .filter(i => i.status !== 'Closed')
+  .filter(i => i.status !== 'Resolved')
   .slice()
   .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   .slice(0, 5)
@@ -625,7 +625,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
       case 'Open': return 'info-primary';
       case 'In Progress': return 'warning';
       case 'Pending Approval': return 'info-secondary';
-      case 'Closed': return 'default';
+      case 'Resolved': return 'default';
       default: return 'default';
     }
   };

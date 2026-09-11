@@ -55,7 +55,7 @@ const statusTheme = (status: string): string => {
     case 'Open': return 'info-primary';
     case 'In Progress': return 'warning';
     case 'Pending Approval': return 'info-secondary';
-    case 'Closed': return 'default';
+    case 'Resolved': return 'default';
     default: return 'default';
   }
 };
@@ -137,7 +137,7 @@ const rawIncidents = [
     route: 'Meyers Middle AM - Yellow',
     driver: 'John Chen',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'John Chen',
     assignedTo: 'Jane Doe',
   },
@@ -193,7 +193,7 @@ const rawIncidents = [
     route: 'Jefferson Middle AM - Blue',
     driver: 'David Park',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'David Park',
     assignedTo: 'Jane Doe',
   },
@@ -262,7 +262,7 @@ const rawIncidents = [
     route: 'Roosevelt High AM - Red',
     driver: 'Robert Thompson',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Robert Thompson',
     assignedTo: 'Jane Doe',
   },
@@ -380,7 +380,7 @@ const rawIncidents = [
     route: 'Lincoln Elementary AM - Green',
     driver: 'Jennifer Martinez',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Jennifer Martinez',
     assignedTo: 'Jane Doe',
   },
@@ -528,7 +528,7 @@ const rawIncidents = [
     route: 'Lincoln Elementary AM - Green',
     driver: 'Jennifer Martinez',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Jennifer Martinez',
     assignedTo: 'Jane Doe',
   },
@@ -558,7 +558,7 @@ const rawIncidents = [
     route: 'Meyers Middle AM - Yellow',
     driver: 'John Chen',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'John Chen',
     assignedTo: 'Jane Doe',
   },
@@ -740,7 +740,7 @@ const rawIncidents = [
     route: 'Meyers Middle AM - Yellow',
     driver: 'John Chen',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'John Chen',
     assignedTo: 'Jane Doe',
   },
@@ -785,7 +785,7 @@ const rawIncidents = [
     route: 'Lincoln Elementary AM - Green',
     driver: 'Robert Martinez',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Robert Martinez',
     assignedTo: 'Jane Doe',
   },
@@ -800,7 +800,7 @@ const rawIncidents = [
     route: 'Meyers Middle AM - Yellow',
     driver: 'John Chen',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'John Chen',
     assignedTo: 'Jane Doe',
   },
@@ -815,7 +815,7 @@ const rawIncidents = [
     route: 'Jefferson Middle AM - Blue',
     driver: 'David Park',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'David Park',
     assignedTo: 'Sarah Williams',
   },
@@ -830,7 +830,7 @@ const rawIncidents = [
     route: 'Washington High PM - Wolf Rd',
     driver: 'Lisa Anderson',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Lisa Anderson',
     assignedTo: 'Jane Doe',
   },
@@ -845,7 +845,7 @@ const rawIncidents = [
     route: 'Lincoln Elementary AM - Green',
     driver: 'Robert Martinez',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Robert Martinez',
     assignedTo: 'Jane Doe',
   },
@@ -860,7 +860,7 @@ const rawIncidents = [
     route: 'Eastside Middle AM - Teal',
     driver: 'Marcus Washington',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Marcus Washington',
     assignedTo: 'Jane Doe',
   },
@@ -875,7 +875,7 @@ const rawIncidents = [
     route: 'Oakwood Elementary AM - Bronze',
     driver: 'Angela Foster',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Angela Foster',
     assignedTo: 'Sarah Williams',
   },
@@ -890,7 +890,7 @@ const rawIncidents = [
     route: 'Hillcrest High AM - Crimson',
     driver: 'Thomas Nguyen',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Thomas Nguyen',
     assignedTo: 'Jane Doe',
   },
@@ -905,7 +905,7 @@ const rawIncidents = [
     route: 'Riverside Elementary AM - Violet',
     driver: 'Sandra Brooks',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Sandra Brooks',
     assignedTo: 'Jane Doe',
   },
@@ -920,7 +920,7 @@ const rawIncidents = [
     route: 'Parkview Middle AM - Navy',
     driver: 'Derek Coleman',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Derek Coleman',
     assignedTo: 'Jane Doe',
   },
@@ -935,7 +935,7 @@ const rawIncidents = [
     route: 'Jefferson Middle AM - Blue',
     driver: 'David Park',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'David Park',
     assignedTo: 'Sarah Williams',
   },
@@ -950,7 +950,7 @@ const rawIncidents = [
     route: 'Washington High PM - Wolf Rd',
     driver: 'Lisa Anderson',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Lisa Anderson',
     assignedTo: 'Jane Doe',
   },
@@ -965,7 +965,7 @@ const rawIncidents = [
     route: 'Lincoln Elementary AM - Green',
     driver: 'Robert Martinez',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Robert Martinez',
     assignedTo: 'Jane Doe',
   },
@@ -980,7 +980,7 @@ const rawIncidents = [
     route: 'Eastside Middle AM - Teal',
     driver: 'Marcus Washington',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Marcus Washington',
     assignedTo: 'Jane Doe',
   },
@@ -995,7 +995,7 @@ const rawIncidents = [
     route: 'Oakwood Elementary AM - Bronze',
     driver: 'Angela Foster',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Angela Foster',
     assignedTo: 'Sarah Williams',
   },
@@ -1010,7 +1010,7 @@ const rawIncidents = [
     route: 'Hillcrest High AM - Crimson',
     driver: 'Thomas Nguyen',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Thomas Nguyen',
     assignedTo: 'Jane Doe',
   },
@@ -1025,7 +1025,7 @@ const rawIncidents = [
     route: 'Parkview Middle AM - Navy',
     driver: 'Derek Coleman',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Derek Coleman',
     assignedTo: 'Jane Doe',
   },
@@ -1040,7 +1040,7 @@ const rawIncidents = [
     route: 'Eastside Middle AM - Teal',
     driver: 'Marcus Washington',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Marcus Washington',
     assignedTo: 'Jane Doe',
   },
@@ -1055,7 +1055,7 @@ const rawIncidents = [
     route: 'Jefferson Middle AM - Blue',
     driver: 'David Park',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'David Park',
     assignedTo: 'Sarah Williams',
   },
@@ -1074,7 +1074,7 @@ const rawIncidents = [
     route: 'Washington High PM - Wolf Rd',
     driver: 'Lisa Anderson',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Lisa Anderson',
     assignedTo: 'Jane Doe',
   },
@@ -1089,7 +1089,7 @@ const rawIncidents = [
     route: 'Washington High PM - Wolf Rd',
     driver: 'Lisa Anderson',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Lisa Anderson',
     assignedTo: 'Jane Doe',
   },
@@ -1104,7 +1104,7 @@ const rawIncidents = [
     route: 'Washington High PM - Wolf Rd',
     driver: 'Lisa Anderson',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Lisa Anderson',
     assignedTo: 'Jane Doe',
   },
@@ -1239,7 +1239,7 @@ const rawIncidents = [
     bus: 'N/A',
     route: 'N/A',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
     createdBy: 'Sarah Williams',
     assignedTo: 'Mike Chen',
     location: 'yard',
@@ -1786,7 +1786,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
   const totalIncidents = mockIncidents.length;
   const openIncidents = mockIncidents.filter(i => i.status === 'Open').length;
   const criticalIncidents = mockIncidents.filter(i => i.severity === 'Critical').length;
-  const closedIncidents = mockIncidents.filter(i => i.status === 'Closed').length;
+  const resolvedIncidents = mockIncidents.filter(i => i.status === 'Resolved').length;
 
   return (
     <div style={{ padding: 'var(--forge-spacing-xlarge)' }}>
@@ -1843,8 +1843,8 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
 
         <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
           <div style={{ padding: 'var(--forge-spacing-xsmall) var(--forge-spacing-medium)', textAlign: 'center' }}>
-            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--brand-olive-medium)', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{closedIncidents}</div>
-            <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Closed Incidents</h3>
+            <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--brand-olive-medium)', fontFamily: 'var(--forge-font-family)', lineHeight: 1 }}>{resolvedIncidents}</div>
+            <h3 className="forge-typography--heading4" style={{ fontSize: '0.9375rem', fontWeight: 400, fontFamily: 'var(--forge-font-family)', margin: 'var(--forge-spacing-xxsmall) 0 0', color: 'var(--forge-theme-text-high)' }}>Resolved Incidents</h3>
           </div>
         </ForgeCard>
       </div>
@@ -2019,7 +2019,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect
                       placeholder="Filter Status..."
-                      options={['Open', 'In Progress', 'Pending Approval', 'Closed']}
+                      options={['Open', 'In Progress', 'Pending Approval', 'Resolved']}
                       selected={statusFilter}
                       onChange={setStatusFilter}
                     />

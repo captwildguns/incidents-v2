@@ -296,8 +296,8 @@ export function EditIncidentDialog({ incident, onClose, onSave }: EditIncidentDi
                 >
                   <option value="Open">Open</option>
                   <option value="In Progress">In Progress</option>
-                  <option value="Closed">Closed</option>
-                  <option value="Cancelled">Cancelled</option>
+                  <option value="Pending Approval">Pending Approval</option>
+                  <option value="Resolved">Resolved</option>
                 </select>
               </forge-text-field>
             </div>

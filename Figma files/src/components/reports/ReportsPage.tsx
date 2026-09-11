@@ -141,7 +141,7 @@ const mockIncidents = [
     route: 'Jefferson Middle AM - Blue',
     driver: 'David Park',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
   },
   {
     id: 'INC-2026-0058',
@@ -154,7 +154,7 @@ const mockIncidents = [
     route: 'Meyers Middle AM - Yellow',
     driver: 'John Chen',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
   },
   // ── March 2026 ──
   {
@@ -168,7 +168,7 @@ const mockIncidents = [
     route: 'Lincoln Elementary AM - Green',
     driver: 'Robert Martinez',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
   },
   {
     id: 'INC-2026-0056',
@@ -181,7 +181,7 @@ const mockIncidents = [
     route: 'Washington High PM - Wolf Rd',
     driver: 'Lisa Anderson',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
   },
   // ── February 2026 ──
   {
@@ -195,7 +195,7 @@ const mockIncidents = [
     route: 'Jefferson Middle AM - Blue',
     driver: 'David Park',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
   },
   {
     id: 'INC-2026-0054',
@@ -208,7 +208,7 @@ const mockIncidents = [
     route: 'Meyers Middle AM - Yellow',
     driver: 'John Chen',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
   },
   // ── January 2026 ──
   {
@@ -222,7 +222,7 @@ const mockIncidents = [
     route: 'Lincoln Elementary AM - Green',
     driver: 'Robert Martinez',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
   },
   {
     id: 'INC-2026-0052',
@@ -235,7 +235,7 @@ const mockIncidents = [
     route: 'Washington High PM - Wolf Rd',
     driver: 'Lisa Anderson',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
   },
   // ── December 2025 ──
   {
@@ -249,7 +249,7 @@ const mockIncidents = [
     route: 'Jefferson Middle AM - Blue',
     driver: 'David Park',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
   },
   {
     id: 'INC-2025-0050',
@@ -262,7 +262,7 @@ const mockIncidents = [
     route: 'Meyers Middle AM - Yellow',
     driver: 'John Chen',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
   },
   // ── November 2025 ──
   {
@@ -276,7 +276,7 @@ const mockIncidents = [
     route: 'Lincoln Elementary AM - Green',
     driver: 'Robert Martinez',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
   },
   {
     id: 'INC-2025-0048',
@@ -289,7 +289,7 @@ const mockIncidents = [
     route: 'Washington High PM - Wolf Rd',
     driver: 'Lisa Anderson',
     severity: 'Medium',
-    status: 'Closed',
+    status: 'Resolved',
   },
   // ── October 2025 ──
   {
@@ -303,7 +303,7 @@ const mockIncidents = [
     route: 'Jefferson Middle AM - Blue',
     driver: 'David Park',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
   },
   {
     id: 'INC-2025-0046',
@@ -316,7 +316,7 @@ const mockIncidents = [
     route: 'Meyers Middle AM - Yellow',
     driver: 'John Chen',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
   },
   // ── September 2025 ──
   {
@@ -330,7 +330,7 @@ const mockIncidents = [
     route: 'Lincoln Elementary AM - Green',
     driver: 'Robert Martinez',
     severity: 'High',
-    status: 'Closed',
+    status: 'Resolved',
   },
   {
     id: 'INC-2025-0044',
@@ -343,7 +343,7 @@ const mockIncidents = [
     route: 'Washington High PM - Wolf Rd',
     driver: 'Lisa Anderson',
     severity: 'Low',
-    status: 'Closed',
+    status: 'Resolved',
   },
 ];
 
