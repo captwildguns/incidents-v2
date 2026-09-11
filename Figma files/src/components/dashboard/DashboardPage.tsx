@@ -624,6 +624,7 @@ export function DashboardPage({ onNavigate, onNavigateToCommunication, onNavigat
     switch (status) {
       case 'Open': return 'info-primary';
       case 'In Progress': return 'warning';
+      case 'Pending Approval': return 'info-secondary';
       case 'Closed': return 'default';
       default: return 'default';
     }

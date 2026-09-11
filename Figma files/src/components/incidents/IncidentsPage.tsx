@@ -54,6 +54,7 @@ const statusTheme = (status: string): string => {
   switch (status) {
     case 'Open': return 'info-primary';
     case 'In Progress': return 'warning';
+    case 'Pending Approval': return 'info-secondary';
     case 'Closed': return 'default';
     default: return 'default';
   }
@@ -2018,7 +2019,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect
                       placeholder="Filter Status..."
-                      options={['Open', 'In Progress', 'Pending Approval', 'Completed', 'Closed']}
+                      options={['Open', 'In Progress', 'Pending Approval', 'Closed']}
                       selected={statusFilter}
                       onChange={setStatusFilter}
                     />
