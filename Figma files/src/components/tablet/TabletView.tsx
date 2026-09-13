@@ -177,7 +177,7 @@ function TydKeyboard({ value, onChange }: { value: string; onChange: (v: string)
 // skip the roster and per-student steps entirely.
 const TABLET_SUBJECTS: Array<{ value: string; label: string; hint: string }> = [
   { value: 'student', label: 'student', hint: 'one or more students on your run' },
-  { value: 'vehicle', label: 'vehicle', hint: 'bus damage or a mechanical problem, nobody aboard' },
+  { value: 'vehicle', label: 'vehicle', hint: 'bus damage, a mechanical problem or a collision' },
   { value: 'location', label: 'location', hint: 'a garage, yard, or depot problem' },
   { value: 'thirdParty', label: 'third party', hint: 'another motorist, a parent, or the public' },
 ];

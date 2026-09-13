@@ -1184,7 +1184,7 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                             {v.damage && <forge-badge theme={v.damage === 'Severe' ? 'error' : v.damage === 'None' ? 'info' : 'warning'}>{v.damage} damage</forge-badge>}
                           </div>
                           <div style={{ marginTop: '6px', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
-                            {v.driver ? `Driver: ${v.driver}` : 'Nobody aboard'}
+                            {v.driver ? `Driver: ${v.driver}` : 'No driver'}
                           </div>
                           {v.notes && (
                             <p style={{ margin: '6px 0 0', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', lineHeight: '1.6', fontStyle: 'italic', color: 'var(--muted-foreground)' }}>

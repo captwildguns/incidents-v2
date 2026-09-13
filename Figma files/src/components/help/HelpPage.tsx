@@ -746,7 +746,7 @@ export function HelpPage() {
                     <p className="mb-2">Yes. An incident is not always about a student, so the form asks what the incident is about before anything else. There are five types:</p>
                     <ul className="ml-5 space-y-1">
                       <li><strong>Student:</strong> One or more students involved</li>
-                      <li><strong>Vehicle:</strong> Damage or breakdown with nobody aboard</li>
+                      <li><strong>Vehicle:</strong> The incident is about the vehicle itself, and students can be named on it</li>
                       <li><strong>Location:</strong> A depot, garage, or yard problem such as a burst pipe or power loss</li>
                       <li><strong>Third Party:</strong> A motorist, parent, or member of the public</li>
                       <li><strong>Employee:</strong> Employees only, no students involved</li>

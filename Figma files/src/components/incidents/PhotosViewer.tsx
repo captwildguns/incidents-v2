@@ -82,7 +82,7 @@ export function PhotosViewer({ photos, incidentId, driverName }: PhotosViewerPro
         <div style={{ padding: 'var(--forge-spacing-medium)' }}>
           <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-xl)', fontWeight: 'var(--font-weight-semibold)' }}>
             {/* Not always a driver now that a location or vehicle incident can
-                carry photos with nobody aboard. */}
+                carry photos with no driver named. */}
             {driverName ? 'Driver Submitted Photos' : 'Photo Evidence'}
           </h3>
           <p className="forge-typography--body2" style={{ fontSize: 'var(--text-sm)', color: 'var(--forge-theme-text-medium)', margin: 0, fontFamily: 'Roboto, sans-serif' }}>

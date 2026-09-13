@@ -21,7 +21,7 @@ export type IncidentSubject =
   | 'student'     // a student is involved
   | 'employee'    // employees only: driver-on-driver, aide injured, conduct
   | 'location'    // depot, garage, yard: burst pipe, vandalism, power loss
-  | 'vehicle'     // bus damage or breakdown, nobody aboard
+  | 'vehicle'     // the incident is about the bus itself
   | 'thirdParty'; // other motorist, pedestrian, parent, member of the public
 
 export const INCIDENT_SUBJECTS: Array<{
@@ -43,7 +43,7 @@ export const INCIDENT_SUBJECTS: Array<{
   {
     value: 'vehicle',
     label: 'Vehicle',
-    description: 'Damage or breakdown, nobody aboard',
+    description: 'One or more district vehicles',
     requiresParties: false,
   },
   {
@@ -165,7 +165,7 @@ export const INCIDENT_TYPES: IncidentType[] = [
     id: 'third-party-collision',
     label: 'Third Party Collision',
     category: INCIDENT_CATEGORIES.COLLISION,
-    description: 'Collision or near miss involving another motorist or cyclist, with no students aboard or no student involvement',
+    description: 'Collision or near miss involving another motorist or cyclist',
     defaultSeverity: 'High',
     applicableTo: 'thirdParty',
   },
@@ -199,7 +199,7 @@ export const INCIDENT_TYPES: IncidentType[] = [
     id: 'vehicle-damage',
     label: 'Vehicle Damage',
     category: INCIDENT_CATEGORIES.MECHANICAL,
-    description: 'Damage to a vehicle with nobody aboard, such as a mirror clipped in the yard, hail damage, or vandalism while parked',
+    description: 'Damage to a vehicle with no collision, such as a mirror clipped in the yard, hail damage, or vandalism while parked',
     defaultSeverity: 'Medium',
     applicableTo: 'vehicle',
   },
@@ -215,7 +215,7 @@ export const INCIDENT_TYPES: IncidentType[] = [
     id: 'vehicle-single-party-collision',
     label: 'Single Vehicle Collision',
     category: INCIDENT_CATEGORIES.COLLISION,
-    description: 'Vehicle strikes a fixed object with nobody aboard, such as backing into a post or a gate in the yard',
+    description: 'Vehicle strikes a fixed object, such as backing into a post or a gate in the yard',
     defaultSeverity: 'Medium',
     applicableTo: 'vehicle',
   },
@@ -433,11 +433,12 @@ export const SUBJECT_FIELDS: Record<IncidentSubject, SubjectFieldMap> = {
   // A collision or a parent at a stop: same context as a student incident.
   thirdParty: { vehicleNumber: true, driver: true, run: true },
   // Involved Vehicles already names the buses, so a separate Vehicle Number
-  // just invites the two to disagree. Nobody is aboard, so there is no run.
-  // Driver is off here because it moved onto each involved vehicle: a collision
-  // between two buses has two drivers, and one field on the incident can only
-  // ever hold one of them.
-  vehicle: { vehicleNumber: false, driver: false, run: false },
+  // just invites the two to disagree. Driver is off here because it moved onto
+  // each involved vehicle: a collision between two buses has two drivers, and
+  // one field on the incident can only ever hold one of them. Run stays on,
+  // because a collision on the way to school or on the way home happened on a
+  // run, and that is how anyone finds which children were affected.
+  vehicle: { vehicleNumber: false, driver: false, run: true },
   // A depot, garage or yard problem has no bus, driver or run.
   location: { vehicleNumber: false, driver: false, run: false },
 };

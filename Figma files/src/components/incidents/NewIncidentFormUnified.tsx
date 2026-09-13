@@ -1060,7 +1060,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 {/* @ts-ignore */}
                 <forge-text-field>
                   <select value={v.driver} onChange={(e) => updateVehicle(v.id, { driver: e.target.value })} style={selectStyle}>
-                    <option value="">Nobody aboard</option>
+                    <option value="">No driver</option>
                     {mockDrivers
                       .filter(d => d.status === 'Active')
                       .sort((a, b) => a.fullName.localeCompare(b.fullName))
@@ -1549,7 +1549,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           involvedVehicles.length
             ? involvedVehicles
                 .map(v => {
-                  const bits = [v.role, v.driver || 'nobody aboard', v.damage ? `${v.damage.toLowerCase()} damage` : null]
+                  const bits = [v.role, v.driver || 'no driver', v.damage ? `${v.damage.toLowerCase()} damage` : null]
                     .filter(Boolean)
                     .join(', ');
                   return bits ? `${v.name} (${bits})` : v.name;
