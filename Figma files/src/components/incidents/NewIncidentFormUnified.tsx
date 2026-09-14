@@ -1252,42 +1252,44 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         </p>
       )}
 
+      {/* One line per child: who, which bus where that is a question, and what
+          condition they were in. The condition sits beside the name rather than
+          under it, because a coordinator reads down a column of children and
+          their conditions, not down a stack of cards. */}
       {studentsAboard.map(sa => (
         <div
           key={sa.id}
-          style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-xsmall)' }}
+          className="flex items-center"
+          style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-xsmall)', gap: 'var(--forge-spacing-small)', flexWrap: 'wrap' }}
         >
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--forge-spacing-xsmall)', fontFamily: 'var(--forge-font-family)' }}>
-            <span style={{ fontWeight: 500 }}>{sa.name}</span>
-            {/* @ts-ignore */}
-            <forge-button variant="flat" onClick={() => removeStudentAboard(sa.id)}>Remove</forge-button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Asked only when there is a choice to make. One bus named means
-                the child was on that bus. */}
-            {busesNamed.length > 1 && (
-              <div>
-                <label style={labelStyle}>Bus</label>
-                {/* @ts-ignore */}
-                <forge-text-field>
-                  <select value={sa.bus} onChange={(e) => updateStudentAboard(sa.id, { bus: e.target.value })} style={selectStyle}>
-                    <option value="">Select bus...</option>
-                    {busesNamed.map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
-                </forge-text-field>
-              </div>
-            )}
-            <div>
-              <label style={labelStyle}>Condition</label>
+          <span style={{ fontFamily: 'var(--forge-font-family)', fontWeight: 500, flex: 1, minWidth: '160px' }}>{sa.name}</span>
+
+          {/* Asked only when there is a choice to make. One bus named means the
+              child was on that bus. */}
+          {busesNamed.length > 1 && (
+            <div style={{ width: '180px' }}>
               {/* @ts-ignore */}
               <forge-text-field>
-                <select value={sa.condition} onChange={(e) => updateStudentAboard(sa.id, { condition: e.target.value })} style={selectStyle}>
-                  <option value="">Select condition...</option>
-                  {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                <select value={sa.bus} onChange={(e) => updateStudentAboard(sa.id, { bus: e.target.value })} style={selectStyle}>
+                  <option value="">Bus...</option>
+                  {busesNamed.map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </forge-text-field>
             </div>
+          )}
+
+          <div style={{ width: '230px' }}>
+            {/* @ts-ignore */}
+            <forge-text-field>
+              <select value={sa.condition} onChange={(e) => updateStudentAboard(sa.id, { condition: e.target.value })} style={selectStyle}>
+                <option value="">Condition...</option>
+                {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </forge-text-field>
           </div>
+
+          {/* @ts-ignore */}
+          <forge-button variant="flat" onClick={() => removeStudentAboard(sa.id)}>Remove</forge-button>
         </div>
       ))}
     </div>
