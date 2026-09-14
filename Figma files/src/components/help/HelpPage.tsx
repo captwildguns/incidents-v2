@@ -972,6 +972,7 @@ export function HelpPage() {
                     <p className="mb-2"><strong>Location Type</strong> says what kind of place it was, chosen from 9 options: Vehicle (on board), Vehicle Stop, Loading/Unloading, School, Parking Lot, Layover Location, Garage, Yard, and Other. It says where the incident happened rather than which site, since the site is already on the record.</p>
                     <p className="mb-2"><strong>Incident Location Pin</strong> records the actual spot on a map, set from your current location, by clicking the map, or by searching an address.</p>
                     <p className="mt-2">For a Vehicle or Location incident, the affected asset is separate and required, because with no people named it is the only thing identifying the record. Vehicle Number, Driver, and Run are optional where they apply, and are not shown where they do not.</p>
+                    <p className="mt-2">Wherever a district bus is named, the form asks who was on board. Each child is picked from the roster and carries the condition they were in: uninjured, injured, or transported for treatment. Naming anyone there puts parent notification on the workflow, and the incident is still one record about the bus. A student incident asks for the same condition on each child it names.</p>
                   </AccordionContent>
                 </AccordionItem>
 

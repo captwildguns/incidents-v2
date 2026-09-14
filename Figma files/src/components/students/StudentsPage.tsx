@@ -1259,6 +1259,18 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
         list.push({ ...inc, role: involved.role });
         byStudent.set(id, list);
       }
+      // A child on board a bus incident belongs on their own record too. That
+      // is how anyone answers which children were in the crash, and it is the
+      // reason the incident names them at all. No role, because the incident is
+      // about the bus and the child was a passenger on it.
+      for (const aboard of (inc.studentsAboard ?? [])) {
+        const id = aboard?.studentId;
+        if (!id) continue;
+        const list = byStudent.get(id) ?? [];
+        if (list.some(x => x.id === inc.id)) continue;
+        list.push({ ...inc, role: '' });
+        byStudent.set(id, list);
+      }
     }
     // Newest first, matching how the removed arrays were ordered
     for (const list of byStudent.values()) {

@@ -1023,6 +1023,15 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                             </div>
                           </div>
                         )}
+                        {s.condition && (
+                          <div>
+                            <div style={labelStyle}>Condition</div>
+                            <div style={valueStyle}>
+                              {/* @ts-ignore */}
+                              <forge-badge theme={s.condition === 'Uninjured' ? 'info' : s.condition === 'Injured' ? 'warning' : 'error'} strong>{s.condition}</forge-badge>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {s.parentNotified !== undefined && (
@@ -1191,6 +1200,55 @@ export function IncidentDetailPage({ incident, onNavigate, onNavigateToCommunica
                               {v.notes}
                             </p>
                           )}
+                        </div>
+                      ))}
+                    </div>
+                  </ForgeCard>
+                );
+              })()}
+
+              {/* Students On Board. A bus incident can have children on it, and
+                  this is where they are named with whether each was hurt. The
+                  children are not the subject here, so they sit in their own
+                  card rather than in the Involved Parties list. */}
+              {incident.studentsAboard?.length > 0 && (() => {
+                const labelStyle = { fontSize: 'var(--text-xs)', color: 'var(--muted-foreground)', marginBottom: '6px', fontFamily: 'Roboto, sans-serif', textTransform: 'uppercase' as const, letterSpacing: '0.5px' };
+                const aboard = incident.studentsAboard;
+                const multipleBuses = new Set(aboard.map((a: any) => a.bus).filter(Boolean)).size > 1;
+                return (
+                  <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
+                    <div style={{ padding: 'var(--forge-spacing-medium)' }}>
+                      <h3 className="forge-typography--heading4" style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-weight-semibold)' }}>
+                        Students On Board ({aboard.length})
+                      </h3>
+                      <p style={{ margin: 0, marginTop: 4, fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
+                        Children who were on board, and the condition each was in.
+                      </p>
+                    </div>
+                    <div style={{ padding: '0 var(--forge-spacing-medium) var(--forge-spacing-medium)', display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-xsmall)' }}>
+                      {aboard.map((a: any, idx: number) => (
+                        <div
+                          key={a.studentId ?? `${a.name}-${idx}`}
+                          style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-small)' }}
+                        >
+                          <div className="flex items-center" style={{ gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-base)', fontWeight: 'var(--font-weight-semibold)' }}>{a.name}</span>
+                            {a.condition && (
+                              /* @ts-ignore */
+                              <forge-badge theme={a.condition === 'Uninjured' ? 'info' : a.condition === 'Injured' ? 'warning' : 'error'} strong>{a.condition}</forge-badge>
+                            )}
+                          </div>
+                          {/* The bus is only worth a line when the incident
+                              named more than one, otherwise every row repeats
+                              the same bus. */}
+                          {multipleBuses && a.bus && (
+                            <div style={{ marginTop: '6px', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
+                              {a.bus}
+                            </div>
+                          )}
+                          <div style={{ marginTop: '6px', fontFamily: 'Roboto, sans-serif', fontSize: 'var(--text-sm)', color: 'var(--muted-foreground)' }}>
+                            {a.studentId}
+                          </div>
                         </div>
                       ))}
                     </div>

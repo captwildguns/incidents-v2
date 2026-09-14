@@ -1163,7 +1163,7 @@ const rawIncidents = [
     time: '15:10',
     subject: 'vehicle',
     type: 'Multi Vehicle Collision',
-    description: 'Bus 12 was backing out of the loading lane at Jefferson Middle and made contact with the front nearside of Bus 18, which was queued behind it waiting to pull forward. No students aboard either bus. Both drivers exchanged details with the site supervisor and yard camera footage has been pulled.',
+    description: 'Bus 12 was backing out of the loading lane at Jefferson Middle and made contact with the front nearside of Bus 18, which was queued behind it waiting to pull forward and was loaded for the afternoon run. Three students were on board Bus 18 and one was seen by the school nurse. Both drivers exchanged details with the site supervisor and yard camera footage has been pulled.',
     bus: 'Bus 12',
     route: 'N/A',
     severity: 'High',
@@ -1185,6 +1185,13 @@ const rawIncidents = [
         role: 'Struck', driver: 'David Park', damage: 'Moderate',
         notes: 'Front nearside panel pushed in and the marker light housing broken. Tagged out pending a body shop estimate.',
       },
+    ],
+    // Children on board a bus incident. The incident is still about the buses,
+    // counted once, and each child carries the condition they were in.
+    studentsAboard: [
+      { studentId: 'STU-1956', name: 'Emma Rodriguez', bus: 'Bus 18', condition: 'Uninjured' },
+      { studentId: 'STU-6891', name: 'Noah Wilson', bus: 'Bus 18', condition: 'Uninjured' },
+      { studentId: 'STU-9123', name: 'Ava Martinez', bus: 'Bus 18', condition: 'Injured' },
     ],
   },
   {

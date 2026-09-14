@@ -86,7 +86,26 @@ interface Person {
   actionTaken: string;
   notes: string;
   parentNotified: boolean;
+  // Which roster the name came from. An outside person is the only one typed by
+  // hand, because a motorist or a parent at a stop is in no district list.
+  kind: 'employee' | 'student' | 'outside';
+  // Whether the child was hurt. Recorded the same way on a student incident and
+  // on a bus incident a child was on, so it reads the same wherever it lands.
+  condition: string;
 }
+
+// A student who was on board when something happened to the bus. Carries the
+// same condition as a student on a student incident, plus which bus, because a
+// two bus collision has children on both.
+interface StudentAboard {
+  id: string;
+  sourceId: string;
+  name: string;
+  bus: string;
+  condition: string;
+}
+
+const CONDITIONS = ['Uninjured', 'Injured', 'Transported for treatment'];
 
 // The five roles a person can hold in an incident, decided Aug 27. One list
 // for every subject. Reporter came out because whoever filed it is already
@@ -114,11 +133,17 @@ const ROSTER: Partial<Record<IncidentSubject, {
   // Full wording rather than an article glued onto noun, which produced
   // "Add a employee".
   addPrompt: string;
+  // A typed name, offered only where the person cannot be in a district list.
   freeText: boolean;
+  pickEmployees: boolean;
+  pickStudents: boolean;
 }>> = {
-  student: { label: 'Involved Students', noun: 'student', addPrompt: 'Add a student...', freeText: false },
-  employee: { label: 'Involved Employees', noun: 'employee', addPrompt: 'Add an employee...', freeText: false },
-  thirdParty: { label: 'Involved People', noun: 'person', addPrompt: 'Type a name and press Enter...', freeText: true },
+  student: { label: 'Involved Students', noun: 'student', addPrompt: '', freeText: false, pickEmployees: false, pickStudents: true },
+  employee: { label: 'Involved Employees', noun: 'employee', addPrompt: '', freeText: false, pickEmployees: true, pickStudents: false },
+  // A third party incident is about somebody outside the district, and district
+  // people are usually in it too: the driver who was struck, the children who
+  // were on the bus. All three get their own selector.
+  thirdParty: { label: 'Involved People', noun: 'person', addPrompt: 'Type a name and press Enter...', freeText: true, pickEmployees: true, pickStudents: true },
 };
 
 interface NewIncidentFormUnifiedProps {
@@ -392,6 +417,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // Vehicles named on a vehicle incident. More than one, because two of our own
   // buses striking each other is a single event and belongs on one record.
   const [involvedVehicles, setInvolvedVehicles] = useState<InvolvedVehicle[]>([]);
+  const [studentsAboard, setStudentsAboard] = useState<StudentAboard[]>([]);
   // Subject the reporter picked while subject-specific answers were already filled
   const [pendingSubject, setPendingSubject] = useState<IncidentSubject | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -416,6 +442,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     setSeverityFromType(false);
     setAssetRef('');
     setPeople([]);
+    setStudentsAboard([]);
     setInvolvedVehicles([]);
     setExpanded(new Set());
     setDescription('');
@@ -468,13 +495,15 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     setStep(1);
   };
 
-  const addPerson = (name: string, sourceId?: string) => {
+  const addPerson = (name: string, sourceId?: string, kind: Person['kind'] = 'outside') => {
     const trimmed = name.trim();
     if (!trimmed) return;
     const id = `${sourceId ?? 'p'}-${people.length}-${trimmed.length}`;
     setPeople(p => [...p, {
       id, sourceId, name: trimmed, role: '', severity: '',
       description: '', actionTaken: '', notes: '', parentNotified: false,
+      kind,
+      condition: '',
     }]);
     setExpanded(e => new Set([...e, id]));
     setPersonDraft('');
@@ -537,7 +566,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // needs warning about, now that a switch discards the whole report.
   const anythingEntered =
     !!incidentType || !!severity || !!assetRef ||
-    people.length > 0 || involvedVehicles.length > 0 ||
+    people.length > 0 || involvedVehicles.length > 0 || studentsAboard.length > 0 ||
     !!description.trim() || !!incidentTime || !!locationType ||
     !!locationCoordinates || !!locationAddress.trim() ||
     !!vehicleNumber || !!driver || !!run || tags.length > 0 || !!assignee ||
@@ -728,53 +757,97 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // ── Step 1: Incident Details ──────────────────────────────────────────────
   // The roster, held here so the WHO section below can place it. Absent on
   // Vehicle and Location, which have nobody to name.
+  // Labels above each selector only earn their space when there is more than
+  // one, otherwise the section heading has already said it.
+  const rosterWays = roster
+    ? [roster.pickEmployees, roster.pickStudents, roster.freeText].filter(Boolean).length
+    : 0;
+
   const rosterSection = roster ? (
       <div>
         <label style={labelStyle}>
           {roster.label}
           {peopleRequired && <Req />}
         </label>
-        <div className="flex" style={{ gap: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-small)' }}>
-          <div style={{ flex: 1 }}>
-            {/* @ts-ignore */}
-            <forge-text-field>
-              <forge-icon slot="start" name="search"></forge-icon>
-              {roster.freeText ? (
-                <input
-                  value={personDraft}
-                  onChange={(e) => setPersonDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') addPerson(personDraft); }}
-                  placeholder={roster.addPrompt}
-                />
-              ) : (
+        {/* Employees and students come out of the district's own lists, so a
+            name on the incident is a record and not a guess at a spelling. The
+            typed field is kept for the one person who cannot be in a list, the
+            motorist or the parent the incident is actually about. */}
+        <div
+          className="grid grid-cols-1 gap-4"
+          style={{ marginBottom: 'var(--forge-spacing-small)' }}
+        >
+          {roster.pickEmployees && (
+            <div>
+              {rosterWays > 1 && <label style={labelStyle}>Employee</label>}
+              {/* @ts-ignore */}
+              <forge-text-field>
+                <forge-icon slot="start" name="search"></forge-icon>
                 <select
                   value=""
                   onChange={(e) => {
                     if (!e.target.value) return;
                     const [id, ...rest] = e.target.value.split('|');
-                    addPerson(rest.join('|'), id);
+                    addPerson(rest.join('|'), id, 'employee');
                   }}
                   style={selectStyle}
                 >
-                  <option value="">{roster.addPrompt}</option>
-                  {subject === 'student'
-                    ? mockStudents
-                        .filter((s: any) => !people.some(p => p.sourceId === s.id))
-                        .map((s: any) => (
-                          <option key={s.id} value={`${s.id}|${s.name}`}>{s.name} ({s.id})</option>
-                        ))
-                    : employeeOptions
-                        .filter(e => !people.some(p => p.sourceId === e.id))
-                        .map(e => (
-                          <option key={e.id} value={`${e.id}|${e.fullName}`}>{e.fullName} ({e.jobRole})</option>
-                        ))}
+                  <option value="">Add an employee...</option>
+                  {employeeOptions
+                    .filter(e => !people.some(p => p.sourceId === e.id))
+                    .map(e => (
+                      <option key={e.id} value={`${e.id}|${e.fullName}`}>{e.fullName} ({e.jobRole})</option>
+                    ))}
                 </select>
-              )}
-            </forge-text-field>
-          </div>
+              </forge-text-field>
+            </div>
+          )}
+
+          {roster.pickStudents && (
+            <div>
+              {rosterWays > 1 && <label style={labelStyle}>Student</label>}
+              {/* @ts-ignore */}
+              <forge-text-field>
+                <forge-icon slot="start" name="search"></forge-icon>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    const [id, ...rest] = e.target.value.split('|');
+                    addPerson(rest.join('|'), id, 'student');
+                  }}
+                  style={selectStyle}
+                >
+                  <option value="">Add a student...</option>
+                  {mockStudents
+                    .filter((st: any) => !people.some(p => p.sourceId === st.id))
+                    .map((st: any) => (
+                      <option key={st.id} value={`${st.id}|${st.name}`}>{st.name} ({st.id})</option>
+                    ))}
+                </select>
+              </forge-text-field>
+            </div>
+          )}
+
           {roster.freeText && (
-            /* @ts-ignore */
-            <forge-button variant="outlined" onClick={() => addPerson(personDraft)}>Add</forge-button>
+            <div>
+              {rosterWays > 1 && <label style={labelStyle}>Someone outside the district</label>}
+              <div className="flex" style={{ gap: 'var(--forge-spacing-small)' }}>
+                <div style={{ flex: 1 }}>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <input
+                      value={personDraft}
+                      onChange={(e) => setPersonDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') addPerson(personDraft, undefined, 'outside'); }}
+                      placeholder={roster.addPrompt}
+                    />
+                  </forge-text-field>
+                </div>
+                {/* @ts-ignore */}
+                <forge-button variant="outlined" onClick={() => addPerson(personDraft, undefined, 'outside')}>Add</forge-button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -900,6 +973,15 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           >
             <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)' }}>
               <span style={{ fontWeight: 500 }}>{person.name}</span>
+              {/* Only worth saying where the list holds more than one kind of
+                  person. On a student or employee incident every row is the
+                  same kind. */}
+              {subject === 'thirdParty' && (
+                /* @ts-ignore */
+                <forge-badge theme="default">
+                  {person.kind === 'employee' ? 'Employee' : person.kind === 'student' ? 'Student' : 'Outside the district'}
+                </forge-badge>
+              )}
               {/* @ts-ignore */}
               <forge-button variant="flat" onClick={() => toggleExpanded(person.id)}>Collapse</forge-button>
             </div>
@@ -924,7 +1006,19 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   </select>
                 </forge-text-field>
               </div>
-              {subject === 'student' && (
+              {(subject === 'student' || person.kind === 'student') && (
+                <div>
+                  <label style={labelStyle}>Condition</label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <select value={person.condition} onChange={(e) => updatePerson(person.id, { condition: e.target.value })} style={selectStyle}>
+                      <option value="">Select condition...</option>
+                      {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </forge-text-field>
+                </div>
+              )}
+              {(subject === 'student' || person.kind === 'student') && (
                 <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                   <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}>
                     <input type="checkbox" checked={person.parentNotified} onChange={(e) => updatePerson(person.id, { parentNotified: e.target.checked })} />
@@ -1096,6 +1190,109 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // Both the people subjects and the vehicle subject now lead with a list, so
   // Incident Type and Severity sit above it. Location is the only subject left
   // that keeps them in the packed run of fields.
+  // Which district buses this incident names. A vehicle incident names them in
+  // the Involved Vehicles list, and an employee or third party incident names
+  // the one bus in Vehicle Number.
+  const busesNamed = subject === 'vehicle'
+    ? involvedVehicles.map(v => v.name)
+    : vehicleNumber ? [vehicleNumber] : [];
+
+  // Students on board. Shown wherever a district bus is named and the children
+  // are not already the subject: a student incident lists them in its own
+  // roster, and a location incident never has a bus.
+  const showStudentsAboard = subject !== 'student' && subject !== 'location' && busesNamed.length > 0;
+
+  const addStudentAboard = (sourceId: string, name: string) => {
+    setStudentsAboard(list => [...list, {
+      id: `sa-${sourceId}-${list.length}`,
+      sourceId,
+      name,
+      bus: busesNamed.length === 1 ? busesNamed[0] : '',
+      condition: '',
+    }]);
+  };
+  const updateStudentAboard = (id: string, patch: Partial<StudentAboard>) =>
+    setStudentsAboard(list => list.map(x => (x.id === id ? { ...x, ...patch } : x)));
+  const removeStudentAboard = (id: string) =>
+    setStudentsAboard(list => list.filter(x => x.id !== id));
+
+  const studentsAboardSection = showStudentsAboard ? (
+    <div>
+      <label style={labelStyle}>Students On Board</label>
+      <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: '0 0 var(--forge-spacing-small)' }}>
+        Every child who was on board. Adding anyone here puts parent notification
+        on the workflow.
+      </p>
+      <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
+        {/* @ts-ignore */}
+        <forge-text-field>
+          <forge-icon slot="start" name="search"></forge-icon>
+          <select
+            value=""
+            onChange={(e) => {
+              if (!e.target.value) return;
+              const [id, ...rest] = e.target.value.split('|');
+              addStudentAboard(id, rest.join('|'));
+            }}
+            style={selectStyle}
+          >
+            <option value="">Add a student...</option>
+            {mockStudents
+              .filter((st: any) => !studentsAboard.some(sa => sa.sourceId === st.id))
+              .map((st: any) => (
+                <option key={st.id} value={`${st.id}|${st.name}`}>{st.name} ({st.id})</option>
+              ))}
+          </select>
+        </forge-text-field>
+      </div>
+
+      {studentsAboard.length === 0 && (
+        <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: 0 }}>
+          No students on board.
+        </p>
+      )}
+
+      {studentsAboard.map(sa => (
+        <div
+          key={sa.id}
+          style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-xsmall)' }}
+        >
+          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--forge-spacing-xsmall)', fontFamily: 'var(--forge-font-family)' }}>
+            <span style={{ fontWeight: 500 }}>{sa.name}</span>
+            {/* @ts-ignore */}
+            <forge-button variant="flat" onClick={() => removeStudentAboard(sa.id)}>Remove</forge-button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Asked only when there is a choice to make. One bus named means
+                the child was on that bus. */}
+            {busesNamed.length > 1 && (
+              <div>
+                <label style={labelStyle}>Bus</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <select value={sa.bus} onChange={(e) => updateStudentAboard(sa.id, { bus: e.target.value })} style={selectStyle}>
+                    <option value="">Select bus...</option>
+                    {busesNamed.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </forge-text-field>
+              </div>
+            )}
+            <div>
+              <label style={labelStyle}>Condition</label>
+              {/* @ts-ignore */}
+              <forge-text-field>
+                <select value={sa.condition} onChange={(e) => updateStudentAboard(sa.id, { condition: e.target.value })} style={selectStyle}>
+                  <option value="">Select condition...</option>
+                  {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </forge-text-field>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : null;
+
   const hasPartyList = !!roster || subject === 'vehicle';
 
   const detailsStep = (
@@ -1129,6 +1326,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       {vehicleRosterSection}
 
       {vehicleDetailsSection}
+
+      {studentsAboardSection}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
@@ -1562,6 +1761,21 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     ...(subjectHasField(subject, 'driver') ? [['Driver', driver || '-'] as [string, string]] : []),
     ...(subjectHasField(subject, 'run') ? [['Run', run || '-'] as [string, string]] : []),
     ...(roster ? [[roster.label, people.length ? people.map(p => p.name).join(', ') : '-'] as [string, string]] : []),
+    ...(showStudentsAboard
+      ? [[
+          'Students On Board',
+          studentsAboard.length
+            ? studentsAboard
+                .map(sa => {
+                  const bits = [busesNamed.length > 1 ? sa.bus : null, sa.condition ? sa.condition.toLowerCase() : null]
+                    .filter(Boolean)
+                    .join(', ');
+                  return bits ? `${sa.name} (${bits})` : sa.name;
+                })
+                .join('  |  ')
+            : 'None',
+        ] as [string, string]]
+      : []),
     ['Witnesses', witnesses.filter(w => w.name.trim() || w.description.trim()).map(w => w.name.trim() || w.description.trim()).join(', ') || '-'],
     ['Third parties', thirdParties.filter(t => t.name.trim() || t.description.trim()).map(t => t.name.trim() || t.description.trim()).join(', ') || '-'],
     ['Tags', tags.join(', ') || '-'],
