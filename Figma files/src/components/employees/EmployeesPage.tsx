@@ -42,8 +42,8 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
   const paginatorRef = useRef<HTMLElement>(null);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [yearsOfServiceFilter, setYearsOfServiceFilter] = useState<string[]>([]);
-  const [garageFilter, setGarageFilter] = useState<string[]>([]);
   const [roleFilter, setRoleFilter] = useState<string[]>([]);
+  const [incidentsFilter, setIncidentsFilter] = useState<string[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const toastHelper = useForgeToast();
@@ -81,7 +81,8 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
   // nothing now but would reintroduce the cycle if it ever did again.
   const incidentCountByDriver = useMemo(() => {
     const counts = new Map<string, number>();
-    const bump = (name: string) => counts.set(name, (counts.get(name) ?? 0) + 1);
+    const open = new Map<string, number>();
+    const bump = (m: Map<string, number>, name: string) => m.set(name, (m.get(name) ?? 0) + 1);
     for (const inc of mockIncidents as any[]) {
       // An employee is linked either by having been the driver on the incident,
       // or by being a named party on an Employee-subject incident. Counted once
@@ -93,15 +94,21 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
       for (const party of (inc.involvedParties ?? [])) {
         if (party?.partyType === 'employee' && party?.name) names.add(party.name);
       }
-      names.forEach(bump);
+      names.forEach((name) => {
+        bump(counts, name);
+        // Resolved is the only terminal status, so anything else is still open.
+        if (inc.status !== 'Resolved') bump(open, name);
+      });
     }
-    return counts;
+    return { counts, open };
   }, []);
 
-  const incidentsFor = (driver: any) => incidentCountByDriver.get(driver.fullName) ?? 0;
+  const incidentsFor = (driver: any) => incidentCountByDriver.counts.get(driver.fullName) ?? 0;
+  const openIncidentsFor = (driver: any) => incidentCountByDriver.open.get(driver.fullName) ?? 0;
 
-  // Garage options come from the roster rather than mockLocations, so a garage
-  // no driver is based at does not appear as an option that filters to nothing.
+  // Garage feeds the typeahead only. It is a driver assignment, so it is taken
+  // from the roster rather than mockLocations and never suggests a garage
+  // nobody is based at.
   const uniqueGarages = Array.from(
     new Set(allEmployees.map(d => d.defaultGarage).filter(Boolean))
   ).sort((a, b) => a.localeCompare(b));
@@ -166,15 +173,21 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
       }
     });
 
-    // Home garage, matching the value shown under each name.
-    const matchesGarage = garageFilter.length === 0 || garageFilter.includes(driver.defaultGarage);
     const matchesRole = roleFilter.length === 0 || roleFilter.includes(driver.jobRole);
+
+    // The point of this page for an employee incident is finding the person and
+    // seeing what is still outstanding on them, which the count alone does not
+    // give you without reading every row.
+    const hasOpenIncident = openIncidentsFor(driver) > 0;
+    const matchesIncidents = incidentsFilter.length === 0
+      || (incidentsFilter.includes('open') && hasOpenIncident)
+      || (incidentsFilter.includes('none') && !hasOpenIncident);
 
     const matchesId = !idFilter.trim() || String(driver.id).toLowerCase().includes(idFilter.trim().toLowerCase());
     const matchesContact = !contactFilter.trim() || String(driver.phone ?? '').toLowerCase().includes(contactFilter.trim().toLowerCase());
     const matchesEmail = !emailFilter.trim() || String(driver.email ?? '').toLowerCase().includes(emailFilter.trim().toLowerCase());
 
-    return matchesSearch && matchesStatus && matchesYears && matchesGarage && matchesRole
+    return matchesSearch && matchesStatus && matchesYears && matchesRole && matchesIncidents
       && matchesId && matchesContact && matchesEmail;
   });
   
@@ -412,15 +425,18 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
               />
             </div>
 
-            {/* Garage Filter. A location incident names a garage, so this is how
-                you get from that incident to the employees based there. */}
+            {/* Open incidents. Resolved is terminal, so an open incident is any
+                incident on that employee which has not reached it. */}
             <div className="shrink-0">
               <ForgeMultiSelect
-                options={uniqueGarages.map(g => ({ value: g, label: g }))}
-                selected={garageFilter}
-                onChange={(val) => { setGarageFilter(val); setCurrentPage(1); }}
-                placeholder="Garage"
-                allLabel="All Garages"
+                options={[
+                  { value: 'open', label: 'Open incidents' },
+                  { value: 'none', label: 'No open incidents' },
+                ]}
+                selected={incidentsFilter}
+                onChange={(val) => { setIncidentsFilter(val); setCurrentPage(1); }}
+                placeholder="Incidents"
+                allLabel="All Employees"
                 width="220px"
               />
             </div>
@@ -557,8 +573,9 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
                     </td>
                     <td className="forge-table-cell">
                       <div style={{ fontWeight: 500, fontFamily: 'var(--forge-font-family)' }}>{driver.fullName}</div>
-                      {/* Garage on a sub-line rather than its own column, so the
-                          Garage filter is legible without an eighth column. */}
+                      {/* Garage on a sub-line rather than its own column. It
+                          is a driver assignment, so it is absent on everyone
+                          else and the line simply does not render. */}
                       {driver.defaultGarage && (
                         <div className="text-muted-foreground" style={{ fontFamily: 'var(--forge-font-family)', fontSize: '0.75rem' }}>
                           {driver.defaultGarage}

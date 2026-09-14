@@ -1493,7 +1493,7 @@ export function StudentsPage({ onNavigate, initialActiveIncidentsFilter = false,
         <div className="flex items-center gap-3 p-3 rounded-md mb-4" style={{ backgroundColor: 'var(--forge-color-surface-info, #f5f3ff)', border: '1px solid var(--forge-color-border-info, #c4b5fd)', borderRadius: 'var(--forge-shape-medium)', fontFamily: 'var(--forge-font-family)' }}>
           <forge-icon name="error" style={{ fontSize: '16px', flexShrink: 0, color: 'var(--forge-color-text-info, #7c3aed)' }}></forge-icon>
           <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-color-text-info, #5b21b6)', fontFamily: 'var(--forge-font-family)' }}>
-            Filtered view: Showing only students with active (non-closed) incidents
+            Filtered view: Showing only students with an unresolved incident
           </span>
           <ForgeButton
             variant="flat"
