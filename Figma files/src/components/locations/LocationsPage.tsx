@@ -107,7 +107,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
   const searchSuggestionGroups = useMemo(() => [
     { kind: 'Location', values: mockLocations.map(l => l.name) },
     { kind: 'Type', values: mockLocations.map(l => l.locationType) },
-    { kind: 'Manager', values: mockLocations.map(l => l.manager) },
+    { kind: 'Contact Name', values: mockLocations.map(l => l.manager) },
     { kind: 'City', values: mockLocations.map(l => l.city) },
   ], []);
 
@@ -197,7 +197,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
     } as any);
 
     setTimeout(() => {
-      const headers = ['Location ID', 'Name', 'Type', 'Manager', 'Address', 'City', 'State', 'Zip', 'Phone', 'Bus Capacity', 'Vehicles Based', 'Employees Based', 'Incidents', 'Status', 'Opened'];
+      const headers = ['Location ID', 'Name', 'Type', 'Contact Name', 'Address', 'City', 'State', 'Zip', 'Phone', 'Bus Capacity', 'Vehicles Based', 'Employees Based', 'Incidents', 'Status', 'Opened'];
       const rows = sortedLocations.map(l => [
         l.id, `"${l.name}"`, `"${l.locationType}"`, `"${l.manager}"`, `"${l.address}"`,
         `"${l.city}"`, l.state, l.zip, l.phone, l.busCapacity,
@@ -270,7 +270,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
                     ['id', 'Location ID'],
                     ['name', 'Name'],
                     ['type', 'Type'],
-                    ['manager', 'Manager'],
+                    ['manager', 'Contact Name'],
                     ['vehicles', 'Vehicles'],
                     ['employees', 'Employees'],
                     ['incidents', 'Incidents'],
@@ -293,7 +293,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
                     <input value={idFilter} onChange={(e) => setIdFilter(e.target.value)} placeholder="Filter Location ID..." aria-label="Filter by location ID" style={colFilterStyle} />
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
-                    <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Filter Name..." aria-label="Filter by name, type, manager or address" style={colFilterStyle} />
+                    <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Filter Name..." aria-label="Filter by name, type, contact name or address" style={colFilterStyle} />
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <ColumnSelect placeholder="Filter Type..." options={locationTypes} selected={typeFilter} onChange={setTypeFilter} />
@@ -433,7 +433,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground" style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)' }}>Manager</div>
+                  <div className="text-muted-foreground" style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)' }}>Contact Name</div>
                   <div style={{ fontFamily: 'var(--forge-font-family)' }}>{selectedLocation.manager}</div>
                 </div>
                 <div>
