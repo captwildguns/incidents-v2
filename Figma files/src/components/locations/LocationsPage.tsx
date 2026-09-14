@@ -254,7 +254,7 @@ export function LocationsPage({ onNavigate, onNavigateToIncidentsMatching }: Loc
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }} className="flex flex-row items-center justify-between">
           <h3 className="forge-typography--heading4">
-            All Locations <span className="text-muted-foreground">({filteredLocations.length})</span>
+            Locations <span className="text-muted-foreground">({filteredLocations.length})</span>
           </h3>
           <div className="flex gap-2">
             <ExportDropdown onExport={handleExport} />

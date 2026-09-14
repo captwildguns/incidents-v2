@@ -449,7 +449,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }} className="flex flex-row items-center justify-between">
           <h3 className="forge-typography--heading4">
-            All Employees <span className="text-muted-foreground">({filteredDrivers.length})</span>
+            Employees <span className="text-muted-foreground">({filteredDrivers.length})</span>
           </h3>
           <div className="flex gap-2">
             <ExportDropdown onExport={handleExport} />

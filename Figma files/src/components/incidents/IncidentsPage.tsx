@@ -1873,7 +1873,7 @@ export function IncidentsPage({ onNavigate, onNavigateToCommunication, onNavigat
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }} className="flex flex-row items-center justify-between">
           <h3 className="forge-typography--heading4">
-            All Incidents <span className="text-muted-foreground">({filteredIncidents.length})</span>
+            Incidents <span className="text-muted-foreground">({filteredIncidents.length})</span>
           </h3>
           <div className="flex gap-2">
             <ExportDropdown onExport={handleExport} />

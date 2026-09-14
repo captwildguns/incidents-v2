@@ -976,7 +976,7 @@ export function VehiclesPage({ onNavigate, onNavigateToIncidentsMatching }: Vehi
       <ForgeCard style={{ boxShadow: 'var(--forge-elevation-1)' }}>
         <div style={{ padding: 'var(--forge-spacing-medium)' }} className="flex flex-row items-center justify-between">
           <h3 className="forge-typography--heading4">
-            All Vehicles <span className="text-muted-foreground">({filteredVehicles.length})</span>
+            Vehicles <span className="text-muted-foreground">({filteredVehicles.length})</span>
           </h3>
           <div className="flex gap-2">
             <ExportDropdown onExport={handleExport} />
