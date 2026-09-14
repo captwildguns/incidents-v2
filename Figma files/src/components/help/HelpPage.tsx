@@ -554,7 +554,7 @@ export function HelpPage() {
                       <ul className="ml-5 space-y-1">
                         <li><strong>Employee ID:</strong> Clickable identifier</li>
                         <li><strong>Name:</strong> Employee&rsquo;s full name</li>
-                        <li><strong>Job Role:</strong> What the person does day to day, which is separate from the incident role a workflow step is assigned to</li>
+                        <li><strong>Employee Type:</strong> What the person does day to day, which is separate from the incident role a workflow step is assigned to</li>
                         <li><strong>Contact and Email:</strong> How to reach them</li>
                         <li><strong>Status:</strong> Active or Inactive</li>
                       </ul>

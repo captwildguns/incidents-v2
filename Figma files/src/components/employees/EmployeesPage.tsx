@@ -292,7 +292,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
     setTimeout(() => {
       // Driver-only columns stay in the export but read empty for everyone else,
       // rather than dropping the columns and breaking downstream consumers.
-      const headers = ['Employee ID', 'Name', 'Job Role', 'Employee Number', 'Status', 'Phone', 'Email', 'License', 'Years of Service', 'Primary Run', 'Safety Rating', 'Incidents', 'Performance', 'On-Time %'];
+      const headers = ['Employee ID', 'Name', 'Employee Type', 'Employee Number', 'Status', 'Phone', 'Email', 'License', 'Years of Service', 'Primary Run', 'Safety Rating', 'Incidents', 'Performance', 'On-Time %'];
       const rows = sortedDrivers.map(d => [
         d.id, `"${d.fullName}"`, `"${d.jobRole}"`, d.employeeId, d.status, d.phone, d.email,
         d.licenseNumber ?? '', d.yearsOfService, `"${d.primaryRoute ?? ''}"`,
@@ -374,7 +374,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
               <EntitySearchField
                 value={searchTerm}
                 onChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
-                placeholder="Search employees, roles, contact details, vehicles, runs, or garage..."
+                placeholder="Search by name, employee type, ID, contact details, vehicle, run, or garage..."
                 groups={searchSuggestionGroups}
               />
             </div>
@@ -412,15 +412,16 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
               />
             </div>
 
-            {/* Job Role filter. This is what lets one page serve drivers and
+            {/* Employee Type is what Student Transportation calls the job
+                someone does, and it is what lets one page serve drivers and
                 every other employee instead of splitting them across two. */}
             <div className="shrink-0">
               <ForgeMultiSelect
                 options={employeeJobRoles.map(r => ({ value: r, label: r }))}
                 selected={roleFilter}
                 onChange={(val) => { setRoleFilter(val); setCurrentPage(1); }}
-                placeholder="Job Role"
-                allLabel="All Job Roles"
+                placeholder="Employee Type"
+                allLabel="All Employee Types"
                 width="200px"
               />
             </div>
@@ -482,7 +483,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
                       onClick={() => handleSort('role')}
                       className="flex items-center hover:text-primary transition-colors cursor-pointer"
                     >
-                      Job Role
+                      Employee Type
                       <SortIcon column="role" />
                     </button>
                   </th>
@@ -541,7 +542,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Filter Name..." style={colFilterStyle} />
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
-                    <ColumnSelect placeholder="Filter Job Role..." options={employeeJobRoles} selected={roleFilter} onChange={setRoleFilter} />
+                    <ColumnSelect placeholder="Filter Employee Type..." options={employeeJobRoles} selected={roleFilter} onChange={setRoleFilter} />
                   </th>
                   <th className="forge-table-cell forge-table-cell--header">
                     <input value={contactFilter} onChange={(e) => setContactFilter(e.target.value)} placeholder="Filter Contact..." style={colFilterStyle} />
@@ -583,7 +584,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
                       )}
                     </td>
                     <td className="forge-table-cell">
-                      {/* One theme for every role. Job role is a category, not a
+                      {/* One theme for every type. Employee Type is a category, not a
                           status, so colouring Driver differently implied a
                           hierarchy that does not exist. */}
                       <forge-badge theme="default">
@@ -752,7 +753,7 @@ export function EmployeesPage({ onNavigate, onNavigateToIncidentsMatching }: Emp
                 </h3>
                 <div className="grid grid-cols-2" style={{ gap: 'var(--forge-spacing-medium)' }}>
                   <div>
-                    <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--muted-foreground)' }}>Job Role</div>
+                    <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--muted-foreground)' }}>Employee Type</div>
                     <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)', fontFamily: 'var(--forge-font-family)' }}>
                       <forge-icon name="badge" style={{ fontSize: '16px', color: 'var(--muted-foreground)' }}></forge-icon>
                       <span>{selectedDriver.jobRole}</span>

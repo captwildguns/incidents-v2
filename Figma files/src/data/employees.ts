@@ -650,8 +650,8 @@ export const allEmployees: AnyEmployee[] = [
   ...mockNonDriverEmployees,
 ].sort((a, b) => a.fullName.localeCompare(b.fullName));
 
-// The distinct job roles present, for the role filter. Derived so a role nobody
-// holds never appears as an option that filters to nothing.
+// The distinct employee types present, for the Employee Type filter. Derived
+// so a type nobody holds never appears as an option that filters to nothing.
 export const employeeJobRoles = Array.from(
   new Set(allEmployees.map(e => e.jobRole))
 ).sort((a, b) => a.localeCompare(b));
