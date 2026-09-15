@@ -965,31 +965,141 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           </p>
         )}
 
-        {people.map(person => (
-          <div
-            key={person.id}
-            style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
-          >
-            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)', padding: 'var(--forge-spacing-small)' }}>
-              <button
-                onClick={() => toggleExpanded(person.id)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', flex: 1, textAlign: 'left', fontFamily: 'var(--forge-font-family)' }}
-              >
-                <forge-icon name={expanded.has(person.id) ? 'expand_less' : 'expand_more'} style={{ fontSize: '18px' }}></forge-icon>
-                <span style={{ fontWeight: 500 }}>{person.name}</span>
-                {person.role && <forge-badge theme="default">{person.role}</forge-badge>}
-                {person.severity && <forge-badge theme="info">{person.severity}</forge-badge>}
-                {expanded.has(person.id) && (
-                  <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
-                    details below
-                  </span>
+        {people.map((person, i) => {
+          const open = expanded.has(person.id);
+          const job = person.kind === 'employee'
+            ? (employeeOptions.find(e => e.id === person.sourceId)?.jobRole ?? '')
+            : '';
+          // A student is identified by their id, an employee by what they do.
+          // A person from outside the district has neither.
+          const subline = person.kind === 'student' ? (person.sourceId ?? '') : job;
+          return (
+            <div
+              key={person.id}
+              style={{ border: '1px solid var(--forge-theme-outline-low)', borderRadius: 'var(--forge-shape-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
+            >
+              <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)', padding: 'var(--forge-spacing-small)' }}>
+                <span style={{
+                  width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'var(--forge-theme-primary)', color: '#fff',
+                  fontSize: '0.75rem', fontWeight: 600, fontFamily: 'var(--forge-font-family)',
+                }}>
+                  {i + 1}
+                </span>
+                {/* @ts-ignore */}
+                <forge-icon name="person" style={{ fontSize: '20px', color: 'var(--forge-theme-text-medium)', flexShrink: 0 }}></forge-icon>
+                <div style={{ flex: 1, minWidth: 0, fontFamily: 'var(--forge-font-family)' }}>
+                  <div style={{ fontWeight: 500 }}>{person.name}</div>
+                  {subline && (
+                    <div style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+                      {subline}
+                    </div>
+                  )}
+                </div>
+                {/* Only worth saying where the list holds more than one kind of
+                    person. On a student or employee incident every row is the
+                    same kind. */}
+                {subject === 'thirdParty' && (
+                  /* @ts-ignore */
+                  <forge-badge theme="default">
+                    {person.kind === 'employee' ? 'Employee' : person.kind === 'student' ? 'Student' : 'Outside the district'}
+                  </forge-badge>
                 )}
-              </button>
-              {/* @ts-ignore */}
-              <forge-button variant="flat" onClick={() => removePerson(person.id)}>Remove</forge-button>
+                {/* Collapsed, the badges are the only summary of what was set. */}
+                {!open && person.role && <forge-badge theme="default">{person.role}</forge-badge>}
+                {!open && person.severity && <forge-badge theme="info">{person.severity}</forge-badge>}
+                {/* @ts-ignore */}
+                <forge-icon-button aria-label={`Remove ${person.name}`} onClick={() => removePerson(person.id)}>
+                  {/* @ts-ignore */}
+                  <forge-icon name="close"></forge-icon>
+                </forge-icon-button>
+                {/* @ts-ignore */}
+                <forge-icon-button aria-label={open ? `Collapse ${person.name}` : `Expand ${person.name}`} onClick={() => toggleExpanded(person.id)}>
+                  {/* @ts-ignore */}
+                  <forge-icon name={open ? 'expand_less' : 'expand_more'}></forge-icon>
+                </forge-icon-button>
+              </div>
+
+              {open && (
+                <div style={{ padding: '0 var(--forge-spacing-small) var(--forge-spacing-small)' }}>
+            <div className="flex flex-col" style={{ gap: 'var(--forge-spacing-small)' }}>
+              <div>
+                <label style={labelStyle}>Role In Incident<Req /></label>
+                <Segmented
+                  ariaLabel="Role in incident"
+                  options={ROLES}
+                  value={person.role}
+                  onChange={(v) => updatePerson(person.id, { role: v })}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  Severity for this person
+                  {!person.severity && (
+                    <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)' }}>
+                      {'  '}same as incident{severity ? ` (${severity})` : ''}
+                    </span>
+                  )}
+                </label>
+                <Segmented
+                  ariaLabel="Severity for this person"
+                  options={SEVERITIES}
+                  value={person.severity}
+                  onChange={(v) => updatePerson(person.id, { severity: v })}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
+              {(subject === 'student' || person.kind === 'student') && (
+                <div>
+                  <label style={labelStyle}>Condition</label>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <select value={person.condition} onChange={(e) => updatePerson(person.id, { condition: e.target.value })} style={selectStyle}>
+                      <option value="">Select condition...</option>
+                      {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </forge-text-field>
+                </div>
+              )}
+              {(subject === 'student' || person.kind === 'student') && (
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={person.parentNotified} onChange={(e) => updatePerson(person.id, { parentNotified: e.target.checked })} />
+                    Parent notified
+                  </label>
+                </div>
+              )}
+            </div>
+            {/* No per-person description. Decided with Jon on Aug 20 (#75):
+                Additional Notes already covers what is specific to a person,
+                so a second free-text field is not worth an
+                IncidentEventStudent column. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
+              <div>
+                <label style={labelStyle}>Action taken</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+                </forge-text-field>
+              </div>
+              {/* The detail page renders Additional Notes per person, and
+                  seeded incidents use it for coordinator context. Without an
+                  input here it could only ever appear on seeded data. */}
+              <div>
+                <label style={labelStyle}>Additional notes</label>
+                {/* @ts-ignore */}
+                <forge-text-field>
+                  <textarea rows={2} value={person.notes} onChange={(e) => updatePerson(person.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+                </forge-text-field>
+              </div>
+            </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
       ) : null;
 
@@ -1066,109 +1176,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           </div>
         </>
   );
-
-  // Per-person detail, lifted out of each name row so it sits below Incident
-  // Type and Severity. A person's severity offers "Same as incident", which
-  // means nothing until the incident's own severity has been set, and the
-  // reporter thinks who, then what, then what each person's part in it was.
-  const personDetailsSection =
-    roster && people.some(pn => expanded.has(pn.id)) ? (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-small)' }}>
-        {people.filter(pn => expanded.has(pn.id)).map(person => (
-          <div
-            key={person.id}
-            style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-small)' }}
-          >
-            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)' }}>
-              <span style={{ fontWeight: 500 }}>{person.name}</span>
-              {/* Only worth saying where the list holds more than one kind of
-                  person. On a student or employee incident every row is the
-                  same kind. */}
-              {subject === 'thirdParty' && (
-                /* @ts-ignore */
-                <forge-badge theme="default">
-                  {person.kind === 'employee' ? 'Employee' : person.kind === 'student' ? 'Student' : 'Outside the district'}
-                </forge-badge>
-              )}
-              {/* @ts-ignore */}
-              <forge-button variant="flat" onClick={() => toggleExpanded(person.id)}>Collapse</forge-button>
-            </div>
-            <div className="flex flex-col" style={{ gap: 'var(--forge-spacing-small)' }}>
-              <div>
-                <label style={labelStyle}>Role In Incident<Req /></label>
-                <Segmented
-                  ariaLabel="Role in incident"
-                  options={ROLES}
-                  value={person.role}
-                  onChange={(v) => updatePerson(person.id, { role: v })}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>
-                  Severity for this person
-                  {!person.severity && (
-                    <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)' }}>
-                      {'  '}same as incident{severity ? ` (${severity})` : ''}
-                    </span>
-                  )}
-                </label>
-                <Segmented
-                  ariaLabel="Severity for this person"
-                  options={SEVERITIES}
-                  value={person.severity}
-                  onChange={(v) => updatePerson(person.id, { severity: v })}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
-              {(subject === 'student' || person.kind === 'student') && (
-                <div>
-                  <label style={labelStyle}>Condition</label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select value={person.condition} onChange={(e) => updatePerson(person.id, { condition: e.target.value })} style={selectStyle}>
-                      <option value="">Select condition...</option>
-                      {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </forge-text-field>
-                </div>
-              )}
-              {(subject === 'student' || person.kind === 'student') && (
-                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={person.parentNotified} onChange={(e) => updatePerson(person.id, { parentNotified: e.target.checked })} />
-                    Parent notified
-                  </label>
-                </div>
-              )}
-            </div>
-            {/* No per-person description. Decided with Jon on Aug 20 (#75):
-                Additional Notes already covers what is specific to a person,
-                so a second free-text field is not worth an
-                IncidentEventStudent column. */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
-              <div>
-                <label style={labelStyle}>Action taken</label>
-                {/* @ts-ignore */}
-                <forge-text-field>
-                  <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                </forge-text-field>
-              </div>
-              {/* The detail page renders Additional Notes per person, and
-                  seeded incidents use it for coordinator context. Without an
-                  input here it could only ever appear on seeded data. */}
-              <div>
-                <label style={labelStyle}>Additional notes</label>
-                {/* @ts-ignore */}
-                <forge-text-field>
-                  <textarea rows={2} value={person.notes} onChange={(e) => updatePerson(person.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                </forge-text-field>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : null;
 
   // Involved Vehicles, the vehicle subject's answer to the roster. Same shape as
   // the people list on purpose: add as many as were in it, each row collapses to
@@ -1422,8 +1429,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       )}
 
       {rosterSection}
-
-      {personDetailsSection}
 
       {vehicleRosterSection}
 
