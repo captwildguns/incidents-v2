@@ -765,10 +765,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
   const rosterSection = roster ? (
       <div>
-        <label style={labelStyle}>
+        <SectionHeading>
           {roster.label}
           {peopleRequired && <Req />}
-        </label>
+        </SectionHeading>
         {/* Employees and students come out of the district's own lists, so a
             name on the incident is a record and not a guess at a spelling. The
             typed field is kept for the one person who cannot be in a list, the
@@ -1567,7 +1567,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
           <div>
-              <label style={labelStyle}>Tags</label>
+              <SectionHeading>Tags</SectionHeading>
             <div className="flex flex-wrap items-center" style={{ gap: '6px' }}>
               {tags.map(t => (
                 <forge-badge key={t} theme="default">
@@ -1657,7 +1657,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             something is attached. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-medium)' }}>
           <div>
-            <label style={labelStyle}>Photo evidence</label>
+            <SectionHeading>Photo Evidence</SectionHeading>
             <input ref={photoInputRef} type="file" accept="image/*" multiple onChange={handlePhotoUpload} style={{ display: 'none' }} />
             {/* @ts-ignore */}
             <forge-button variant="outlined" onClick={() => photoInputRef.current?.click()}>
@@ -1695,7 +1695,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           </div>
 
           <div>
-            <label style={labelStyle}>Document evidence</label>
+            <SectionHeading>Document Evidence</SectionHeading>
             <input ref={documentInputRef} type="file" accept=".pdf,.doc,.docx" multiple onChange={handleDocumentUpload} style={{ display: 'none' }} />
             {/* @ts-ignore */}
             <forge-button variant="outlined" onClick={() => documentInputRef.current?.click()}>
