@@ -168,6 +168,49 @@ function Req() {
   return <span style={{ color: 'var(--forge-theme-error)' }}> *</span>;
 }
 
+function Segmented({
+  options, value, onChange, ariaLabel,
+}: {
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+  ariaLabel: string;
+}) {
+  return (
+    <div role="radiogroup" aria-label={ariaLabel} className="flex" style={{ width: 'fit-content' }}>
+      {options.map((o, i) => {
+        const on = value === o;
+        return (
+          <button
+            key={o}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(on ? '' : o)}
+            style={{
+              fontFamily: 'var(--forge-font-family)',
+              fontSize: 'var(--forge-font-size-sm)',
+              fontWeight: on ? 500 : 400,
+              padding: '7px 14px',
+              cursor: 'pointer',
+              background: on ? 'var(--forge-theme-primary-container-minimum)' : '#fff',
+              color: on ? 'var(--forge-theme-text-high)' : 'var(--forge-theme-text-medium)',
+              border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+              borderLeftWidth: i === 0 ? '1px' : '0',
+              borderTopLeftRadius: i === 0 ? 'var(--forge-shape-medium)' : '0',
+              borderBottomLeftRadius: i === 0 ? 'var(--forge-shape-medium)' : '0',
+              borderTopRightRadius: i === options.length - 1 ? 'var(--forge-shape-medium)' : '0',
+              borderBottomRightRadius: i === options.length - 1 ? 'var(--forge-shape-medium)' : '0',
+            }}
+          >
+            {o}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function SectionHeading({ children, hint, block }: { children: any; hint?: string; block?: boolean }) {
   return (
     <div style={{
@@ -988,27 +1031,34 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               {/* @ts-ignore */}
               <forge-button variant="flat" onClick={() => toggleExpanded(person.id)}>Collapse</forge-button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="flex flex-col" style={{ gap: 'var(--forge-spacing-small)' }}>
               <div>
-                <label style={labelStyle}>Role</label>
-                {/* @ts-ignore */}
-                <forge-text-field>
-                  <select value={person.role} onChange={(e) => updatePerson(person.id, { role: e.target.value })} style={selectStyle}>
-                    <option value="">Select role...</option>
-                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </forge-text-field>
+                <label style={labelStyle}>Role In Incident<Req /></label>
+                <Segmented
+                  ariaLabel="Role in incident"
+                  options={ROLES}
+                  value={person.role}
+                  onChange={(v) => updatePerson(person.id, { role: v })}
+                />
               </div>
               <div>
-                <label style={labelStyle}>Severity for this person</label>
-                {/* @ts-ignore */}
-                <forge-text-field>
-                  <select value={person.severity} onChange={(e) => updatePerson(person.id, { severity: e.target.value })} style={selectStyle}>
-                    <option value="">Same as incident{severity ? ` (${severity})` : ''}</option>
-                    {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </forge-text-field>
+                <label style={labelStyle}>
+                  Severity for this person
+                  {!person.severity && (
+                    <span style={{ fontWeight: 400, color: 'var(--forge-theme-text-medium)' }}>
+                      {'  '}same as incident{severity ? ` (${severity})` : ''}
+                    </span>
+                  )}
+                </label>
+                <Segmented
+                  ariaLabel="Severity for this person"
+                  options={SEVERITIES}
+                  value={person.severity}
+                  onChange={(v) => updatePerson(person.id, { severity: v })}
+                />
               </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
               {(subject === 'student' || person.kind === 'student') && (
                 <div>
                   <label style={labelStyle}>Condition</label>
