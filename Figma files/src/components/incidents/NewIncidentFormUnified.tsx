@@ -4,12 +4,14 @@ import {
   defineButtonComponent,
   defineBadgeComponent,
   defineIconComponent,
+  defineIconButtonComponent,
   defineCheckboxComponent,
 } from '@tylertech/forge';
 defineTextFieldComponent();
 defineButtonComponent();
 defineBadgeComponent();
 defineIconComponent();
+defineIconButtonComponent();
 defineCheckboxComponent();
 
 import {
@@ -381,7 +383,7 @@ function ContactFields({
     >
       <div>
         {/* @ts-ignore */}
-        <forge-text-field>
+        <forge-text-field float-label>
           <label slot="label">Name</label>
 
           <input value={contact.name} onChange={(e) => onChange({ ...contact, name: e.target.value })} placeholder={`${noun} name`} />
@@ -389,7 +391,7 @@ function ContactFields({
       </div>
       <div>
         {/* @ts-ignore */}
-        <forge-text-field>
+        <forge-text-field float-label>
           <label slot="label">Phone</label>
 
           <input value={contact.phone} onChange={(e) => onChange({ ...contact, phone: e.target.value })} placeholder="Optional" />
@@ -397,7 +399,7 @@ function ContactFields({
       </div>
       <div>
         {/* @ts-ignore */}
-        <forge-text-field>
+        <forge-text-field float-label>
           <label slot="label">Email</label>
 
           <input value={contact.email} onChange={(e) => onChange({ ...contact, email: e.target.value })} placeholder="Optional" />
@@ -406,7 +408,7 @@ function ContactFields({
       <div>
         {/* For the person who cannot or will not give a name. */}
         {/* @ts-ignore */}
-        <forge-text-field>
+        <forge-text-field float-label>
           <label slot="label">Description</label>
 
           <input
@@ -1021,7 +1023,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 {/* @ts-ignore */}
                 <forge-icon-button aria-label={open ? `Collapse ${person.name}` : `Expand ${person.name}`} onClick={() => toggleExpanded(person.id)}>
                   {/* @ts-ignore */}
-                  <forge-icon name={open ? 'expand_less' : 'expand_more'}></forge-icon>
+                  <forge-icon name={open ? 'chevron_up' : 'chevron_down'}></forge-icon>
                 </forge-icon-button>
               </div>
 
@@ -1060,7 +1062,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 IncidentEventStudent column. */}
             <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
               {/* @ts-ignore */}
-              <forge-text-field>
+              <forge-text-field float-label>
                 <label slot="label">Action taken</label>
 
                 <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
@@ -1071,7 +1073,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 it could only ever appear on seeded data. */}
             <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
               {/* @ts-ignore */}
-              <forge-text-field>
+              <forge-text-field float-label>
                 <label slot="label">Additional notes</label>
 
                 <textarea rows={2} value={person.notes} onChange={(e) => updatePerson(person.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
@@ -1101,7 +1103,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   const typeField = (
         <>
           {/* @ts-ignore */}
-          <forge-text-field required>
+          <forge-text-field required float-label>
             <label slot="label">Event</label>
 
             <select
@@ -1260,7 +1262,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field float-label>
                   <label slot="label">Part in the incident</label>
 
                   <select value={v.role} onChange={(e) => updateVehicle(v.id, { role: e.target.value })} style={selectStyle}>
@@ -1271,7 +1273,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               </div>
               <div>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field float-label>
                   <label slot="label">Driver</label>
 
                   <select value={v.driver} onChange={(e) => updateVehicle(v.id, { driver: e.target.value })} style={selectStyle}>
@@ -1285,7 +1287,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               </div>
               <div>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field float-label>
                   <label slot="label">Damage</label>
 
                   <select value={v.damage} onChange={(e) => updateVehicle(v.id, { damage: e.target.value })} style={selectStyle}>
@@ -1298,7 +1300,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             <div className="grid grid-cols-1 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
               <div>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field float-label>
                   <label slot="label">Notes for this vehicle</label>
 
                   <textarea rows={2} value={v.notes} onChange={(e) => updateVehicle(v.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
@@ -1444,7 +1446,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             node: (
               <>
                 {/* @ts-ignore */}
-                <forge-text-field required>
+                <forge-text-field required float-label>
                   <label slot="label">Affected Location</label>
 
                   <select value={assetRef} onChange={(e) => setAssetRef(e.target.value)} style={selectStyle}>
@@ -1468,7 +1470,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             node: (
               <>
                 {/* @ts-ignore */}
-                <forge-text-field required>
+                <forge-text-field required float-label>
                   <label slot="label">Incident Description</label>
 
                   <textarea
@@ -1489,7 +1491,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             node: (
               <>
                 {/* @ts-ignore */}
-                <forge-text-field required>
+                <forge-text-field required float-label>
                   <label slot="label">Date</label>
 
                   <input type="date" max={new Date().toISOString().slice(0, 10)} value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} />
@@ -1502,7 +1504,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             node: (
               <>
                 {/* @ts-ignore */}
-                <forge-text-field required>
+                <forge-text-field required float-label>
                   <label slot="label">Time</label>
 
                   <input type="time" value={incidentTime} onChange={(e) => setIncidentTime(e.target.value)} />
@@ -1515,7 +1517,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             node: (
               <>
                 {/* @ts-ignore */}
-                <forge-text-field required>
+                <forge-text-field required float-label>
                   <label slot="label">Location Type</label>
 
                   <select value={locationType} onChange={(e) => setLocationType(e.target.value)} style={selectStyle}>
@@ -1535,7 +1537,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             node: (
               <>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field float-label>
                   <label slot="label">Vehicle Number</label>
 
                   <select value={vehicleNumber} onChange={(e) => setVehicleNumber(e.target.value)} style={selectStyle}>
@@ -1551,7 +1553,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             node: (
               <>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field float-label>
                   <label slot="label">Driver</label>
 
                   <select value={driver} onChange={(e) => setDriver(e.target.value)} style={selectStyle}>
@@ -1570,7 +1572,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             node: (
               <>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field float-label>
                   <label slot="label">Run</label>
 
                   <select value={run} onChange={(e) => setRun(e.target.value)} style={selectStyle}>
@@ -1611,7 +1613,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               row look unfinished. */}
           <div>
             {/* @ts-ignore */}
-            <forge-text-field>
+            <forge-text-field float-label>
               <label slot="label">Witnesses</label>
 
               <select
@@ -1634,7 +1636,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
           <div>
             {/* @ts-ignore */}
-            <forge-text-field>
+            <forge-text-field float-label>
               <label slot="label">Third parties</label>
 
               <select
@@ -1716,7 +1718,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               hold a role, so a role on its own does not name anybody. */}
           <div>
             {/* @ts-ignore */}
-            <forge-text-field>
+            <forge-text-field float-label>
               <label slot="label">Assigned To</label>
 
               <select
@@ -1743,7 +1745,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
           <div>
             {/* @ts-ignore */}
-            <forge-text-field>
+            <forge-text-field float-label>
               <label slot="label">Assign to a specific employee</label>
 
               <select

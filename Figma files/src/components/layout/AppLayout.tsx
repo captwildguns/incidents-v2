@@ -61,6 +61,8 @@ import {
   tylIconCheck,
   tylIconCheckCircle,
   tylIconChevronLeft,
+  tylIconChevronUp,
+  tylIconChevronDown,
   tylIconContentCopy,
   tylIconDelete,
   tylIconFlashOn,
@@ -107,6 +109,8 @@ defineMenuComponent();
 
 // Register Tyler icons
 IconRegistry.define([
+  tylIconChevronUp,
+  tylIconChevronDown,
   tylIconMenu,
   // Prod drawer icons
   tylIconHomeOutline, tylIconErrorOutline, tylIconPeopleOutline,
