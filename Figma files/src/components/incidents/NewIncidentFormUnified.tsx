@@ -89,8 +89,8 @@ interface Person {
   // Which roster the name came from. An outside person is the only one typed by
   // hand, because a motorist or a parent at a stop is in no district list.
   kind: 'employee' | 'student' | 'outside';
-  // Whether the child was hurt. Recorded the same way on a student incident and
-  // on a bus incident a child was on, so it reads the same wherever it lands.
+  // Whether the child was hurt. Only asked of a student on board a bus
+  // incident, never on a student incident, where the child is the subject.
   condition: string;
 }
 
@@ -1051,18 +1051,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
-              {(subject === 'student' || person.kind === 'student') && (
-                <div>
-                  <label style={labelStyle}>Condition</label>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <select value={person.condition} onChange={(e) => updatePerson(person.id, { condition: e.target.value })} style={selectStyle}>
-                      <option value="">Select condition...</option>
-                      {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </forge-text-field>
-                </div>
-              )}
               {(subject === 'student' || person.kind === 'student') && (
                 <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                   <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}>
