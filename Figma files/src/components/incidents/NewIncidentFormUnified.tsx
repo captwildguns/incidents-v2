@@ -390,6 +390,19 @@ function ContactFields({
         </forge-text-field>
       </div>
       <div>
+        {/* For the person who cannot or will not give a name. */}
+        {/* @ts-ignore */}
+        <forge-text-field float-label>
+          <label slot="label">Description</label>
+
+          <input
+            value={contact.description}
+            onChange={(e) => onChange({ ...contact, description: e.target.value })}
+
+          />
+        </forge-text-field>
+      </div>
+      <div>
         {/* @ts-ignore */}
         <forge-text-field float-label>
           <label slot="label">Phone</label>
@@ -403,19 +416,6 @@ function ContactFields({
           <label slot="label">Email</label>
 
           <input value={contact.email} onChange={(e) => onChange({ ...contact, email: e.target.value })} />
-        </forge-text-field>
-      </div>
-      <div>
-        {/* For the person who cannot or will not give a name. */}
-        {/* @ts-ignore */}
-        <forge-text-field float-label>
-          <label slot="label">Description</label>
-
-          <input
-            value={contact.description}
-            onChange={(e) => onChange({ ...contact, description: e.target.value })}
-
-          />
         </forge-text-field>
       </div>
       <div className="flex" style={{ gap: 'var(--forge-spacing-xsmall)' }}>
@@ -527,9 +527,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // Runs alongside the list above: true while that entry is open for editing,
   // false once Done has collapsed it to a line.
   const [witnessEditing, setWitnessEditing] = useState<boolean[]>([]);
-  const [thirdPartyPresent, setThirdPartyPresent] = useState(false);
-  const [thirdParties, setThirdParties] = useState<PersonContact[]>([]);
-  const [thirdPartyEditing, setThirdPartyEditing] = useState<boolean[]>([]);
   const [uploadedPhotos, setUploadedPhotos] = useState<Array<{ id: string; name: string; url: string; size: string }>>([]);
   const [uploadedDocuments, setUploadedDocuments] = useState<Array<{ id: string; name: string; size: string; type: string }>>([]);
   const [locationCoordinates, setLocationCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -699,7 +696,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     !!description.trim() || !!incidentTime || !!locationType ||
     !!locationCoordinates || !!locationAddress.trim() ||
     !!vehicleNumber || !!driver || !!run || tags.length > 0 || !!assignee ||
-    witnessPresent || thirdPartyPresent ||
+    witnessPresent ||
     uploadedPhotos.length > 0 || uploadedDocuments.length > 0;
 
   // Workflow selection already keys off type and severity, so as soon as both
@@ -1606,58 +1603,24 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             a three-across row with tags, which pushed their fields below
             Assigned To, so turning on witnesses made fields appear a long way
             from the thing that asked for them. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
-          {/* Label above a bordered control, the same shape as every other
-              field. As bare inline checkboxes these two sat at a different
-              height to their neighbours and had no field box, which made the
-              row look unfinished. */}
-          <div>
-            {/* @ts-ignore */}
-            <forge-text-field float-label>
-              <label slot="label">Witnesses</label>
-
-              <select
-                value={witnessPresent ? 'yes' : 'no'}
-                onChange={(e) => {
-                  const on = e.target.value === 'yes';
-                  setWitnessPresent(on);
-                  if (on && witnesses.length === 0) {
-                    setWitnesses([emptyContact()]);
-                    setWitnessEditing([true]);
-                  }
-                }}
-                style={selectStyle}
-              >
-                <option value="no">None</option>
-                <option value="yes">One or more present</option>
-              </select>
-            </forge-text-field>
-          </div>
-
-          <div>
-            {/* @ts-ignore */}
-            <forge-text-field float-label>
-              <label slot="label">Third parties</label>
-
-              <select
-                value={thirdPartyPresent ? 'yes' : 'no'}
-                onChange={(e) => {
-                  const on = e.target.value === 'yes';
-                  setThirdPartyPresent(on);
-                  if (on && thirdParties.length === 0) {
-                    setThirdParties([emptyContact()]);
-                    setThirdPartyEditing([true]);
-                  }
-                }}
-                style={selectStyle}
-              >
-                <option value="no">None</option>
-                <option value="yes">One or more involved</option>
-              </select>
-            </forge-text-field>
-          </div>
-
-        </div>
+        <label
+          className="flex items-center"
+          style={{ gap: '6px', marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}
+        >
+          <input
+            type="checkbox"
+            checked={witnessPresent}
+            onChange={(e) => {
+              const on = e.target.checked;
+              setWitnessPresent(on);
+              if (on && witnesses.length === 0) {
+                setWitnesses([emptyContact()]);
+                setWitnessEditing([true]);
+              }
+            }}
+          />
+          Witness(es) present
+        </label>
 
         {witnessPresent && (
           <ContactList
@@ -1667,17 +1630,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             setEditing={setWitnessEditing}
             noun="Witness"
             addLabel="Add witness"
-          />
-        )}
-
-        {thirdPartyPresent && (
-          <ContactList
-            contacts={thirdParties}
-            setContacts={setThirdParties}
-            editing={thirdPartyEditing}
-            setEditing={setThirdPartyEditing}
-            noun="Third party"
-            addLabel="Add third party"
           />
         )}
 
@@ -1895,7 +1847,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         ] as [string, string]]
       : []),
     ['Witnesses', witnesses.filter(w => w.name.trim() || w.description.trim()).map(w => w.name.trim() || w.description.trim()).join(', ') || '-'],
-    ['Third parties', thirdParties.filter(t => t.name.trim() || t.description.trim()).map(t => t.name.trim() || t.description.trim()).join(', ') || '-'],
     ['Tags', tags.join(', ') || '-'],
     ['Workflow', routed ? routed.workflow : 'None matches this type and severity'],
     // Unassigned is a real outcome per #197: a workflow with no owner creates
