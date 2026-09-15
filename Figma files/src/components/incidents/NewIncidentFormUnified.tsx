@@ -386,7 +386,7 @@ function ContactFields({
         <forge-text-field float-label>
           <label slot="label">Name</label>
 
-          <input value={contact.name} onChange={(e) => onChange({ ...contact, name: e.target.value })} placeholder={`${noun} name`} />
+          <input value={contact.name} onChange={(e) => onChange({ ...contact, name: e.target.value })} />
         </forge-text-field>
       </div>
       <div>
@@ -394,7 +394,7 @@ function ContactFields({
         <forge-text-field float-label>
           <label slot="label">Phone</label>
 
-          <input value={contact.phone} onChange={(e) => onChange({ ...contact, phone: e.target.value })} placeholder="Optional" />
+          <input value={contact.phone} onChange={(e) => onChange({ ...contact, phone: e.target.value })} />
         </forge-text-field>
       </div>
       <div>
@@ -402,7 +402,7 @@ function ContactFields({
         <forge-text-field float-label>
           <label slot="label">Email</label>
 
-          <input value={contact.email} onChange={(e) => onChange({ ...contact, email: e.target.value })} placeholder="Optional" />
+          <input value={contact.email} onChange={(e) => onChange({ ...contact, email: e.target.value })} />
         </forge-text-field>
       </div>
       <div>
@@ -414,7 +414,7 @@ function ContactFields({
           <input
             value={contact.description}
             onChange={(e) => onChange({ ...contact, description: e.target.value })}
-            placeholder="If unnamed, describe them"
+
           />
         </forge-text-field>
       </div>
@@ -1126,7 +1126,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               }}
               style={selectStyle}
             >
-              <option value="">Select type...</option>
+              <option value=""></option>
               {typeOptions.map(ty => (
                 <option key={ty.id} value={ty.label} title={ty.description}>{ty.label}</option>
               ))}
@@ -1266,7 +1266,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   <label slot="label">Part in the incident</label>
 
                   <select value={v.role} onChange={(e) => updateVehicle(v.id, { role: e.target.value })} style={selectStyle}>
-                    <option value="">Select...</option>
+                    <option value=""></option>
                     {VEHICLE_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </forge-text-field>
@@ -1277,7 +1277,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   <label slot="label">Driver</label>
 
                   <select value={v.driver} onChange={(e) => updateVehicle(v.id, { driver: e.target.value })} style={selectStyle}>
-                    <option value="">No driver</option>
+                    <option value=""></option>
                     {mockDrivers
                       .filter(d => d.status === 'Active')
                       .sort((a, b) => a.fullName.localeCompare(b.fullName))
@@ -1291,7 +1291,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   <label slot="label">Damage</label>
 
                   <select value={v.damage} onChange={(e) => updateVehicle(v.id, { damage: e.target.value })} style={selectStyle}>
-                    <option value="">Not assessed</option>
+                    <option value=""></option>
                     {VEHICLE_DAMAGE_LEVELS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </forge-text-field>
@@ -1450,7 +1450,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   <label slot="label">Affected Location</label>
 
                   <select value={assetRef} onChange={(e) => setAssetRef(e.target.value)} style={selectStyle}>
-                    <option value="">Select location...</option>
+                    <option value=""></option>
                     {mockLocations.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
                   </select>
                 </forge-text-field>
@@ -1477,7 +1477,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                     rows={4}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="What happened, including any relevant context..."
+
                     style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-base)', width: '100%' }}
                   />
                 </forge-text-field>
@@ -1521,7 +1521,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   <label slot="label">Location Type</label>
 
                   <select value={locationType} onChange={(e) => setLocationType(e.target.value)} style={selectStyle}>
-                    <option value="">Select location type...</option>
+                    <option value=""></option>
                     {LOCATION_TYPES.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
                 </forge-text-field>
@@ -1541,7 +1541,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   <label slot="label">Vehicle Number</label>
 
                   <select value={vehicleNumber} onChange={(e) => setVehicleNumber(e.target.value)} style={selectStyle}>
-                    <option value="">Optional...</option>
+                    <option value=""></option>
                     {mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
                   </select>
                 </forge-text-field>
@@ -1557,7 +1557,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   <label slot="label">Driver</label>
 
                   <select value={driver} onChange={(e) => setDriver(e.target.value)} style={selectStyle}>
-                    <option value="">Optional...</option>
+                    <option value=""></option>
                     {mockDrivers
                       .filter(d => d.status === 'Active')
                       .sort((a, b) => a.fullName.localeCompare(b.fullName))
@@ -1576,7 +1576,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                   <label slot="label">Run</label>
 
                   <select value={run} onChange={(e) => setRun(e.target.value)} style={selectStyle}>
-                    <option value="">Optional...</option>
+                    <option value=""></option>
                     {RUNS.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </forge-text-field>
@@ -1726,9 +1726,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 onChange={(e) => { setAssigneeRole(e.target.value); setAssignee(''); }}
                 style={selectStyle}
               >
-                <option value="">
-                  {routed?.ownerRole ? `Workflow default (${routed.ownerRole})` : 'Workflow default'}
-                </option>
+                <option value=""></option>
                 {Object.keys(ROLE_HOLDERS).map(r => (
                   <option key={r} value={r}>{r}</option>
                 ))}
@@ -1754,7 +1752,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 style={selectStyle}
                 disabled={effectiveAssigneeRole === ''}
               >
-                <option value="">Whoever holds the role</option>
+                <option value=""></option>
                 {holdersOfRole(effectiveAssigneeRole).map(n => (
                   <option key={n} value={n}>{n}</option>
                 ))}
