@@ -623,7 +623,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     if (!trimmed) return;
     const id = `${sourceId ?? 'p'}-${people.length}-${trimmed.length}`;
     setPeople(p => [...p, {
-      id, sourceId, name: trimmed, role: '', severity: '',
+      id, sourceId, name: trimmed, role: '', severity,
       description: '', actionTaken: '', notes: '', parentNotified: false,
       kind,
       condition: '',
@@ -1109,6 +1109,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 if (picked) {
                   setSeverity(picked.defaultSeverity);
                   setSeverityFromType(true);
+                  // Every person named carries the event's severity too. Change
+                  // one person's severity afterwards and it holds until the
+                  // event changes again.
+                  setPeople(ps => ps.map(x => ({ ...x, severity: picked.defaultSeverity })));
                 }
               }}
               style={selectStyle}
