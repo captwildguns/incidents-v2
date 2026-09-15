@@ -168,6 +168,83 @@ function Req() {
   return <span style={{ color: 'var(--forge-theme-error)' }}> *</span>;
 }
 
+function StudentSearch({
+  taken, onPick, placeholder,
+}: {
+  taken: (id: string) => boolean;
+  onPick: (id: string, name: string) => void;
+  placeholder: string;
+}) {
+  const [q, setQ] = useState('');
+  const term = q.trim().toLowerCase();
+  const matches = term
+    ? (mockStudents as any[])
+        .filter(st => !taken(st.id))
+        .filter(st => st.name.toLowerCase().includes(term) || String(st.id).toLowerCase().includes(term))
+        .slice(0, 8)
+    : [];
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* @ts-ignore */}
+      <forge-text-field>
+        <forge-icon slot="start" name="search"></forge-icon>
+        <input
+          value={q}
+          placeholder={placeholder}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setQ('');
+            if (e.key === 'Enter' && matches.length) {
+              onPick(matches[0].id, matches[0].name);
+              setQ('');
+            }
+          }}
+        />
+      </forge-text-field>
+
+      {term && (
+        <div
+          style={{
+            position: 'absolute', zIndex: 20, left: 0, right: 0, top: 'calc(100% + 2px)',
+            background: '#fff',
+            border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+            borderRadius: 'var(--forge-shape-medium)',
+            boxShadow: 'var(--forge-elevation-4)',
+            maxHeight: '260px', overflowY: 'auto',
+          }}
+        >
+          {matches.length === 0 && (
+            <div style={{ padding: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+              No student matches "{q.trim()}"
+            </div>
+          )}
+          {matches.map(st => (
+            <button
+              key={st.id}
+              type="button"
+              onClick={() => { onPick(st.id, st.name); setQ(''); }}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer',
+                background: 'none', border: 'none',
+                padding: '8px var(--forge-spacing-small)',
+                fontFamily: 'var(--forge-font-family)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--forge-theme-primary-container-minimum)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+            >
+              <div style={{ fontWeight: 500, fontSize: 'var(--forge-font-size-base)' }}>{st.name}</div>
+              <div style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+                {st.id} · {st.grade} · {st.school}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Segmented({
   options, value, onChange, ariaLabel,
 }: {
@@ -852,26 +929,11 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           {roster.pickStudents && (
             <div>
               {rosterWays > 1 && <label style={labelStyle}>Student</label>}
-              {/* @ts-ignore */}
-              <forge-text-field>
-                <forge-icon slot="start" name="search"></forge-icon>
-                <select
-                  value=""
-                  onChange={(e) => {
-                    if (!e.target.value) return;
-                    const [id, ...rest] = e.target.value.split('|');
-                    addPerson(rest.join('|'), id, 'student');
-                  }}
-                  style={selectStyle}
-                >
-                  <option value="">Add a student...</option>
-                  {mockStudents
-                    .filter((st: any) => !people.some(p => p.sourceId === st.id))
-                    .map((st: any) => (
-                      <option key={st.id} value={`${st.id}|${st.name}`}>{st.name} ({st.id})</option>
-                    ))}
-                </select>
-              </forge-text-field>
+              <StudentSearch
+                placeholder="Add a student..."
+                taken={(id) => people.some(p => p.sourceId === id)}
+                onPick={(id, name) => addPerson(name, id, 'student')}
+              />
             </div>
           )}
 
@@ -1277,26 +1339,11 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         on the workflow.
       </p>
       <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
-        {/* @ts-ignore */}
-        <forge-text-field>
-          <forge-icon slot="start" name="search"></forge-icon>
-          <select
-            value=""
-            onChange={(e) => {
-              if (!e.target.value) return;
-              const [id, ...rest] = e.target.value.split('|');
-              addStudentAboard(id, rest.join('|'));
-            }}
-            style={selectStyle}
-          >
-            <option value="">Add a student...</option>
-            {mockStudents
-              .filter((st: any) => !studentsAboard.some(sa => sa.sourceId === st.id))
-              .map((st: any) => (
-                <option key={st.id} value={`${st.id}|${st.name}`}>{st.name} ({st.id})</option>
-              ))}
-          </select>
-        </forge-text-field>
+        <StudentSearch
+          placeholder="Add a student..."
+          taken={(id) => studentsAboard.some(sa => sa.sourceId === id)}
+          onPick={(id, name) => addStudentAboard(id, name)}
+        />
       </div>
 
       {studentsAboard.length === 0 && (
