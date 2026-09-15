@@ -341,3 +341,33 @@ forge-button.incident-card-action-btn::part(root) {
 @media (min-width: 1400px) {
   .dashboard-chart-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* Fields with an inset label.
+
+   Forge positions the label about 20px in from the field's edge and floats it
+   to the top, but a slotted select, input or textarea keeps its own box: full
+   width, no inline padding, and vertically centred. The result is a value
+   printed on top of its own caption and pinned to the left border. These rules
+   give the control the room the label needs above it and the same inline
+   padding the label already has. */
+forge-text-field {
+  --forge-field-inset-height: 56px;
+}
+
+forge-text-field select,
+forge-text-field input,
+forge-text-field textarea {
+  box-sizing: border-box;
+  padding-inline: 16px;
+}
+
+forge-text-field[float-label] select,
+forge-text-field[float-label] input {
+  height: 100%;
+  padding-top: 22px;
+  padding-bottom: 4px;
+}
+
+forge-text-field[float-label] textarea {
+  padding-top: 22px;
+}
