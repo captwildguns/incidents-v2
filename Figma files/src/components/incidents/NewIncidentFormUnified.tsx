@@ -380,31 +380,35 @@ function ContactFields({
       style={{ padding: 'var(--forge-spacing-small)', border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
     >
       <div>
-        <label style={labelStyle}>Name</label>
         {/* @ts-ignore */}
         <forge-text-field>
+          <label slot="label">Name</label>
+
           <input value={contact.name} onChange={(e) => onChange({ ...contact, name: e.target.value })} placeholder={`${noun} name`} />
         </forge-text-field>
       </div>
       <div>
-        <label style={labelStyle}>Phone</label>
         {/* @ts-ignore */}
         <forge-text-field>
+          <label slot="label">Phone</label>
+
           <input value={contact.phone} onChange={(e) => onChange({ ...contact, phone: e.target.value })} placeholder="Optional" />
         </forge-text-field>
       </div>
       <div>
-        <label style={labelStyle}>Email</label>
         {/* @ts-ignore */}
         <forge-text-field>
+          <label slot="label">Email</label>
+
           <input value={contact.email} onChange={(e) => onChange({ ...contact, email: e.target.value })} placeholder="Optional" />
         </forge-text-field>
       </div>
       <div>
         {/* For the person who cannot or will not give a name. */}
-        <label style={labelStyle}>Description</label>
         {/* @ts-ignore */}
         <forge-text-field>
+          <label slot="label">Description</label>
+
           <input
             value={contact.description}
             onChange={(e) => onChange({ ...contact, description: e.target.value })}
@@ -1055,9 +1059,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 so a second free-text field is not worth an
                 IncidentEventStudent column. */}
             <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
-              <label style={labelStyle}>Action taken</label>
               {/* @ts-ignore */}
               <forge-text-field>
+                <label slot="label">Action taken</label>
+
                 <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
               </forge-text-field>
             </div>
@@ -1065,9 +1070,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 incidents use it for coordinator context. Without an input here
                 it could only ever appear on seeded data. */}
             <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
-              <label style={labelStyle}>Additional notes</label>
               {/* @ts-ignore */}
               <forge-text-field>
+                <label slot="label">Additional notes</label>
+
                 <textarea rows={2} value={person.notes} onChange={(e) => updatePerson(person.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
               </forge-text-field>
             </div>
@@ -1094,9 +1100,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // the two without people can keep them in the packed run of fields.
   const typeField = (
         <>
-          <label style={labelStyle}>Event<Req /></label>
           {/* @ts-ignore */}
-          <forge-text-field>
+          <forge-text-field required>
+            <label slot="label">Event</label>
+
             <select
               value={incidentType}
               onChange={(e) => {
@@ -1172,9 +1179,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // a line, and expanding one opens its detail below the list.
   const vehicleRosterSection = subject === 'vehicle' ? (
     <div>
-      <label style={labelStyle}>
+      <SectionHeading block>
         Involved Vehicles<Req />
-      </label>
+      </SectionHeading>
       <div className="flex" style={{ gap: 'var(--forge-spacing-small)', marginBottom: 'var(--forge-spacing-small)' }}>
         <div style={{ flex: 1 }}>
           {/* @ts-ignore */}
@@ -1252,9 +1259,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label style={labelStyle}>Part in the incident</label>
                 {/* @ts-ignore */}
                 <forge-text-field>
+                  <label slot="label">Part in the incident</label>
+
                   <select value={v.role} onChange={(e) => updateVehicle(v.id, { role: e.target.value })} style={selectStyle}>
                     <option value="">Select...</option>
                     {VEHICLE_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
@@ -1262,9 +1270,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 </forge-text-field>
               </div>
               <div>
-                <label style={labelStyle}>Driver</label>
                 {/* @ts-ignore */}
                 <forge-text-field>
+                  <label slot="label">Driver</label>
+
                   <select value={v.driver} onChange={(e) => updateVehicle(v.id, { driver: e.target.value })} style={selectStyle}>
                     <option value="">No driver</option>
                     {mockDrivers
@@ -1275,9 +1284,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 </forge-text-field>
               </div>
               <div>
-                <label style={labelStyle}>Damage</label>
                 {/* @ts-ignore */}
                 <forge-text-field>
+                  <label slot="label">Damage</label>
+
                   <select value={v.damage} onChange={(e) => updateVehicle(v.id, { damage: e.target.value })} style={selectStyle}>
                     <option value="">Not assessed</option>
                     {VEHICLE_DAMAGE_LEVELS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -1287,9 +1297,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             </div>
             <div className="grid grid-cols-1 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
               <div>
-                <label style={labelStyle}>Notes for this vehicle</label>
                 {/* @ts-ignore */}
                 <forge-text-field>
+                  <label slot="label">Notes for this vehicle</label>
+
                   <textarea rows={2} value={v.notes} onChange={(e) => updateVehicle(v.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
                 </forge-text-field>
               </div>
@@ -1330,11 +1341,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
   const studentsAboardSection = showStudentsAboard ? (
     <div>
-      <label style={labelStyle}>Students On Board</label>
-      <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: '0 0 var(--forge-spacing-small)' }}>
-        Every child who was on board. Adding anyone here puts parent notification
-        on the workflow.
-      </p>
+      <SectionHeading block hint="Every child who was on board. Adding anyone here puts parent notification on the workflow.">
+        Students On Board
+      </SectionHeading>
       <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
         <StudentSearch
           placeholder="Add a student..."
@@ -1434,9 +1443,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             key: 'asset',
             node: (
               <>
-                <label style={labelStyle}>Affected Location<Req /></label>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field required>
+                  <label slot="label">Affected Location</label>
+
                   <select value={assetRef} onChange={(e) => setAssetRef(e.target.value)} style={selectStyle}>
                     <option value="">Select location...</option>
                     {mockLocations.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
@@ -1457,9 +1467,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             span: true,
             node: (
               <>
-                <label style={labelStyle}>Incident Description<Req /></label>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field required>
+                  <label slot="label">Incident Description</label>
+
                   <textarea
                     rows={4}
                     value={description}
@@ -1477,9 +1488,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             key: 'date',
             node: (
               <>
-                <label style={labelStyle}>Date<Req /></label>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field required>
+                  <label slot="label">Date</label>
+
                   <input type="date" max={new Date().toISOString().slice(0, 10)} value={incidentDate} onChange={(e) => setIncidentDate(e.target.value)} />
                 </forge-text-field>
               </>
@@ -1489,9 +1501,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             key: 'time',
             node: (
               <>
-                <label style={labelStyle}>Time<Req /></label>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field required>
+                  <label slot="label">Time</label>
+
                   <input type="time" value={incidentTime} onChange={(e) => setIncidentTime(e.target.value)} />
                 </forge-text-field>
               </>
@@ -1501,9 +1514,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             key: 'locationType',
             node: (
               <>
-                <label style={labelStyle}>Location Type<Req /></label>
                 {/* @ts-ignore */}
-                <forge-text-field>
+                <forge-text-field required>
+                  <label slot="label">Location Type</label>
+
                   <select value={locationType} onChange={(e) => setLocationType(e.target.value)} style={selectStyle}>
                     <option value="">Select location type...</option>
                     {LOCATION_TYPES.map(l => <option key={l} value={l}>{l}</option>)}
@@ -1520,9 +1534,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             key: 'vehicleNumber',
             node: (
               <>
-                <label style={labelStyle}>Vehicle Number</label>
                 {/* @ts-ignore */}
                 <forge-text-field>
+                  <label slot="label">Vehicle Number</label>
+
                   <select value={vehicleNumber} onChange={(e) => setVehicleNumber(e.target.value)} style={selectStyle}>
                     <option value="">Optional...</option>
                     {mockVehicles.map((v: any) => <option key={v.id} value={v.name}>{v.name}</option>)}
@@ -1535,9 +1550,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             key: 'driver',
             node: (
               <>
-                <label style={labelStyle}>Driver</label>
                 {/* @ts-ignore */}
                 <forge-text-field>
+                  <label slot="label">Driver</label>
+
                   <select value={driver} onChange={(e) => setDriver(e.target.value)} style={selectStyle}>
                     <option value="">Optional...</option>
                     {mockDrivers
@@ -1553,9 +1569,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             key: 'run',
             node: (
               <>
-                <label style={labelStyle}>Run</label>
                 {/* @ts-ignore */}
                 <forge-text-field>
+                  <label slot="label">Run</label>
+
                   <select value={run} onChange={(e) => setRun(e.target.value)} style={selectStyle}>
                     <option value="">Optional...</option>
                     {RUNS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -1593,9 +1610,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               height to their neighbours and had no field box, which made the
               row look unfinished. */}
           <div>
-            <label style={labelStyle}>Witnesses</label>
             {/* @ts-ignore */}
             <forge-text-field>
+              <label slot="label">Witnesses</label>
+
               <select
                 value={witnessPresent ? 'yes' : 'no'}
                 onChange={(e) => {
@@ -1615,9 +1633,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           </div>
 
           <div>
-            <label style={labelStyle}>Third parties</label>
             {/* @ts-ignore */}
             <forge-text-field>
+              <label slot="label">Third parties</label>
+
               <select
                 value={thirdPartyPresent ? 'yes' : 'no'}
                 onChange={(e) => {
@@ -1696,9 +1715,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               can be redirected. Naming a person is the override: several people
               hold a role, so a role on its own does not name anybody. */}
           <div>
-            <label style={labelStyle}>Assigned To</label>
             {/* @ts-ignore */}
             <forge-text-field>
+              <label slot="label">Assigned To</label>
+
               <select
                 value={assigneeRole}
                 onChange={(e) => { setAssigneeRole(e.target.value); setAssignee(''); }}
@@ -1722,9 +1742,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           </div>
 
           <div>
-            <label style={labelStyle}>Assign to a specific employee</label>
             {/* @ts-ignore */}
             <forge-text-field>
+              <label slot="label">Assign to a specific employee</label>
+
               <select
                 value={assignee}
                 onChange={(e) => setAssignee(e.target.value)}
