@@ -168,9 +168,12 @@ function Req() {
   return <span style={{ color: 'var(--forge-theme-error)' }}> *</span>;
 }
 
-function SectionHeading({ children, hint }: { children: any; hint?: string }) {
+function SectionHeading({ children, hint, block }: { children: any; hint?: string; block?: boolean }) {
   return (
-    <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
+    <div style={{
+      marginBottom: 'var(--forge-spacing-small)',
+      marginTop: block ? 'var(--forge-spacing-large)' : undefined,
+    }}>
       <h3
         className="forge-typography--heading4"
         style={{ margin: 0, fontFamily: 'var(--forge-font-family)', fontSize: '1rem', fontWeight: 500 }}
@@ -765,7 +768,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
   const rosterSection = roster ? (
       <div>
-        <SectionHeading>
+        <SectionHeading block>
           {roster.label}
           {peopleRequired && <Req />}
         </SectionHeading>
@@ -1567,7 +1570,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
           <div>
-              <SectionHeading>Tags</SectionHeading>
+              <SectionHeading block>Tags</SectionHeading>
             <div className="flex flex-wrap items-center" style={{ gap: '6px' }}>
               {tags.map(t => (
                 <forge-badge key={t} theme="default">
@@ -1657,7 +1660,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             something is attached. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-medium)' }}>
           <div>
-            <SectionHeading>Photo Evidence</SectionHeading>
+            <SectionHeading block>Photo Evidence</SectionHeading>
             <input ref={photoInputRef} type="file" accept="image/*" multiple onChange={handlePhotoUpload} style={{ display: 'none' }} />
             {/* @ts-ignore */}
             <forge-button variant="outlined" onClick={() => photoInputRef.current?.click()}>
@@ -1695,7 +1698,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           </div>
 
           <div>
-            <SectionHeading>Document Evidence</SectionHeading>
+            <SectionHeading block>Document Evidence</SectionHeading>
             <input ref={documentInputRef} type="file" accept=".pdf,.doc,.docx" multiple onChange={handleDocumentUpload} style={{ display: 'none' }} />
             {/* @ts-ignore */}
             <forge-button variant="outlined" onClick={() => documentInputRef.current?.click()}>
