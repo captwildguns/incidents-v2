@@ -1050,39 +1050,37 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
-              {(subject === 'student' || person.kind === 'student') && (
-                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <label className="flex items-center" style={{ gap: '6px', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={person.parentNotified} onChange={(e) => updatePerson(person.id, { parentNotified: e.target.checked })} />
-                    Parent notified
-                  </label>
-                </div>
-              )}
-            </div>
             {/* No per-person description. Decided with Jon on Aug 20 (#75):
                 Additional Notes already covers what is specific to a person,
                 so a second free-text field is not worth an
                 IncidentEventStudent column. */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
-              <div>
-                <label style={labelStyle}>Action taken</label>
-                {/* @ts-ignore */}
-                <forge-text-field>
-                  <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                </forge-text-field>
-              </div>
-              {/* The detail page renders Additional Notes per person, and
-                  seeded incidents use it for coordinator context. Without an
-                  input here it could only ever appear on seeded data. */}
-              <div>
-                <label style={labelStyle}>Additional notes</label>
-                {/* @ts-ignore */}
-                <forge-text-field>
-                  <textarea rows={2} value={person.notes} onChange={(e) => updatePerson(person.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                </forge-text-field>
-              </div>
+            <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
+              <label style={labelStyle}>Action taken</label>
+              {/* @ts-ignore */}
+              <forge-text-field>
+                <textarea rows={2} value={person.actionTaken} onChange={(e) => updatePerson(person.id, { actionTaken: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+              </forge-text-field>
             </div>
+            {/* The detail page renders Additional Notes per person, and seeded
+                incidents use it for coordinator context. Without an input here
+                it could only ever appear on seeded data. */}
+            <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
+              <label style={labelStyle}>Additional notes</label>
+              {/* @ts-ignore */}
+              <forge-text-field>
+                <textarea rows={2} value={person.notes} onChange={(e) => updatePerson(person.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+              </forge-text-field>
+            </div>
+            {/* Last thing on the card, after everything it depends on. */}
+            {(subject === 'student' || person.kind === 'student') && (
+              <label
+                className="flex items-center"
+                style={{ gap: '6px', marginTop: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}
+              >
+                <input type="checkbox" checked={person.parentNotified} onChange={(e) => updatePerson(person.id, { parentNotified: e.target.checked })} />
+                Parent notified
+              </label>
+            )}
                 </div>
               )}
             </div>
