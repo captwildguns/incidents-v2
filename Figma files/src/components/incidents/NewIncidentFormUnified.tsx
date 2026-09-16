@@ -1679,7 +1679,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         </forge-text-field>
       </div>
 
-      <SectionHeading block>Assignment</SectionHeading>
+      <SectionHeading block>Incident Assignment</SectionHeading>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
         {/* Assignment in two parts. The role is what the workflow decides and
             can be redirected. Naming a person is the override: several people
@@ -1705,7 +1705,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               ? 'Sends this incident to ' + assigneeRole + ' instead of the workflow.'
               : routed
                 ? 'Follows the ' + routed.workflow + ' workflow.'
-                : 'Set by the workflow once incident type and severity are chosen.'}
+                : 'Default incident assignment - assigned from the workflow.'}
           </div>
         </div>
 
@@ -1731,7 +1731,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               ? assignee + ' owns this incident, whatever the workflow would have done.'
               : effectiveAssigneeRole
                 ? holdersOfRole(effectiveAssigneeRole).length + ' people hold ' + effectiveAssigneeRole + '. Optional, and only for this incident.'
-                : 'Available once the incident type and severity pick a workflow.'}
+                : 'Assign this incident to a specific employee'}
           </div>
         </div>
       </div>
