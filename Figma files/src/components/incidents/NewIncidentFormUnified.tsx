@@ -1701,11 +1701,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             </select>
           </forge-text-field>
           <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', marginTop: '4px' }}>
-            {assigneeRole
-              ? 'Sends this incident to ' + assigneeRole + ' instead of the workflow.'
-              : routed
-                ? 'Follows the ' + routed.workflow + ' workflow.'
-                : 'Default incident assignment - assigned from the workflow.'}
+            {routed
+              ? 'Follows the ' + routed.workflow + ' workflow.'
+              : 'Default incident assignment - assigned from the workflow.'}
           </div>
         </div>
 
@@ -1727,11 +1725,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             </select>
           </forge-text-field>
           <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', marginTop: '4px' }}>
-            {assignee
-              ? assignee + ' owns this incident, whatever the workflow would have done.'
-              : effectiveAssigneeRole
-                ? holdersOfRole(effectiveAssigneeRole).length + ' people hold ' + effectiveAssigneeRole + '. Optional, and only for this incident.'
-                : 'Assign this incident to a specific employee'}
+            {effectiveAssigneeRole
+              ? holdersOfRole(effectiveAssigneeRole).length + ' people hold ' + effectiveAssigneeRole + '. Optional, and only for this incident.'
+              : 'Assign this incident to a specific employee'}
           </div>
         </div>
       </div>
