@@ -109,10 +109,9 @@ interface StudentAboard {
 
 const CONDITIONS = ['Uninjured', 'Injured', 'Transported for treatment'];
 
-// The five roles a person can hold in an incident, decided Aug 27. One list
-// for every subject. Reporter came out because whoever filed it is already
-// recorded, and Bystander merged into Witness.
-const ROLES = ['Participant', 'Witness', 'Victim', 'Instigator', 'Injured'];
+// The four roles a person can hold in an incident, in this order, matching the
+// Forge build. One list for every incident type.
+const ROLES = ['Instigator', 'Participant', 'Victim', 'Witness'];
 const SEVERITIES = ['Low', 'Medium', 'High', 'Critical'];
 
 // Nine, ordered from where a route runs out to where a bus is kept, with Other
