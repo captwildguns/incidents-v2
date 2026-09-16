@@ -572,6 +572,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // buses striking each other is a single event and belongs on one record.
   const [involvedVehicles, setInvolvedVehicles] = useState<InvolvedVehicle[]>([]);
   const [studentsAboard, setStudentsAboard] = useState<StudentAboard[]>([]);
+  const [studentsAboardPresent, setStudentsAboardPresent] = useState(false);
   // Subject the reporter picked while subject-specific answers were already filled
   const [pendingSubject, setPendingSubject] = useState<IncidentSubject | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -1378,9 +1379,26 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
   const studentsAboardSection = showStudentsAboard ? (
     <div>
-      <SectionHeading block hint="Every child who was on board. Adding anyone here puts parent notification on the workflow.">
-        Students On Board
-      </SectionHeading>
+      {/* Asked the same way witnesses are: a checkbox, and the selector only
+          once the answer is yes. Clearing the answer clears the children, so a
+          hidden list cannot put parent notification on the workflow. */}
+      <label
+        className="flex items-center"
+        style={{ gap: '6px', marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}
+      >
+        <input
+          type="checkbox"
+          checked={studentsAboardPresent}
+          onChange={(e) => {
+            const on = e.target.checked;
+            setStudentsAboardPresent(on);
+            if (!on) setStudentsAboard([]);
+          }}
+        />
+        Student(s) on the vehicle
+      </label>
+
+      {studentsAboardPresent && (
       <div style={{ marginBottom: 'var(--forge-spacing-small)' }}>
         <StudentSearch
           placeholder="Add a student..."
@@ -1388,8 +1406,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           onPick={(id, name) => addStudentAboard(id, name)}
         />
       </div>
+      )}
 
-      {studentsAboard.length === 0 && (
+      {studentsAboardPresent && studentsAboard.length === 0 && (
         <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: 0 }}>
           No students on board.
         </p>
@@ -1399,7 +1418,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           condition they were in. The condition sits beside the name rather than
           under it, because a coordinator reads down a column of children and
           their conditions, not down a stack of cards. */}
-      {studentsAboard.map(sa => (
+      {studentsAboardPresent && studentsAboard.map(sa => (
         <div
           key={sa.id}
           className="flex items-center"
@@ -1469,7 +1488,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       {vehicleRosterSection}
 
 
-      {studentsAboardSection}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
@@ -1656,6 +1674,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           addLabel="Add witness"
         />
       )}
+
+      {studentsAboardSection}
 
       <div>
         <SectionHeading block>Tags</SectionHeading>
