@@ -1679,6 +1679,63 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         </forge-text-field>
       </div>
 
+      <SectionHeading block>Assignment</SectionHeading>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
+        {/* Assignment in two parts. The role is what the workflow decides and
+            can be redirected. Naming a person is the override: several people
+            hold a role, so a role on its own does not name anybody. */}
+        <div>
+          {/* @ts-ignore */}
+          <forge-text-field float-label>
+            <label slot="label">Assigned To</label>
+
+            <select
+              value={assigneeRole}
+              onChange={(e) => { setAssigneeRole(e.target.value); setAssignee(''); }}
+              style={selectStyle}
+            >
+              <option value=""></option>
+              {Object.keys(ROLE_HOLDERS).map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </forge-text-field>
+          <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', marginTop: '4px' }}>
+            {assigneeRole
+              ? 'Sends this incident to ' + assigneeRole + ' instead of the workflow.'
+              : routed
+                ? 'Follows the ' + routed.workflow + ' workflow.'
+                : 'Set by the workflow once incident type and severity are chosen.'}
+          </div>
+        </div>
+
+        <div>
+          {/* @ts-ignore */}
+          <forge-text-field float-label>
+            <label slot="label">Assign to a specific employee</label>
+
+            <select
+              value={assignee}
+              onChange={(e) => setAssignee(e.target.value)}
+              style={selectStyle}
+              disabled={effectiveAssigneeRole === ''}
+            >
+              <option value=""></option>
+              {holdersOfRole(effectiveAssigneeRole).map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </forge-text-field>
+          <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', marginTop: '4px' }}>
+            {assignee
+              ? assignee + ' owns this incident, whatever the workflow would have done.'
+              : effectiveAssigneeRole
+                ? holdersOfRole(effectiveAssigneeRole).length + ' people hold ' + effectiveAssigneeRole + '. Optional, and only for this incident.'
+                : 'Available once the incident type and severity pick a workflow.'}
+          </div>
+        </div>
+      </div>
+
       {/* The map component supplies its own heading. */}
       <IncidentLocationMap
         location={locationCoordinates}
@@ -1687,65 +1744,8 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         onAddressChange={setLocationAddress}
       />
 
-      {/* Still the same run of fields, just the optional ones. */}
+      {/* Evidence last, after the map. */}
       <div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
-          {/* Assignment in two parts. The role is what the workflow decides and
-              can be redirected. Naming a person is the override: several people
-              hold a role, so a role on its own does not name anybody. */}
-          <div>
-            {/* @ts-ignore */}
-            <forge-text-field float-label>
-              <label slot="label">Assigned To</label>
-
-              <select
-                value={assigneeRole}
-                onChange={(e) => { setAssigneeRole(e.target.value); setAssignee(''); }}
-                style={selectStyle}
-              >
-                <option value=""></option>
-                {Object.keys(ROLE_HOLDERS).map(r => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </forge-text-field>
-            <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', marginTop: '4px' }}>
-              {assigneeRole
-                ? 'Sends this incident to ' + assigneeRole + ' instead of the workflow.'
-                : routed
-                  ? 'Follows the ' + routed.workflow + ' workflow.'
-                  : 'Set by the workflow once incident type and severity are chosen.'}
-            </div>
-          </div>
-
-          <div>
-            {/* @ts-ignore */}
-            <forge-text-field float-label>
-              <label slot="label">Assign to a specific employee</label>
-
-              <select
-                value={assignee}
-                onChange={(e) => setAssignee(e.target.value)}
-                style={selectStyle}
-                disabled={effectiveAssigneeRole === ''}
-              >
-                <option value=""></option>
-                {holdersOfRole(effectiveAssigneeRole).map(n => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-            </forge-text-field>
-            <div style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', marginTop: '4px' }}>
-              {assignee
-                ? assignee + ' owns this incident, whatever the workflow would have done.'
-                : effectiveAssigneeRole
-                  ? holdersOfRole(effectiveAssigneeRole).length + ' people hold ' + effectiveAssigneeRole + '. Optional, and only for this incident.'
-                  : 'Available once the incident type and severity pick a workflow.'}
-            </div>
-          </div>
-        </div>
-
 
         {/* Each upload is a drop box of its own, full width, matching the
             Forge build: the icon, what it takes, the button, then the formats
@@ -1924,22 +1924,15 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       {header}
       {step === 1 ? detailsStep : reviewStep}
 
-      <div className="flex items-center justify-between" style={{ marginTop: 'var(--forge-spacing-large)', paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))' }}>
-        {/* @ts-ignore */}
-        <forge-button variant="outlined" onClick={() => (step === 1 ? onNavigate('incidents') : setStep(1))}>
-          {step === 1 ? 'Cancel' : 'Back'}
-        </forge-button>
-
+      {/* Both buttons sit bottom right, Cancel then Review, matching the Forge
+          build. Nothing is written about what is still missing: Review stays
+          disabled until the minimums are met and that is the whole signal. */}
+      <div className="flex items-center justify-end" style={{ marginTop: 'var(--forge-spacing-large)', paddingTop: 'var(--forge-spacing-medium)', borderTop: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))' }}>
         <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)' }}>
-          {step === 1 && !detailsComplete && (
-            <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
-              {peopleRequired && people.length === 0
-                ? `Add at least one ${roster?.noun ?? 'person'} to continue`
-                : vehiclesRequired && involvedVehicles.length === 0
-                  ? 'Add at least one vehicle to continue'
-                  : 'Complete the required fields to continue'}
-            </span>
-          )}
+          {/* @ts-ignore */}
+          <forge-button variant="outlined" onClick={() => (step === 1 ? onNavigate('incidents') : setStep(1))}>
+            {step === 1 ? 'Cancel' : 'Back'}
+          </forge-button>
           {/* @ts-ignore */}
           <forge-button
             variant="raised"
