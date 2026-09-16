@@ -1242,100 +1242,110 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         </p>
       )}
 
-      {involvedVehicles.map(v => (
-        <div
-          key={v.id}
-          style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
-        >
-          <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)', padding: 'var(--forge-spacing-small)' }}>
-            <button
-              onClick={() => toggleExpanded(v.id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', flex: 1, textAlign: 'left', fontFamily: 'var(--forge-font-family)' }}
-            >
-              <forge-icon name={expanded.has(v.id) ? 'expand_less' : 'expand_more'} style={{ fontSize: '18px' }}></forge-icon>
-              <span style={{ fontWeight: 500 }}>{v.name}</span>
-              {v.role && <forge-badge theme="default">{v.role}</forge-badge>}
-              {v.damage && <forge-badge theme={v.damage === 'Severe' ? 'error' : v.damage === 'None' ? 'info' : 'warning'}>{v.damage} damage</forge-badge>}
-              {v.driver && (
-                <span style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
-                  {v.driver}
-                </span>
-              )}
-            </button>
-            {/* @ts-ignore */}
-            <forge-button variant="flat" onClick={() => removeVehicle(v.id)}>Remove</forge-button>
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : null;
-
-  // Per-vehicle detail, below the list, matching how per-person detail works.
-  const vehicleDetailsSection =
-    subject === 'vehicle' && involvedVehicles.some(v => expanded.has(v.id)) ? (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--forge-spacing-small)' }}>
-        {involvedVehicles.filter(v => expanded.has(v.id)).map(v => (
+      {involvedVehicles.map((v, i) => {
+        const open = expanded.has(v.id);
+        return (
           <div
             key={v.id}
-            style={{ border: '1px solid var(--forge-theme-outline-low, rgba(0,0,0,0.06))', borderRadius: 'var(--forge-shape-medium)', padding: 'var(--forge-spacing-small)' }}
+            style={{ border: '1px solid var(--forge-theme-outline-low)', borderRadius: 'var(--forge-shape-medium)', marginBottom: 'var(--forge-spacing-xsmall)' }}
           >
-            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-xsmall)', marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)' }}>
-              <span style={{ fontWeight: 500 }}>{v.name}</span>
+            <div className="flex items-center" style={{ gap: 'var(--forge-spacing-small)', padding: 'var(--forge-spacing-small)' }}>
+              <span style={{
+                width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                background: 'var(--forge-theme-primary)', color: '#fff',
+                fontSize: '0.75rem', fontWeight: 600, fontFamily: 'var(--forge-font-family)',
+              }}>
+                {i + 1}
+              </span>
               {/* @ts-ignore */}
-              <forge-button variant="flat" onClick={() => toggleExpanded(v.id)}>Collapse</forge-button>
+              <forge-icon name="directions_bus" style={{ fontSize: '20px', color: 'var(--forge-theme-text-medium)', flexShrink: 0 }}></forge-icon>
+              <div style={{ flex: 1, minWidth: 0, fontFamily: 'var(--forge-font-family)' }}>
+                <div style={{ fontWeight: 500 }}>{v.name}</div>
+                {/* A vehicle is identified by who was driving it. */}
+                {v.driver && (
+                  <div style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+                    {v.driver}
+                  </div>
+                )}
+              </div>
+              {/* Collapsed, the badges are the only summary of what was set. */}
+              {!open && v.role && <forge-badge theme="default">{v.role}</forge-badge>}
+              {!open && v.damage && (
+                /* @ts-ignore */
+                <forge-badge theme={v.damage === 'Severe' ? 'error' : v.damage === 'None' ? 'info' : 'warning'}>
+                  {v.damage} damage
+                </forge-badge>
+              )}
+              {/* @ts-ignore */}
+              <forge-icon-button aria-label={`Remove ${v.name}`} onClick={() => removeVehicle(v.id)}>
+                {/* @ts-ignore */}
+                <forge-icon name="close"></forge-icon>
+              </forge-icon-button>
+              {/* @ts-ignore */}
+              <forge-icon-button aria-label={open ? `Collapse ${v.name}` : `Expand ${v.name}`} onClick={() => toggleExpanded(v.id)}>
+                {/* @ts-ignore */}
+                <forge-icon name={open ? 'chevron_up' : 'chevron_down'}></forge-icon>
+              </forge-icon-button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                {/* @ts-ignore */}
-                <forge-text-field float-label>
-                  <label slot="label">Part in the incident</label>
 
-                  <select value={v.role} onChange={(e) => updateVehicle(v.id, { role: e.target.value })} style={selectStyle}>
-                    <option value=""></option>
-                    {VEHICLE_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </forge-text-field>
-              </div>
-              <div>
-                {/* @ts-ignore */}
-                <forge-text-field float-label>
-                  <label slot="label">Driver</label>
+            {open && (
+              <div style={{ padding: '0 var(--forge-spacing-small) var(--forge-spacing-small)' }}>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    {/* @ts-ignore */}
+                    <forge-text-field float-label>
+                      <label slot="label">Part in the incident</label>
 
-                  <select value={v.driver} onChange={(e) => updateVehicle(v.id, { driver: e.target.value })} style={selectStyle}>
-                    <option value=""></option>
-                    {mockDrivers
-                      .filter(d => d.status === 'Active')
-                      .sort((a, b) => a.fullName.localeCompare(b.fullName))
-                      .map(d => <option key={d.id} value={d.fullName}>{d.fullName}</option>)}
-                  </select>
-                </forge-text-field>
-              </div>
-              <div>
-                {/* @ts-ignore */}
-                <forge-text-field float-label>
-                  <label slot="label">Damage</label>
+                      <select value={v.role} onChange={(e) => updateVehicle(v.id, { role: e.target.value })} style={selectStyle}>
+                        <option value=""></option>
+                        {VEHICLE_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </forge-text-field>
+                  </div>
+                  <div>
+                    {/* @ts-ignore */}
+                    <forge-text-field float-label>
+                      <label slot="label">Driver</label>
 
-                  <select value={v.damage} onChange={(e) => updateVehicle(v.id, { damage: e.target.value })} style={selectStyle}>
-                    <option value=""></option>
-                    {VEHICLE_DAMAGE_LEVELS.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </forge-text-field>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
-              <div>
-                {/* @ts-ignore */}
-                <forge-text-field float-label>
-                  <label slot="label">Notes for this vehicle</label>
+                      <select value={v.driver} onChange={(e) => updateVehicle(v.id, { driver: e.target.value })} style={selectStyle}>
+                        <option value=""></option>
+                        {mockDrivers
+                          .filter(d => d.status === 'Active')
+                          .sort((a, b) => a.fullName.localeCompare(b.fullName))
+                          .map(d => <option key={d.id} value={d.fullName}>{d.fullName}</option>)}
+                      </select>
+                    </forge-text-field>
+                  </div>
+                  <div>
+                    {/* @ts-ignore */}
+                    <forge-text-field float-label>
+                      <label slot="label">Damage</label>
 
-                  <textarea rows={2} value={v.notes} onChange={(e) => updateVehicle(v.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
-                </forge-text-field>
+                      <select value={v.damage} onChange={(e) => updateVehicle(v.id, { damage: e.target.value })} style={selectStyle}>
+                        <option value=""></option>
+                        {VEHICLE_DAMAGE_LEVELS.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </forge-text-field>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4" style={{ marginTop: 'var(--forge-spacing-small)' }}>
+                  <div>
+                    {/* @ts-ignore */}
+                    <forge-text-field float-label>
+                      <label slot="label">Notes for this vehicle</label>
+
+                      <textarea rows={2} value={v.notes} onChange={(e) => updateVehicle(v.id, { notes: e.target.value })} style={{ width: '100%', fontFamily: 'var(--forge-font-family)' }} />
+                    </forge-text-field>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        ))}
-      </div>
-    ) : null;
+        );
+      })}
+    </div>
+  ) : null;
 
   // Both the people subjects and the vehicle subject now lead with a list, so
   // Incident Type and Severity sit above it. Location is the only subject left
@@ -1458,7 +1468,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
       {vehicleRosterSection}
 
-      {vehicleDetailsSection}
 
       {studentsAboardSection}
 
