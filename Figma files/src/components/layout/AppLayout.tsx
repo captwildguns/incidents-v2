@@ -84,6 +84,7 @@ import {
   tylIconUnfoldMore,
   tylIconVisibility,
   tylIconZoomIn,
+  tylIconFileUpload,
   // New Incident subject chooser (school and directions_bus already above)
   tylIconWarehouse,
   tylIconPublic,
@@ -111,6 +112,7 @@ defineMenuComponent();
 IconRegistry.define([
   tylIconChevronUp,
   tylIconChevronDown,
+  tylIconFileUpload,
   tylIconMenu,
   // Prod drawer icons
   tylIconHomeOutline, tylIconErrorOutline, tylIconPeopleOutline,

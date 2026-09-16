@@ -289,6 +289,35 @@ function Segmented({
   );
 }
 
+function UploadBox({ label, formats, onPick }: { label: string; formats: string; onPick: () => void }) {
+  return (
+    <div
+      onClick={onPick}
+      style={{
+        // Same weight as the other container borders, since the theme outline
+        // token is too faint for a dash to read as a dash.
+        border: '1px dashed rgba(0,0,0,0.24)',
+        borderRadius: 'var(--forge-shape-medium)',
+        padding: 'var(--forge-spacing-large)',
+        textAlign: 'center',
+        cursor: 'pointer',
+        fontFamily: 'var(--forge-font-family)',
+      }}
+    >
+      {/* @ts-ignore */}
+      <forge-icon name="file_upload" style={{ color: 'var(--forge-theme-primary)', fontSize: '24px' }}></forge-icon>
+      <div style={{ marginTop: 'var(--forge-spacing-xxsmall)', fontSize: 'var(--forge-font-size-base, 0.875rem)' }}>{label}</div>
+      {/* @ts-ignore */}
+      <forge-button variant="raised" style={{ marginTop: 'var(--forge-spacing-small)' }}>
+        Choose files
+      </forge-button>
+      <div style={{ marginTop: 'var(--forge-spacing-small)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+        {formats}
+      </div>
+    </div>
+  );
+}
+
 function SectionHeading({ children, hint, block }: { children: any; hint?: string; block?: boolean }) {
   return (
     <div style={{
@@ -1718,17 +1747,19 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         </div>
 
 
-        {/* Both uploads share a row, since each is only a button until
-            something is attached. */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginTop: 'var(--forge-spacing-medium)' }}>
+        {/* Each upload is a drop box of its own, full width, matching the
+            Forge build: the icon, what it takes, the button, then the formats
+            it accepts. The whole box is the click target, so the button inside
+            carries no handler of its own. */}
+        <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
           <div>
             <SectionHeading block>Photo Evidence</SectionHeading>
             <input ref={photoInputRef} type="file" accept="image/*" multiple onChange={handlePhotoUpload} style={{ display: 'none' }} />
-            {/* @ts-ignore */}
-            <forge-button variant="outlined" onClick={() => photoInputRef.current?.click()}>
-              <forge-icon slot="start" name="upload"></forge-icon>
-              Upload photos
-            </forge-button>
+            <UploadBox
+              label="Upload Photos"
+              formats="Supported formats: JPG, PNG, GIF. Maximum 10 photos."
+              onPick={() => photoInputRef.current?.click()}
+            />
             {uploadedPhotos.length > 0 && (
               <div className="grid grid-cols-3 gap-3" style={{ marginTop: 'var(--forge-spacing-small)' }}>
                 {uploadedPhotos.map(photo => (
@@ -1759,14 +1790,14 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             )}
           </div>
 
-          <div>
+          <div style={{ marginTop: 'var(--forge-spacing-medium)' }}>
             <SectionHeading block>Document Evidence</SectionHeading>
             <input ref={documentInputRef} type="file" accept=".pdf,.doc,.docx" multiple onChange={handleDocumentUpload} style={{ display: 'none' }} />
-            {/* @ts-ignore */}
-            <forge-button variant="outlined" onClick={() => documentInputRef.current?.click()}>
-              <forge-icon slot="start" name="upload"></forge-icon>
-              Upload documents
-            </forge-button>
+            <UploadBox
+              label="Upload Documents"
+              formats="Supported formats: PDF, DOC, DOCX. Maximum 10 documents."
+              onPick={() => documentInputRef.current?.click()}
+            />
             {uploadedDocuments.length > 0 && (
               <div className="flex flex-wrap" style={{ gap: 'var(--forge-spacing-xsmall)', marginTop: 'var(--forge-spacing-small)' }}>
                 {uploadedDocuments.map(doc => (
