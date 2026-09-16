@@ -1489,7 +1489,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
 
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
         {[
           // WHO, on Location, the one subject with neither people nor vehicles
           // to name. The lists above are the same slot for the other four.
@@ -1540,6 +1540,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           // WHEN AND WHERE
           {
             key: 'date',
+            half: subject === 'vehicle',
             node: (
               <>
                 {/* @ts-ignore */}
@@ -1553,6 +1554,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           },
           {
             key: 'time',
+            half: subject === 'vehicle',
             node: (
               <>
                 {/* @ts-ignore */}
@@ -1566,6 +1568,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           },
           {
             key: 'locationType',
+            half: subject === 'vehicle',
             // On a vehicle incident the bus and its driver are named in the
             // list above, so Vehicle Number and Driver are absent and only Run
             // follows. Starting a row here keeps Date and Time together and
@@ -1626,6 +1629,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           },
           subjectHasField(subject, 'run') && {
             key: 'run',
+            half: subject === 'vehicle',
             node: (
               <>
                 {/* @ts-ignore */}
@@ -1643,7 +1647,13 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         ]
           .filter(Boolean)
           .map((f: any) => (
-            <div key={f.key} className={f.span ? 'sm:col-span-3' : f.spanTwo ? 'sm:col-span-2' : f.newRow ? 'sm:col-start-1' : undefined}>{f.node}</div>
+            <div
+              key={f.key}
+              className={[
+                f.span ? 'sm:col-span-6' : f.spanTwo ? 'sm:col-span-4' : f.half ? 'sm:col-span-3' : 'sm:col-span-2',
+                f.newRow ? 'sm:col-start-1' : '',
+              ].filter(Boolean).join(' ')}
+            >{f.node}</div>
           ))}
       </div>
 
