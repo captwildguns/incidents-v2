@@ -1566,6 +1566,11 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           },
           {
             key: 'locationType',
+            // On a vehicle incident the bus and its driver are named in the
+            // list above, so Vehicle Number and Driver are absent and only Run
+            // follows. Starting a row here keeps Date and Time together and
+            // puts Location Type and Run on the line below them.
+            newRow: subject === 'vehicle',
             node: (
               <>
                 {/* @ts-ignore */}
@@ -1638,7 +1643,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
         ]
           .filter(Boolean)
           .map((f: any) => (
-            <div key={f.key} className={f.span ? 'sm:col-span-3' : f.spanTwo ? 'sm:col-span-2' : undefined}>{f.node}</div>
+            <div key={f.key} className={f.span ? 'sm:col-span-3' : f.spanTwo ? 'sm:col-span-2' : f.newRow ? 'sm:col-start-1' : undefined}>{f.node}</div>
           ))}
       </div>
 
