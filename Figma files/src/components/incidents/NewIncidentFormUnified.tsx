@@ -1586,6 +1586,70 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           ))}
       </div>
 
+      {/* Witnesses then tags, both above the map, matching the Forge build.
+          The witness fields appear directly beneath the checkbox that asked
+          for them. */}
+      <label
+        className="flex items-center"
+        style={{ gap: '6px', marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}
+      >
+        <input
+          type="checkbox"
+          checked={witnessPresent}
+          onChange={(e) => {
+            const on = e.target.checked;
+            setWitnessPresent(on);
+            if (on && witnesses.length === 0) {
+              setWitnesses([emptyContact()]);
+              setWitnessEditing([true]);
+            }
+          }}
+        />
+        Witness(es) present
+      </label>
+
+      {witnessPresent && (
+        <ContactList
+          contacts={witnesses}
+          setContacts={setWitnesses}
+          editing={witnessEditing}
+          setEditing={setWitnessEditing}
+          noun="Witness"
+          addLabel="Add witness"
+        />
+      )}
+
+      <div>
+        <SectionHeading block>Tags</SectionHeading>
+        <div className="flex flex-wrap items-center" style={{ gap: '6px' }}>
+          {tags.map(t => (
+            <forge-badge key={t} theme="default">
+              {t}
+              <button
+                onClick={() => setTags(ts => ts.filter(x => x !== t))}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '4px', color: 'inherit' }}
+              >
+                ×
+              </button>
+            </forge-badge>
+          ))}
+        </div>
+        {/* @ts-ignore */}
+        <forge-text-field style={{ marginTop: '6px' }}>
+          <input
+            value={tagDraft}
+            onChange={(e) => setTagDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && tagDraft.trim()) {
+                setTags(ts => Array.from(new Set([...ts, tagDraft.trim()])));
+                setTagDraft('');
+              }
+            }}
+            placeholder="Type a tag and press Enter..."
+          />
+        </forge-text-field>
+      </div>
+
       {/* The map component supplies its own heading. */}
       <IncidentLocationMap
         location={locationCoordinates}
@@ -1597,73 +1661,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
       {/* Still the same run of fields, just the optional ones. */}
       <div>
 
-        {/* Witnesses and third parties share a row, and the fields for whichever
-            one you turn on appear directly beneath that row. They used to sit in
-            a three-across row with tags, which pushed their fields below
-            Assigned To, so turning on witnesses made fields appear a long way
-            from the thing that asked for them. */}
-        <label
-          className="flex items-center"
-          style={{ gap: '6px', marginBottom: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', cursor: 'pointer' }}
-        >
-          <input
-            type="checkbox"
-            checked={witnessPresent}
-            onChange={(e) => {
-              const on = e.target.checked;
-              setWitnessPresent(on);
-              if (on && witnesses.length === 0) {
-                setWitnesses([emptyContact()]);
-                setWitnessEditing([true]);
-              }
-            }}
-          />
-          Witness(es) present
-        </label>
-
-        {witnessPresent && (
-          <ContactList
-            contacts={witnesses}
-            setContacts={setWitnesses}
-            editing={witnessEditing}
-            setEditing={setWitnessEditing}
-            noun="Witness"
-            addLabel="Add witness"
-          />
-        )}
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" style={{ marginBottom: 'var(--forge-spacing-small)' }}>
-          <div>
-              <SectionHeading block>Tags</SectionHeading>
-            <div className="flex flex-wrap items-center" style={{ gap: '6px' }}>
-              {tags.map(t => (
-                <forge-badge key={t} theme="default">
-                  {t}
-                  <button
-                    onClick={() => setTags(ts => ts.filter(x => x !== t))}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '4px', color: 'inherit' }}
-                  >
-                    ×
-                  </button>
-                </forge-badge>
-              ))}
-            </div>
-            {/* @ts-ignore */}
-            <forge-text-field style={{ marginTop: '6px' }}>
-              <input
-                value={tagDraft}
-                onChange={(e) => setTagDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && tagDraft.trim()) {
-                    setTags(ts => Array.from(new Set([...ts, tagDraft.trim()])));
-                    setTagDraft('');
-                  }
-                }}
-                placeholder="Type a tag and press Enter..."
-              />
-            </forge-text-field>
-          </div>
-
           {/* Assignment in two parts. The role is what the workflow decides and
               can be redirected. Naming a person is the override: several people
               hold a role, so a role on its own does not name anybody. */}
