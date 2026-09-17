@@ -919,6 +919,17 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
   // incident is about renders under the field that added them, where a
   // reporter is looking, and the district people render below their own
   // selectors. The number stays the position in the whole list.
+  // Whether the section offers more than one way to name somebody. Only a
+  // third party incident does, and only there does each selector need to show
+  // what it added: one selector has nothing to be confused with.
+  const rosterGrouped = rosterWays > 1;
+  // The cards for one kind of person, numbered by their place in the whole list.
+  const cardsOfKind = (kind: Person['kind']) =>
+    people
+      .map((person, i) => [person, i] as const)
+      .filter(([person]) => person.kind === kind)
+      .map(([person, i]) => personCard(person, i));
+
   const personCard = (person: Person, i: number) => {
           const open = expanded.has(person.id);
           const job = person.kind === 'employee'
@@ -1077,14 +1088,11 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 <forge-button variant="outlined" onClick={() => addPerson(personDraft, undefined, 'outside')}>Add</forge-button>
               </div>
 
-              {/* Added here, under the field, rather than below the two
-                  selectors, where a reporter had no reason to look and read it
-                  as nothing having been added. */}
+              {/* Added here, under the field that named them, rather than at
+                  the foot of the section where a reporter had no reason to look
+                  and read it as nothing having been added. */}
               <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
-                {people
-                  .map((person, i) => [person, i] as const)
-                  .filter(([person]) => person.kind === 'outside')
-                  .map(([person, i]) => personCard(person, i))}
+                {cardsOfKind('outside')}
               </div>
             </div>
           )}
@@ -1112,6 +1120,12 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                     ))}
                 </select>
               </forge-text-field>
+
+              {rosterGrouped && (
+                <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
+                  {cardsOfKind('employee')}
+                </div>
+              )}
             </div>
           )}
 
@@ -1123,6 +1137,12 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 taken={(id) => people.some(p => p.sourceId === id)}
                 onPick={(id, name) => addPerson(name, id, 'student')}
               />
+
+              {rosterGrouped && (
+                <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
+                  {cardsOfKind('student')}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1133,10 +1153,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           </p>
         )}
 
-        {people
-          .map((person, i) => [person, i] as const)
-          .filter(([person]) => !(roster.freeText && person.kind === 'outside'))
-          .map(([person, i]) => personCard(person, i))}
+        {/* One selector means one list, and it belongs here under it. The
+            grouped case has already shown every card beside its own field. */}
+        {!rosterGrouped && people.map((person, i) => personCard(person, i))}
       </div>
       ) : null;
 
