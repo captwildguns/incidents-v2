@@ -615,9 +615,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     setWitnessPresent(false);
     setWitnesses([]);
     setWitnessEditing([]);
-    setThirdPartyPresent(false);
-    setThirdParties([]);
-    setThirdPartyEditing([]);
     setUploadedPhotos([]);
     setUploadedDocuments([]);
   };
