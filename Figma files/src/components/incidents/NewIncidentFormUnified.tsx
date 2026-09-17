@@ -915,87 +915,11 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     ? [roster.pickEmployees, roster.pickStudents, roster.freeText].filter(Boolean).length
     : 0;
 
-  const rosterSection = roster ? (
-      <div>
-        <SectionHeading block>
-          {roster.label}
-          {peopleRequired && <Req />}
-        </SectionHeading>
-        {/* The typed field leads, because the person the incident is actually
-            about is the one who cannot be in a list: the motorist, the parent.
-            Employees and students come out of the district's own lists below
-            it, so a name on the incident is a record and not a guess at a
-            spelling. */}
-        <div
-          className="grid grid-cols-1 gap-4"
-          style={{ marginBottom: 'var(--forge-spacing-small)' }}
-        >
-          {roster.freeText && (
-            <div>
-              {rosterWays > 1 && <label style={labelStyle}>3rd Party Person</label>}
-              <div className="flex" style={{ gap: 'var(--forge-spacing-small)' }}>
-                <div style={{ flex: 1 }}>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <input
-                      value={personDraft}
-                      onChange={(e) => setPersonDraft(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') addPerson(personDraft, undefined, 'outside'); }}
-                      placeholder={roster.addPrompt}
-                    />
-                  </forge-text-field>
-                </div>
-                {/* @ts-ignore */}
-                <forge-button variant="outlined" onClick={() => addPerson(personDraft, undefined, 'outside')}>Add</forge-button>
-              </div>
-            </div>
-          )}
-
-          {roster.pickEmployees && (
-            <div>
-              {rosterWays > 1 && <label style={labelStyle}>Employee</label>}
-              {/* @ts-ignore */}
-              <forge-text-field>
-                <forge-icon slot="start" name="search"></forge-icon>
-                <select
-                  value=""
-                  onChange={(e) => {
-                    if (!e.target.value) return;
-                    const [id, ...rest] = e.target.value.split('|');
-                    addPerson(rest.join('|'), id, 'employee');
-                  }}
-                  style={selectStyle}
-                >
-                  <option value="">Add an employee...</option>
-                  {employeeOptions
-                    .filter(e => !people.some(p => p.sourceId === e.id))
-                    .map(e => (
-                      <option key={e.id} value={`${e.id}|${e.fullName}`}>{e.fullName} ({e.jobRole})</option>
-                    ))}
-                </select>
-              </forge-text-field>
-            </div>
-          )}
-
-          {roster.pickStudents && (
-            <div>
-              {rosterWays > 1 && <label style={labelStyle}>Student</label>}
-              <StudentSearch
-                placeholder="Add a student..."
-                taken={(id) => people.some(p => p.sourceId === id)}
-                onPick={(id, name) => addPerson(name, id, 'student')}
-              />
-            </div>
-          )}
-        </div>
-
-        {people.length === 0 && (
-          <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: 0 }}>
-            No {roster.noun}s added yet.
-          </p>
-        )}
-
-        {people.map((person, i) => {
+  // One person card, so the list can be split: the 3rd party person the
+  // incident is about renders under the field that added them, where a
+  // reporter is looking, and the district people render below their own
+  // selectors. The number stays the position in the whole list.
+  const personCard = (person: Person, i: number) => {
           const open = expanded.has(person.id);
           const job = person.kind === 'employee'
             ? (employeeOptions.find(e => e.id === person.sourceId)?.jobRole ?? '')
@@ -1117,7 +1041,102 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
               )}
             </div>
           );
-        })}
+  };
+
+  const rosterSection = roster ? (
+      <div>
+        <SectionHeading block>
+          {roster.label}
+          {peopleRequired && <Req />}
+        </SectionHeading>
+        {/* The typed field leads, because the person the incident is actually
+            about is the one who cannot be in a list: the motorist, the parent.
+            Employees and students come out of the district's own lists below
+            it, so a name on the incident is a record and not a guess at a
+            spelling. */}
+        <div
+          className="grid grid-cols-1 gap-4"
+          style={{ marginBottom: 'var(--forge-spacing-small)' }}
+        >
+          {roster.freeText && (
+            <div>
+              {rosterWays > 1 && <label style={labelStyle}>3rd Party Person</label>}
+              <div className="flex" style={{ gap: 'var(--forge-spacing-small)' }}>
+                <div style={{ flex: 1 }}>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <input
+                      value={personDraft}
+                      onChange={(e) => setPersonDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') addPerson(personDraft, undefined, 'outside'); }}
+                      placeholder={roster.addPrompt}
+                    />
+                  </forge-text-field>
+                </div>
+                {/* @ts-ignore */}
+                <forge-button variant="outlined" onClick={() => addPerson(personDraft, undefined, 'outside')}>Add</forge-button>
+              </div>
+
+              {/* Added here, under the field, rather than below the two
+                  selectors, where a reporter had no reason to look and read it
+                  as nothing having been added. */}
+              <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
+                {people
+                  .map((person, i) => [person, i] as const)
+                  .filter(([person]) => person.kind === 'outside')
+                  .map(([person, i]) => personCard(person, i))}
+              </div>
+            </div>
+          )}
+
+          {roster.pickEmployees && (
+            <div>
+              {rosterWays > 1 && <label style={labelStyle}>Employee</label>}
+              {/* @ts-ignore */}
+              <forge-text-field>
+                <forge-icon slot="start" name="search"></forge-icon>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    const [id, ...rest] = e.target.value.split('|');
+                    addPerson(rest.join('|'), id, 'employee');
+                  }}
+                  style={selectStyle}
+                >
+                  <option value="">Add an employee...</option>
+                  {employeeOptions
+                    .filter(e => !people.some(p => p.sourceId === e.id))
+                    .map(e => (
+                      <option key={e.id} value={`${e.id}|${e.fullName}`}>{e.fullName} ({e.jobRole})</option>
+                    ))}
+                </select>
+              </forge-text-field>
+            </div>
+          )}
+
+          {roster.pickStudents && (
+            <div>
+              {rosterWays > 1 && <label style={labelStyle}>Student</label>}
+              <StudentSearch
+                placeholder="Add a student..."
+                taken={(id) => people.some(p => p.sourceId === id)}
+                onPick={(id, name) => addPerson(name, id, 'student')}
+              />
+            </div>
+          )}
+        </div>
+
+        {people.length === 0 && (
+          <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: 0 }}>
+            No {roster.noun}s added yet.
+          </p>
+        )}
+
+        {people
+          .map((person, i) => [person, i] as const)
+          .filter(([person]) => !(roster.freeText && person.kind === 'outside'))
+          .map(([person, i]) => personCard(person, i))}
       </div>
       ) : null;
 
