@@ -1494,6 +1494,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           // to name. The lists above are the same slot for the other four.
           assetKind === 'location' && {
             key: 'asset',
+            // The whole of line one. Which location this is about frames every
+            // answer after it, the way the list of people or vehicles does on
+            // the other four, and those lists run the full width too.
+            span: true,
             node: (
               <>
                 {/* @ts-ignore */}
@@ -1510,8 +1514,10 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           },
 
           // WHAT. Only here on Location, which has no list to sit above it.
+          // Two columns then four puts Event and Severity on one line in the
+          // same one third to two thirds split the other four screens use.
           // See typeField and severityField.
-          !hasPartyList && { key: 'type', node: typeField },
+          !hasPartyList && { key: 'type', newRow: true, node: typeField },
           !hasPartyList && { key: 'severity', spanTwo: true, node: severityField },
           {
             key: 'description',
