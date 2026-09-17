@@ -1392,7 +1392,9 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
             if (!on) setStudentsAboard([]);
           }}
         />
-        Student(s) on the vehicle
+        {/* An employee incident is about the employee, and the children are
+            not riding in it, so the vehicle wording does not fit there. */}
+        {subject === 'employee' ? 'Student(s) involved' : 'Student(s) on the vehicle'}
       </label>
 
       {studentsAboardPresent && (
@@ -1407,7 +1409,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
 
       {studentsAboardPresent && studentsAboard.length === 0 && (
         <p style={{ fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)', margin: 0 }}>
-          No students on board.
+          {subject === 'employee' ? 'No students added yet.' : 'No students on board.'}
         </p>
       )}
 
@@ -1898,7 +1900,7 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
     ...(roster ? [[roster.label, people.length ? people.map(p => p.name).join(', ') : '-'] as [string, string]] : []),
     ...(showStudentsAboard
       ? [[
-          'Students On Board',
+          subject === 'employee' ? 'Students Involved' : 'Students On Board',
           studentsAboard.length
             ? studentsAboard
                 .map(sa => {
