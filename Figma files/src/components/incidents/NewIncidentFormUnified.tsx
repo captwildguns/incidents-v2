@@ -1245,6 +1245,14 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 // Every type in the catalogue carries a defaultSeverity, so
                 // picking one sets severity rather than leaving the
                 // reporter to guess. Overridable below.
+                // The event picks the workflow, and the workflow already names
+                // the role that owns the incident, so Assigned To is filled in
+                // rather than left for the reporter to look up. Still theirs to
+                // change, and a named person is cleared because the role they
+                // held may not be the role the workflow assigns.
+                const wf = assignWorkflowToIncident(label);
+                setAssigneeRole(wf?.ownerRole ?? '');
+                setAssignee('');
                 const picked = typeOptions.find(ty => ty.label === label);
                 if (picked) {
                   setSeverity(picked.defaultSeverity);
