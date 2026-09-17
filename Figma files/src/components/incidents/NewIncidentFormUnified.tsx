@@ -144,7 +144,7 @@ const ROSTER: Partial<Record<IncidentSubject, {
   // A third party incident is about somebody outside the district, and district
   // people are usually in it too: the driver who was struck, the children who
   // were on the bus. All three get their own selector.
-  thirdParty: { label: 'Involved People', noun: 'person', addPrompt: 'Type a name and press Enter...', freeText: true, pickEmployees: true, pickStudents: true },
+  thirdParty: { label: 'Involved People', noun: 'person', addPrompt: 'Type a name or description of the 3rd party person', freeText: true, pickEmployees: true, pickStudents: true },
 };
 
 interface NewIncidentFormUnifiedProps {
@@ -921,14 +921,36 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           {roster.label}
           {peopleRequired && <Req />}
         </SectionHeading>
-        {/* Employees and students come out of the district's own lists, so a
-            name on the incident is a record and not a guess at a spelling. The
-            typed field is kept for the one person who cannot be in a list, the
-            motorist or the parent the incident is actually about. */}
+        {/* The typed field leads, because the person the incident is actually
+            about is the one who cannot be in a list: the motorist, the parent.
+            Employees and students come out of the district's own lists below
+            it, so a name on the incident is a record and not a guess at a
+            spelling. */}
         <div
           className="grid grid-cols-1 gap-4"
           style={{ marginBottom: 'var(--forge-spacing-small)' }}
         >
+          {roster.freeText && (
+            <div>
+              {rosterWays > 1 && <label style={labelStyle}>3rd Party Person</label>}
+              <div className="flex" style={{ gap: 'var(--forge-spacing-small)' }}>
+                <div style={{ flex: 1 }}>
+                  {/* @ts-ignore */}
+                  <forge-text-field>
+                    <input
+                      value={personDraft}
+                      onChange={(e) => setPersonDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') addPerson(personDraft, undefined, 'outside'); }}
+                      placeholder={roster.addPrompt}
+                    />
+                  </forge-text-field>
+                </div>
+                {/* @ts-ignore */}
+                <forge-button variant="outlined" onClick={() => addPerson(personDraft, undefined, 'outside')}>Add</forge-button>
+              </div>
+            </div>
+          )}
+
           {roster.pickEmployees && (
             <div>
               {rosterWays > 1 && <label style={labelStyle}>Employee</label>}
@@ -963,27 +985,6 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
                 taken={(id) => people.some(p => p.sourceId === id)}
                 onPick={(id, name) => addPerson(name, id, 'student')}
               />
-            </div>
-          )}
-
-          {roster.freeText && (
-            <div>
-              {rosterWays > 1 && <label style={labelStyle}>Someone outside the district</label>}
-              <div className="flex" style={{ gap: 'var(--forge-spacing-small)' }}>
-                <div style={{ flex: 1 }}>
-                  {/* @ts-ignore */}
-                  <forge-text-field>
-                    <input
-                      value={personDraft}
-                      onChange={(e) => setPersonDraft(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') addPerson(personDraft, undefined, 'outside'); }}
-                      placeholder={roster.addPrompt}
-                    />
-                  </forge-text-field>
-                </div>
-                {/* @ts-ignore */}
-                <forge-button variant="outlined" onClick={() => addPerson(personDraft, undefined, 'outside')}>Add</forge-button>
-              </div>
             </div>
           )}
         </div>
