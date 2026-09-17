@@ -246,6 +246,89 @@ function StudentSearch({
   );
 }
 
+function EmployeeSearch({
+  employees, taken, onPick, placeholder,
+}: {
+  employees: any[];
+  taken: (id: string) => boolean;
+  onPick: (id: string, name: string) => void;
+  placeholder: string;
+}) {
+  const [q, setQ] = useState('');
+  const term = q.trim().toLowerCase();
+  // Name, employee number or what they do, because a reporter naming the driver
+  // who was struck knows one of the three, not always the spelling of the name.
+  const matches = term
+    ? employees
+        .filter(em => !taken(em.id))
+        .filter(em =>
+          em.fullName.toLowerCase().includes(term) ||
+          String(em.employeeId ?? '').toLowerCase().includes(term) ||
+          String(em.jobRole ?? '').toLowerCase().includes(term))
+        .slice(0, 8)
+    : [];
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* @ts-ignore */}
+      <forge-text-field>
+        <forge-icon slot="start" name="search"></forge-icon>
+        <input
+          value={q}
+          placeholder={placeholder}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setQ('');
+            if (e.key === 'Enter' && matches.length) {
+              onPick(matches[0].id, matches[0].fullName);
+              setQ('');
+            }
+          }}
+        />
+      </forge-text-field>
+
+      {term && (
+        <div
+          style={{
+            position: 'absolute', zIndex: 20, left: 0, right: 0, top: 'calc(100% + 2px)',
+            background: '#fff',
+            border: '1px solid var(--forge-theme-outline, rgba(0,0,0,0.12))',
+            borderRadius: 'var(--forge-shape-medium)',
+            boxShadow: 'var(--forge-elevation-4)',
+            maxHeight: '260px', overflowY: 'auto',
+          }}
+        >
+          {matches.length === 0 && (
+            <div style={{ padding: 'var(--forge-spacing-small)', fontFamily: 'var(--forge-font-family)', fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+              No employee matches "{q.trim()}"
+            </div>
+          )}
+          {matches.map(em => (
+            <button
+              key={em.id}
+              type="button"
+              onClick={() => { onPick(em.id, em.fullName); setQ(''); }}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer',
+                background: 'none', border: 'none',
+                padding: '8px var(--forge-spacing-small)',
+                fontFamily: 'var(--forge-font-family)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--forge-theme-primary-container-minimum)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+            >
+              <div style={{ fontWeight: 500, fontSize: 'var(--forge-font-size-base)' }}>{em.fullName}</div>
+              <div style={{ fontSize: 'var(--forge-font-size-sm)', color: 'var(--forge-theme-text-medium)' }}>
+                {em.jobRole}{em.defaultGarage ? ' · ' + em.defaultGarage : ''}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Segmented({
   options, value, onChange, ariaLabel,
 }: {
@@ -1100,26 +1183,12 @@ export function NewIncidentFormUnified({ onNavigate }: NewIncidentFormUnifiedPro
           {roster.pickEmployees && (
             <div>
               {rosterWays > 1 && <label style={labelStyle}>Employee</label>}
-              {/* @ts-ignore */}
-              <forge-text-field>
-                <forge-icon slot="start" name="search"></forge-icon>
-                <select
-                  value=""
-                  onChange={(e) => {
-                    if (!e.target.value) return;
-                    const [id, ...rest] = e.target.value.split('|');
-                    addPerson(rest.join('|'), id, 'employee');
-                  }}
-                  style={selectStyle}
-                >
-                  <option value="">Add an employee...</option>
-                  {employeeOptions
-                    .filter(e => !people.some(p => p.sourceId === e.id))
-                    .map(e => (
-                      <option key={e.id} value={`${e.id}|${e.fullName}`}>{e.fullName} ({e.jobRole})</option>
-                    ))}
-                </select>
-              </forge-text-field>
+              <EmployeeSearch
+                employees={employeeOptions}
+                placeholder="Add an employee..."
+                taken={(id) => people.some(p => p.sourceId === id)}
+                onPick={(id, name) => addPerson(name, id, 'employee')}
+              />
 
               {rosterGrouped && (
                 <div style={{ marginTop: 'var(--forge-spacing-small)' }}>
